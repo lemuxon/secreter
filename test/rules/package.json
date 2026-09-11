@@ -1,0 +1,15 @@
+{
+  "name": "secreter-rules-tests",
+  "private": true,
+  "description": "Firestore güvenlik kuralları birim testleri (emulator gerektirir)",
+  "scripts": {
+    "test": "mocha --timeout 20000 firestore.rules.test.js",
+    "test:emulator": "firebase emulators:exec --only firestore --project secreter-rules-test \"npm test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "chai": "^4.5.0",
+    "firebase": "^11.0.0",
+    "mocha": "^10.8.2"
+  }
+}

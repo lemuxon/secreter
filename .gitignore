@@ -1,0 +1,83 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ⚠️ İMZA ANAHTARLARI VE SIRLAR — ASLA DEPOYA GİRMEMELİ
+# Kaybedersen/sızdırırsan uygulamayı Play'de bir daha güvenle
+# güncelleyemezsin. (android/.gitignore da bunu kapsıyor; burada
+# ikinci bir güvenlik ağı olarak tekrarlanıyor.)
+android/key.properties
+*.jks
+*.keystore
+android/local.properties
+
+# Firebase servis hesabı anahtarları
+**/serviceAccountKey.json
+**/*-firebase-adminsdk-*.json
+.runtimeconfig.json
+
+# Ortam dosyaları (Giphy vb. anahtarlar --dart-define ile geçilir)
+.env
+.env.*
+!.env.example
+
+# Cloud Functions bağımlılıkları
+functions/node_modules/
+functions/.firebase/
+
+# Yerel yedek dosyaları (düz metin sohbet dökümü içerebilir)
+SECRETER_yedek_*.json
+
+# Kural testlerinin bağımlılıkları (functions/node_modules gibi)
+test/rules/node_modules/
+
+# Play Developer API servis hesabı anahtarı — depo DIŞINDA tutulur,
+# yine de ikinci bir ağ (yanlışlıkla kopyalanırsa yakalansın)
+play-sa.json
+**/play-*.json
+
+# Anahtar deposu yedekleri (imza parolası döndürme betiği üretir)
+*.jks.yedek-*
+android/key.properties.yedek-*

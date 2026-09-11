@@ -1,0 +1,220 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Aynı dal için üst üste gelen çalıştırmaları iptal et (runner tasarrufu)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────
+  # 1. Statik analiz + format
+  # ────────────────────────────────────────────
+  analyze:
+    name: Analiz & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Bağımlılıkları yükle
+        run: flutter pub get
+
+      - name: Format kontrolü
+        run: dart format --output=none --set-exit-if-changed .
+
+      # NOT: `flutter analyze` VARSAYILAN olarak warning'lerde de başarısız
+      # olur. Depoda 6 warning bulunduğu için bu adım sessizce kırmızıydı ve
+      # `needs: analyze` zinciri yüzünden test/build işleri HİÇ ÇALIŞMIYORDU.
+      # Warning'ler giderildi; kapı bilinçli olarak sıkı tutuluyor.
+      #
+      # ⚠️ `--no-fatal-infos` KALDIRILDI. Projenin yerel kapısı SIFIR bulgu
+      # (info dahil) istiyor; CI daha gevşek olsaydı info düzeyinde bir
+      # gerileme CI'dan geçer, yerelde kırılırdı — yani CI yanlış güven
+      # verirdi. İki kapı aynı sıkılıkta olmalı.
+      - name: Statik analiz
+        run: flutter analyze
+
+  # ────────────────────────────────────────────
+  # 2. Birim ve widget testleri
+  # ────────────────────────────────────────────
+  test:
+    name: Testler
+    runs-on: ubuntu-latest
+    needs: analyze
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Bağımlılıkları yükle
+        run: flutter pub get
+
+      - name: Testleri çalıştır (coverage ile)
+        run: flutter test --coverage
+
+      - name: Coverage raporu yükle
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # ────────────────────────────────────────────
+  # 3. Firestore GÜVENLİK KURALLARI testleri
+  #
+  # Bu iş kritiktir: uygulamanın yetkilendirmesinin tamamı kurallarda
+  # yaşıyor ve kural dosyası derlenmediği için sessizce bozulabilir.
+  # ────────────────────────────────────────────
+  rules:
+    name: Güvenlik Kuralları
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # firebase-tools emulator'ü JDK 21+ ister
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Firebase CLI kur
+        run: npm install -g firebase-tools
+
+      - name: Test bağımlılıkları
+        run: npm --prefix test/rules ci
+
+      - name: Kuralları emulator'de doğrula
+        run: |
+          firebase emulators:exec --only firestore \
+            --project secreter-rules-test \
+            "npm --prefix test/rules test"
+
+  # ────────────────────────────────────────────
+  # 4. Cloud Functions denetimi
+  # ────────────────────────────────────────────
+  functions:
+    name: Cloud Functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Bağımlılıkları yükle
+        run: npm --prefix functions ci
+
+      - name: Sözdizimi kontrolü
+        run: node --check functions/index.js
+
+      # ⚠️ SÖZDİZİMİ GEÇMESİ DAĞITILABİLİR OLMAK DEĞİLDİR (§4n).
+      #
+      # Dağıtım aylarca şu hatayla düşüyordu:
+      #   "User code failed to load. Cannot determine backend specification."
+      # Sebep: `admin.storage().bucket()` MODÜL SEVİYESİNDE çağrılıyordu ve
+      # ortamda `storageBucket` yoksa fırlatıyordu. `node --check` bunu
+      # göremez — sözdizimi kusursuzdu.
+      #
+      # Firebase CLI dağıtımdan önce kodu tam olarak böyle yükler; bu adım
+      # o kontrolü CI'ya taşır.
+      - name: Modül yüklenebiliyor mu (dağıtım ön koşulu)
+        working-directory: functions
+        env:
+          GCLOUD_PROJECT: ci-yukleme-denemesi
+        run: node -e "require('./index.js'); console.log('modul yuklendi')"
+
+  # ────────────────────────────────────────────
+  # 5. APK derleme (yalnızca main'e push)
+  # ────────────────────────────────────────────
+  build:
+    name: APK Derle
+    runs-on: ubuntu-latest
+    needs: [test, rules, functions]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Bağımlılıkları yükle
+        run: flutter pub get
+
+      - name: Firebase config oluştur
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d \
+            > android/app/google-services.json
+        continue-on-error: true
+
+      # ⚠️ İMZA: keystore CI'da yoksa `release` imzasız kalır ve derleme
+      # başarısız olur — bu İSTENEN davranıştır. Eskiden imza yokken
+      # release, DEBUG anahtarıyla imzalanıp "yayına hazır" artefakt olarak
+      # yükleniyordu; bu tehlikeli bir yanılsamaydı.
+      #
+      # Sırlar tanımlıysa gerçek imzayla release, değilse debug APK üretilir.
+      - name: Keystore hazırla (varsa)
+        id: keystore
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d \
+              > "$RUNNER_TEMP/release.jks"
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Release APK derle (imzalı)
+        if: steps.keystore.outputs.present == 'true'
+        env:
+          SECRETER_STORE_FILE: ${{ runner.temp }}/release.jks
+          SECRETER_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          SECRETER_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          SECRETER_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          flutter build apk --release --split-per-abi \
+            --dart-define=GIPHY_API_KEY=${{ secrets.GIPHY_API_KEY }} \
+            --dart-define=SECRETER_TURN_URL=${{ secrets.TURN_URL }} \
+            --dart-define=SECRETER_TURN_USER=${{ secrets.TURN_USER }} \
+            --dart-define=SECRETER_TURN_PASS=${{ secrets.TURN_PASS }}
+
+      - name: Debug APK derle (imza yoksa)
+        if: steps.keystore.outputs.present != 'true'
+        run: flutter build apk --debug
+
+      - name: APK'yı artifact olarak yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ steps.keystore.outputs.present == 'true' && 'release' || 'debug' }}
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 7

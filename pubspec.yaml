@@ -1,0 +1,99 @@
+name: gizli_chat
+description: Anonim, güvenli mesajlaşma uygulaması
+publish_to: 'none'
+version: 1.0.11+22
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Mimari: State Management + DI
+  flutter_riverpod: ^2.5.1     # State management
+  get_it: ^7.6.7               # Dependency injection
+  equatable: ^2.0.5            # Value equality
+  dartz: ^0.10.1               # Either<Failure, Success>
+
+  # Offline & cache
+  hive: ^2.2.3                 # Lokal NoSQL (codegen'siz)
+  hive_flutter: ^1.1.0
+  connectivity_plus: ^6.1.0
+
+  # Güvenlik sertleştirme
+  safe_device: ^1.1.4
+  record: ^6.0.0
+  http: ^1.2.0
+  audioplayers: ^6.1.0
+
+  # Firebase
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  cloud_firestore: ^6.0.0
+  firebase_storage: ^13.0.0
+  # Crashlytics AKTİF — toplama varsayılan KAPALI, yalnızca kullanıcı
+  # onayıyla açılır (bkz. CrashlyticsReporter + manifest meta-data).
+  firebase_crashlytics: ^5.0.0
+  firebase_messaging: ^16.0.0
+  # E2EE ön-anahtar tüketimi ve hesap silme sunucuda ATOMİK yapılır
+  # (istemci karşı tarafın anahtar paketine yazamaz — güvenlik kuralı).
+  cloud_functions: ^6.3.6
+  flutter_local_notifications: ^17.2.4
+
+  # Arama (WebRTC)
+  flutter_webrtc: ^1.5.2
+
+  # Yardımcı
+  uuid: ^4.3.3
+  qr_flutter: ^4.1.0             # kurtarma anahtarını QR olarak göster
+  image_cropper: ^8.0.2          # fotoğraf kırpma + döndürme
+
+  # Medya
+  image_picker: ^1.0.7
+  path_provider: ^2.1.2
+  file_selector: ^1.0.3          # dosya/belge gonderme (#6) — flutter.dev resmî, SDK-36 uyumlu
+  url_launcher: ^6.3.0           # dosyayi tarayicida ac (#6)
+  # 🔄 GÜNCELLEME BİLDİRİMİ: Play'in kendi API'si. Sunucuda sürüm listesi
+  # tutmaya gerek yok — "güncelleme var mı" bilgisi doğrudan Play'den
+  # gelir. Yalnızca Play'den kurulmuş derlemelerde çalışır; yan yükleme
+  # ve emülatörde `checkForUpdate` HATA fırlatır, bu yüzden çağrı
+  # daima yutulur (özellik yoksa uygulama etkilenmemeli).
+  in_app_update: ^4.2.3
+  home_widget: ^0.7.0            # ana ekran widget'i (#18)
+  video_player: ^2.9.2           # video oynatma (flutter.dev resmî)
+  app_links: ^6.3.0              # gizlichat:// davet linki yakalama
+  share_plus: ^10.0.2            # sohbet dökümü paylaşma          # sohbet arka plan fotosunu kalici kopyalamak icin
+  cached_network_image: ^3.3.1
+
+  # Ses, dosya, konum
+
+  # Şifreleme
+  encrypt: ^5.0.3                    # AES (uygulama katmanı)
+  cryptography: ^2.7.0              # X25519, AES-GCM, HKDF (E2EE)
+  crypto: ^3.0.3                    # PIN hash (SHA-256)
+
+  # Depolama
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+
+  # Güvenlik & Gizlilik
+  local_auth: ^2.2.0
+
+  # Util
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  mocktail: ^1.0.3             # Mock'lama (codegen'siz, null-safe)
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/brand/

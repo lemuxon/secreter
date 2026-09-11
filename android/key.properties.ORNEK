@@ -1,0 +1,20 @@
+# ============================================================
+# BU DOSYAYI "key.properties" OLARAK YENIDEN ADLANDIR ve doldur.
+# (Aynı klasörde kalacak: android\key.properties)
+#
+# ⚠️ Bu dosyayı ve .jks dosyasını ASLA paylaşma, git'e ekleme.
+#    Kaybedersen uygulamayı Play'de bir daha güncelleyemezsin.
+# ============================================================
+
+# keytool komutunda verdiğin alias (örn: secreter)
+keyAlias=secreter
+
+# Anahtar şifresi (keytool'da ikinci sorduğu; Enter'a bastıysan store ile aynı)
+keyPassword=BURAYA_KEY_SIFRESI
+
+# .jks dosyasının TAM yolu — ters eğik çizgileri ÇİFT yaz veya / kullan
+# Örnek:  C:/yol/secreter-release.jks
+storeFile=C:/yol/secreter-release.jks
+
+# Keystore şifresi (keytool'da ilk sorduğu)
+storePassword=BURAYA_STORE_SIFRESI

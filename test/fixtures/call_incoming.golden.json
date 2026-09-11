@@ -1,0 +1,40 @@
+{
+  "_aciklama": [
+    "GELEN ARAMA SÖZLEŞMESİ — iki dil arasındaki tek doğruluk kaynağı.",
+    "",
+    "Bu dosya elle DÜZENLENMEZ; Dart tarafındaki gerçek şemadan üretilir",
+    "ve iki test onu iki uçtan kilitler:",
+    "",
+    "  • test/features/call/incoming_call_contract_test.dart (Dart)",
+    "      `buildCallDocument` çıktısının ve `CallFields` sabitlerinin",
+    "      buradakiyle AYNI olduğunu doğrular. Şema değişip bu dosya",
+    "      güncellenmezse DÜŞER.",
+    "",
+    "  • test/rules/firestore.rules.test.js (emülatör)",
+    "      `belge`yi gerçek Firestore'a yazar, `sorgu` alan adlarıyla",
+    "      gelen arama sorgusunu çalıştırır ve çağrının GERÇEKTEN",
+    "      DÖNDÜĞÜNÜ doğrular.",
+    "",
+    "NEDEN: gelen arama iki kez SESSİZCE kırıldı (§4m kural, §4u şema).",
+    "Var olan kural testi `assertSucceeds` kullanıyordu — sorgunun",
+    "İZİNLİ olduğunu ölçüyor, EŞLEŞTİĞİNİ değil. §4u'nun hatası tam da",
+    "'sorgu kuruluyor ama boş dönüyor'du, yani o test kırık hâlde de",
+    "geçerdi. Fixture da elle yazılmıştı; şema değişse fark etmezdi."
+  ],
+  "belge": {
+    "id": "call-gelen",
+    "callerId": "uidBob",
+    "calleeId": "uidAlice",
+    "participants": ["uidBob", "uidAlice"],
+    "type": "audio",
+    "status": "ringing",
+    "createdAt": "2026-09-10T00:00:00.000Z",
+    "answeredAt": null,
+    "endedAt": null
+  },
+  "sorgu": {
+    "katilimciAlani": "participants",
+    "durumAlani": "status",
+    "calanDurum": "ringing"
+  }
+}

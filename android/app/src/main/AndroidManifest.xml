@@ -1,0 +1,191 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ═══════════════ İZİNLER ═══════════════
+         İLKE: Kullanılmayan izin İSTENMEZ. Gizlilik uygulamasında gereksiz
+         izin hem mağaza incelemesinde risk hem de kullanıcı güveninde kayıptır.
+
+         KALDIRILAN: ACCESS_FINE_LOCATION / ACCESS_COARSE_LOCATION.
+         Projede hiçbir konum paketi yoktu ve konum gönderme kodu ölüydü;
+         yani izin isteniyor ama ASLA kullanılmıyordu. Play Data Safety
+         formunda da "Location: No" beyan edilmişti — bu çelişki
+         uygulamanın kaldırılmasına yol açabilirdi. -->
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- Android 13+ bildirim izni. Bu satır OLMADAN flutter_local_notifications
+         ve FCM bildirimleri API 33+ cihazlarda HİÇ görünmüyordu. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Medya: fotoğraf seçme/çekme. Eski depolama izinleri yalnızca
+         API 32 ve altına verilir (API 33+ READ_MEDIA_IMAGES kullanır);
+         WRITE_EXTERNAL_STORAGE API 30+'ta zaten yok sayılır. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        tools:ignore="ScopedStorage"/>
+
+    <!-- Sesli mesaj + WebRTC arama -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+
+    <!-- TÜRLÜ ön plan izinleri (…_MICROPHONE / …_CAMERA) KALDIRILDI.
+         ÖLÇÜM: birleştirilmiş manifestte foregroundServiceType beyan eden
+         HİÇBİR servis yok ve kodda startForeground hiç çağrılmıyor — yani
+         bu izinler ATILDI, hiçbir şey yapmıyorlardı. Eski yorum "bunlar
+         olmadan arama düşüyordu" diyordu; izin tek başına arka plandaki
+         mikrofon/kamera erişimini AÇMAZ, bunun için türü beyan edilmiş
+         gerçek bir servis gerekir. Atıl izinler Play'de "ön plan hizmeti
+         beyanı" HATASI doğurup olmayan bir davranışı beyan etmeye
+         zorluyordu. Arama arka planda gerçekten sürsün isteniyorsa
+         yapılacak iş camera|microphone türünde bir servis yazmaktır.
+         Düz FOREGROUND_SERVICE kalıyor: eklentilerin getirdiği WorkManager
+         (androidx.work…SystemForegroundService) onu kullanabiliyor. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!-- Bluetooth kulaklıkla arama: API 31+ yeni izni gerektirir -->
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+
+    <!-- Biyometrik kilit -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+
+    <!-- Donanım zorunlu değil: kamerasız cihazlar da uygulamayı kurabilsin -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
+
+    <!-- Bluetooth da zorunlu değil: BLUETOOTH / BLUETOOTH_CONNECT izinleri
+         karşılığında uses-feature yazılmazsa Play bunu ZIMNEN
+         "android.hardware.bluetooth GEREKLİ" sayar ve bluetooth'suz
+         cihazlar uygulamayı mağazada göremez. -->
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
+
+    <application
+        android:label="SECRETER"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:enableOnBackInvokedCallback="true"
+
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
+
+        <!-- ⚠️ allowBackup=false NEDEN KRİTİK:
+             Varsayılan `true` iken `adb backup` ve Google Drive otomatik
+             yedeği; Hive önbelleğindeki mesajları, SharedPreferences'taki
+             kilit bayrağını ve secure storage girdilerini cihaz dışına
+             çıkarabiliyordu. Bir gizlilik uygulamasında uygulama verisi
+             ASLA otomatik yedeklenmemelidir. -->
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"/>
+            <!-- ⚠️ LAUNCHER filtresi burada DEĞİL, aşağıdaki
+                 activity-alias'lardadır (uygulama kılığı). MainActivity'ye
+                 geri eklemek, kılık açıkken başlatıcıda İKİ simge
+                 görünmesine yol açar ve özelliği işlevsiz kılar. -->
+            <!-- Davet linki (gizlichat://join/KOD).
+                 NOT: Derin bağlantı artık uygulama kilidine saygı duyar ve
+                 gruba katılmadan ÖNCE kullanıcı onayı ister
+                 (bkz. DeepLinkService). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="gizlichat" android:host="join"/>
+            </intent-filter>
+        </activity>
+
+        <!-- ═══════════ UYGULAMA KILIĞI ═══════════
+             Başlatıcıda görünen bileşen bir activity-alias'tır. Gerçek
+             kimlik ve kılık AYRI alias'lardır; her an YALNIZCA BİRİ
+             etkindir (bkz. MainActivity.setDisguise).
+
+             NEDEN: Sahte PIN, telefon açıldıktan SONRA korur. Kılık ise
+             uygulamanın VARLIĞINI gizler — cihaz incelenirken uygulama
+             listesinde "SECRETER" yerine sıradan bir hesap makinesi
+             görünür. İkisi birlikte anlamlıdır.
+
+             ⚠️ İkisi de aynı anda KAPATILMAMALIDIR: uygulama
+             başlatılamaz hâle gelir. Yerli taraf her zaman önce YENİYİ
+             açar, sonra eskisini kapatır. -->
+        <activity-alias
+            android:name=".Launcher"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="true"
+            android:label="SECRETER"
+            android:icon="@mipmap/ic_launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".LauncherDisguised"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/disguise_label"
+            android:icon="@drawable/ic_disguise_calculator">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Ana ekran widget'ı (yalnızca okunmamış SAYISI — içerik göstermez) -->
+        <receiver
+            android:name=".UnreadWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/unread_widget_info"/>
+        </receiver>
+
+        <!-- image_cropper (uCrop) kırpma ekranı -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2"/>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="gizlichat_channel"/>
+        <!-- Crashlytics: yalnızca kullanıcı onayıyla açılır (varsayılan KAPALI).
+             Toplama, çalışma zamanında CrashlyticsReporter tarafından yönetilir. -->
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false"/>
+        <!-- Analytics kullanılmıyor: reklam kimliği toplanmasını da kapat -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false"/>
+    </application>
+</manifest>

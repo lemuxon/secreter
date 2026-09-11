@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="tr" data-lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SECRETER — Gizlilik Politikası / Privacy Policy</title>
+<meta name="description" content="SECRETER gizlilik politikası: hangi veriler toplanır, neyin şifreli olduğu ve olmadığı açıkça yazılıdır.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0A12;
+    --panel:#151327;
+    --panel-2:#1C1930;
+    --violet:#8B5CF6;
+    --lilac:#C4B5FD;
+    --amber:#F2B45B;
+    --text:#E7E4F3;
+    --muted:#9A94B8;
+    --line:#2A2545;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --body:'IBM Plex Sans',system-ui,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--ink);color:var(--text);
+    font-family:var(--body);font-size:16.5px;line-height:1.65;
+  }
+  a{color:var(--lilac)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 22px 96px}
+
+  /* ---------- başlık ---------- */
+  header{
+    padding:64px 0 34px;
+    animation:rise .5s ease-out both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){header{animation:none}}
+  .mark{
+    display:inline-flex;align-items:center;gap:12px;
+    font-family:var(--display);font-weight:700;letter-spacing:.14em;
+    font-size:15px;color:var(--lilac);text-transform:uppercase;
+  }
+  .mark span.dot{
+    width:26px;height:26px;border-radius:9px;
+    background:linear-gradient(150deg,#A78BFA,#6D28D9);
+    box-shadow:0 0 0 1px #ffffff14, 0 8px 24px #6d28d955;
+  }
+  h1{
+    font-family:var(--display);font-weight:700;
+    font-size:clamp(30px,6vw,46px);line-height:1.1;
+    margin:26px 0 10px;letter-spacing:-.02em;
+  }
+  .sub{color:var(--muted);max-width:52ch;margin:0}
+  .meta{
+    font-family:var(--mono);font-size:12.5px;color:var(--muted);
+    margin-top:26px;padding-top:16px;border-top:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:6px 22px;
+  }
+
+  /* ---------- dil anahtarı ---------- */
+  .langbar{position:sticky;top:0;z-index:9;background:linear-gradient(var(--ink) 70%,transparent);padding:14px 0 10px}
+  .langbtns{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .langbtns button{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;
+    background:transparent;color:var(--muted);border:0;padding:8px 16px;cursor:pointer;
+  }
+  .langbtns button[aria-pressed="true"]{background:var(--violet);color:#fff}
+  .langbtns button:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
+
+  /* ---------- bölümler ---------- */
+  section{padding:30px 0;border-top:1px solid var(--line)}
+  .eyebrow{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--violet);margin:0 0 8px;
+  }
+  h2{font-family:var(--display);font-weight:500;font-size:22px;margin:0 0 12px;letter-spacing:-.01em}
+  h3{font-family:var(--display);font-weight:500;font-size:16.5px;margin:22px 0 6px}
+  p,li{color:#DDD9EE}
+  ul{padding-left:20px;margin:10px 0}
+  li{margin:5px 0}
+  .note{color:var(--muted);font-size:14.5px}
+
+  /* ---------- İMZA: şifreleme kapsamı paneli ---------- */
+  .scope{display:grid;gap:14px;margin:18px 0 6px}
+  .band{
+    background:var(--panel);border:1px solid var(--line);
+    border-left:3px solid var(--lilac);border-radius:14px;padding:18px 20px;
+  }
+  .band.open{border-left-color:var(--amber)}
+  .band h4{
+    margin:0 0 4px;font-family:var(--display);font-weight:700;font-size:15px;
+    letter-spacing:.01em;color:var(--lilac);
+  }
+  .band.open h4{color:var(--amber)}
+  .band .tag{
+    font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);display:block;margin-bottom:10px;
+  }
+  .band ul{margin:8px 0 0;padding-left:18px}
+  .band li{font-size:15px}
+
+  /* ---------- tablo ---------- */
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px}
+  .tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  .tbl th{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .tbl td:first-child{color:var(--text);white-space:nowrap}
+  @media(max-width:560px){
+    .tbl td:first-child{white-space:normal}
+    .tbl th:nth-child(3),.tbl td:nth-child(3){display:none}
+  }
+
+  .card{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:16px 0}
+  .fill{color:var(--amber);font-family:var(--mono);font-size:14px}
+  footer{padding:34px 0 0;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+
+  [data-lang="tr"] .en,[data-lang="en"] .tr{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="langbar">
+    <div class="langbtns" role="group" aria-label="Dil / Language">
+      <button type="button" data-set="tr" aria-pressed="true">TÜRKÇE</button>
+      <button type="button" data-set="en" aria-pressed="false">ENGLISH</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="mark"><span class="dot"></span> SECRETER</div>
+    <h1 class="tr">Gizlilik Politikası</h1>
+    <h1 class="en">Privacy Policy</h1>
+    <p class="sub tr">Telefon numarası istemeyen bir mesajlaşma uygulaması. Bu sayfa neyin toplandığını ve neyin şifreli olduğunu pazarlama dili kullanmadan anlatır.</p>
+    <p class="sub en">A messaging app that works without a phone number. This page states what is collected and what is encrypted, without marketing language.</p>
+    <div class="meta">
+      <span class="tr">Son güncelleme: <span class="fill">[01.08.2028]</span></span>
+      <span class="en">Last updated: <span class="fill">[01.08.2026]</span></span>
+      <span>İletişim / Contact: <span class="fill">[lemuxon@gmail.com]</span></span>
+    </div>
+  </header>
+
+  <!-- ŞİFRELEME KAPSAMI — sayfanın imzası -->
+  <section>
+    <p class="eyebrow tr">Şifreleme kapsamı</p>
+    <p class="eyebrow en">Encryption scope</p>
+    <h2 class="tr">Neyi okuyamayız, neyi okuyabiliriz</h2>
+    <h2 class="en">What we cannot read, and what we can</h2>
+    <div class="scope">
+      <div class="band">
+        <h4 class="tr">Uçtan uca şifreli</h4>
+        <h4 class="en">End-to-end encrypted</h4>
+        <span class="tag tr">Sunucu içeriği göremez</span>
+        <span class="tag en">The server cannot see the content</span>
+        <ul class="tr">
+          <li>Birebir sohbetlerdeki metin mesajları (X3DH + Double Ratchet)</li>
+          <li>Grup ve kanal metin mesajları (sender key; üyelik değişince anahtar yenilenir)</li>
+          <li>Fotoğraf, video, sesli mesaj ve dosyalar (AES-256-GCM)</li>
+          <li>Düzenlenen mesajlar</li>
+        </ul>
+        <ul class="en">
+          <li>Text messages in one-to-one chats (X3DH + Double Ratchet)</li>
+          <li>Group and channel text messages (sender key; rotated when membership changes)</li>
+          <li>Photos, videos, voice notes and files (AES-256-GCM)</li>
+          <li>Edited messages</li>
+        </ul>
+      </div>
+      <div class="band open">
+        <h4 class="tr">Uçtan uca şifreli değil</h4>
+        <h4 class="en">Not end-to-end encrypted</h4>
+        <span class="tag tr">Aktarımda TLS ile korunur · sunucuyu işleten taraf erişebilir</span>
+        <span class="tag en">Protected by TLS in transit · the server operator can access it</span>
+        <ul class="tr">
+          <li>Anketler — oylar toplanabilsin diye düz metin</li>
+          <li>Zamanlanmış mesajlar — gönderimi sunucu yapar</li>
+          <li>GIF ve çıkartmalar — içerik zaten Giphy'de herkese açık</li>
+          <li>Hikâyeler (24 saat sonra otomatik silinir)</li>
+        </ul>
+        <ul class="en">
+          <li>Polls — plain text so votes can be aggregated</li>
+          <li>Scheduled messages — delivered by the server</li>
+          <li>GIFs and stickers — the content is already public on Giphy</li>
+          <li>Stories (auto-deleted after 24 hours)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note tr"><strong>Şifreleme içeriği korur, üst veriyi korumaz.</strong> Şifreli mesajlarda bile kimin kiminle yazıştığı (kullanıcı kimlikleri), mesaj zamanları, okundu bilgisi ve grup üyelikleri sunucuda görünür. Kullanıcı <strong>adları</strong> sunucudaki sohbet ve mesaj kayıtlarından kaldırılmıştır; kimlikler kaldırılamaz, çünkü sunucu yetki denetimini onlarla yapar. Bunu gizlemek yerine yazmayı tercih ediyoruz.</p>
+    <p class="note en"><strong>Encryption protects content, not metadata.</strong> Even for encrypted messages, the server can still see who is talking to whom (user IDs), message timestamps, read receipts and group memberships. User <strong>names</strong> have been removed from chat and message records on the server; identifiers cannot be removed, because the server uses them to enforce access control. We prefer to state this rather than hide it.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow tr">Toplanan veriler</p>
+    <p class="eyebrow en">Data we collect</p>
+    <h2 class="tr">Hesap bilgileri</h2>
+    <h2 class="en">Account data</h2>
+    <table class="tbl">
+      <thead>
+        <tr class="tr"><th>Veri</th><th>Zorunlu</th><th>Amaç</th></tr>
+        <tr class="en"><th>Data</th><th>Required</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr class="tr"><td>Kullanıcı adı</td><td>Evet</td><td>Diğer kullanıcıların seni bulması</td></tr>
+        <tr class="tr"><td>Hesap kimliği</td><td>Evet</td><td>Hesabını teknik olarak tanımlamak</td></tr>
+        <tr class="tr"><td>Profil fotoğrafı</td><td>Hayır</td><td>Profilinde göstermek</td></tr>
+        <tr class="tr"><td>“Hakkında” metni</td><td>Hayır</td><td>Profilinde göstermek</td></tr>
+        <tr class="en"><td>Username</td><td>Yes</td><td>So others can find you</td></tr>
+        <tr class="en"><td>Account identifier</td><td>Yes</td><td>Technically identify your account</td></tr>
+        <tr class="en"><td>Profile photo</td><td>No</td><td>Shown on your profile</td></tr>
+        <tr class="en"><td>“About” text</td><td>No</td><td>Shown on your profile</td></tr>
+      </tbody>
+    </table>
+    <h3 class="tr">Toplamadıklarımız</h3>
+    <h3 class="en">What we do not collect</h3>
+    <p class="tr">Telefon numarası, e-posta adresi, ad-soyad, adres, kimlik numarası, rehber/kişi listesi, konum geçmişi, reklam kimliği.</p>
+    <p class="en">Phone number, email address, real name, address, government ID, contact list, location history, advertising identifiers.</p>
+
+    <h3 class="tr">Kullanım ve teknik veriler</h3>
+    <h3 class="en">Usage and technical data</h3>
+    <ul class="tr">
+      <li><strong>Bildirim kimliği:</strong> sana bildirim gönderebilmek için.</li>
+      <li><strong>Çevrimiçi durumu, son görülme, “yazıyor”:</strong> uygulama içinden kapatılabilir.</li>
+      <li><strong>Okundu bilgisi:</strong> kapatılabilir.</li>
+      <li><strong>Çağrı kayıtları:</strong> kim, ne zaman, ne kadar süre (içerik değil).</li>
+      <li><strong>Çökme raporları:</strong> varsayılan <em>kapalı</em>. Yalnızca sen açarsan gönderilir; gönderim öncesi kimlik benzeri kalıplar maskelenir.</li>
+    </ul>
+    <ul class="en">
+      <li><strong>Push token:</strong> to deliver notifications.</li>
+      <li><strong>Online status, last seen, typing:</strong> can be turned off in the app.</li>
+      <li><strong>Read receipts:</strong> can be turned off.</li>
+      <li><strong>Call logs:</strong> who, when, how long (not the content).</li>
+      <li><strong>Crash reports:</strong> <em>off</em> by default. Sent only if you enable them; identifier-like patterns are masked before sending.</li>
+    </ul>
+
+    <h3 class="tr">Yalnızca cihazında kalanlar</h3>
+    <h3 class="en">Data that stays on your device</h3>
+    <p class="tr">Uygulama ve sohbet kilidi şifreleri (yalnızca kriptografik özet olarak, güvenli depoda), sahte sohbet içerikleri, gizlediğin mesaj işaretleri, klasörler, kişi etiketleri, yıldızlı mesajlar, tema ve dil tercihleri. Bunlar sunucuya gönderilmez.</p>
+    <p class="en">App and chat lock passcodes (only as salted cryptographic hashes in secure storage), decoy chat content, hidden-message markers, folders, contact labels, starred messages, theme and language preferences. These are never sent to our servers.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow tr">Üçüncü taraflar</p>
+    <p class="eyebrow en">Third parties</p>
+    <h2 class="tr">Verileri kimler işliyor</h2>
+    <h2 class="en">Who processes data</h2>
+    <table class="tbl">
+      <thead>
+        <tr class="tr"><th>Hizmet</th><th>Ne için</th><th>Ne gidiyor</th></tr>
+        <tr class="en"><th>Service</th><th>Purpose</th><th>What is sent</th></tr>
+      </thead>
+      <tbody>
+        <tr class="tr"><td>Google Firebase</td><td>Hesap, veri saklama, bildirim</td><td>Hesap kimliği, mesaj verisi (yukarıdaki kapsamda), medya, bildirim kimliği</td></tr>
+        <tr class="tr"><td>Firebase Crashlytics</td><td>Çökme raporu</td><td>Yalnızca sen açarsan: maskelenmiş hata ve cihaz bilgisi</td></tr>
+        <tr class="tr"><td>Giphy</td><td>GIF/çıkartma arama</td><td>Arama kelimesi ve IP adresi</td></tr>
+        <tr class="tr"><td>Çeviri servisleri</td><td>Mesaj çevirisi</td><td>Yalnızca çevirmeyi seçtiğin mesajın metni (ilk kullanımda onay alınır)</td></tr>
+        <tr class="en"><td>Google Firebase</td><td>Accounts, storage, notifications</td><td>Account identifier, message data (scope above), media, push token</td></tr>
+        <tr class="en"><td>Firebase Crashlytics</td><td>Crash reporting</td><td>Only if you enable it: masked error and device info</td></tr>
+        <tr class="en"><td>Giphy</td><td>GIF/sticker search</td><td>Your search term and IP address</td></tr>
+        <tr class="en"><td>Translation services</td><td>Message translation</td><td>Only the text of messages you choose to translate (consent on first use)</td></tr>
+      </tbody>
+    </table>
+    <p class="note tr">Verilerini satmıyoruz, reklam ağlarıyla paylaşmıyoruz, uygulamada reklam göstermiyoruz.</p>
+    <p class="note en">We do not sell your data, share it with ad networks, or show ads in the app.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow tr">Saklama ve silme</p>
+    <p class="eyebrow en">Retention and deletion</p>
+    <h2 class="tr">Verini ne zaman silebilirsin</h2>
+    <h2 class="en">When your data goes away</h2>
+    <ul class="tr">
+      <li>Mesajlar, sen veya karşı taraf silene kadar saklanır.</li>
+      <li><strong>Kaybolan mesajlar</strong> açıksa, seçtiğin süre sonunda mesajlar gizlenir ve sunucudan silinir.</li>
+      <li><strong>Gizli sohbet</strong> modunda, sohbetten her çıkışında o sohbetin mesajları iki taraftan da kalıcı silinir.</li>
+      <li><strong>Hesap silme:</strong> Ayarlar → Hesabımı Kaldır. Profil, fotoğraf ve hikâyeler silinir; kullanıcı adı 14 gün rezerve kalır, sonra serbest bırakılır.</li>
+      <li>Bulut sağlayıcısının yedeklerinde kısa süreli artıklar kalabilir (Google altyapı politikalarına tabi).</li>
+    </ul>
+    <ul class="en">
+      <li>Messages are stored until you or the other party deletes them.</li>
+      <li>With <strong>disappearing messages</strong> on, messages are hidden and deleted from the server after the period you choose.</li>
+      <li>In <strong>secret chat</strong> mode, every time you leave the chat all of its messages are permanently deleted for both sides.</li>
+      <li><strong>Account deletion:</strong> Settings → Remove my account. Profile, photos and stories are deleted; the username is reserved for 14 days, then released.</li>
+      <li>Short-lived remnants may persist in the cloud provider's backups (subject to Google's infrastructure policies).</li>
+    </ul>
+    <div class="card">
+      <p class="tr" style="margin:0">Uygulamaya erişemiyorsan hesabını silmek için: <a href="hesap-silme.html">Hesap silme sayfası</a></p>
+      <p class="en" style="margin:0">If you cannot access the app, request deletion here: <a href="hesap-silme.html">Account deletion page</a></p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow tr">Haklar, çocuklar, güvenlik</p>
+    <p class="eyebrow en">Rights, children, security</p>
+    <h2 class="tr">Diğer hususlar</h2>
+    <h2 class="en">Other matters</h2>
+    <h3 class="tr">Haklarınız</h3>
+    <h3 class="en">Your rights</h3>
+    <p class="tr">Bulunduğun ülkenin mevzuatına göre (KVKK, GDPR vb.) erişim, düzeltme, silme, işlemeye itiraz ve taşınabilirlik haklarına sahip olabilirsin. Talep için: <span class="fill">lemuxon@gmail.com</span>. Uygulama içinden hesabını silebilir, sohbetlerini dışa aktarabilir, telemetriyi ve durum paylaşımını kapatabilirsin.</p>
+    <p class="en">Depending on your jurisdiction (GDPR, KVKK, etc.) you may have rights to access, correct, delete, object to processing, and port your data. Requests: <span class="fill">lemuxon@gmail.com</span>. In the app you can delete your account, export your chats, and turn off telemetry and status sharing.</p>
+    <h3 class="tr">Çocuklar</h3>
+    <h3 class="en">Children</h3>
+    <p class="tr">SECRETER 13 yaşın altındaki çocuklara yönelik değildir ve bilerek onlardan veri toplamayız. Ülkenizde daha yüksek bir yaş sınırı varsa o geçerlidir.</p>
+    <p class="en">SECRETER is not directed to children under 13 and we do not knowingly collect their data. Where your country sets a higher age limit, that limit applies.</p>
+    <h3 class="tr">Güvenlik</h3>
+    <h3 class="en">Security</h3>
+    <p class="tr">Aktarımda TLS, hesap doğrulamada Firebase Authentication, yerel şifrelerde tuzlanmış kriptografik özet ve güvenli depolama kullanılır. Hiçbir sistem %100 güvenli değildir; kusursuz güvenlik garantisi verilemez.</p>
+    <p class="en">We use TLS in transit, Firebase Authentication for accounts, and salted cryptographic hashes with secure storage for local passcodes. No system is 100% secure; perfect security cannot be guaranteed.</p>
+  </section>
+
+  <footer>
+    <p class="tr">Veri sorumlusu: <span class="fill">[Enes / Lemuxon]</span> · <span class="fill">Istanbul,Turkey</span> · <span class="fill">lemuxon@gmail.com</span></p>
+    <p class="en">Data controller: <span class="fill">[YOUR NAME / COMPANY]</span> · <span class="fill">[ADDRESS]</span> · <span class="fill">lemuxon@gmail.com</span></p>
+    <p class="note">Bu metin bir avukat tarafından hazırlanmamıştır. / This text was not prepared by a lawyer.</p>
+  </footer>
+</div>
+
+<script>
+  const html = document.documentElement;
+  const btns = document.querySelectorAll('.langbtns button');
+  function setLang(l){
+    html.setAttribute('data-lang', l);
+    html.setAttribute('lang', l);
+    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.set === l)));
+    try { localStorage.setItem('secreter-lang', l); } catch (e) {}
+  }
+  btns.forEach(b => b.addEventListener('click', () => setLang(b.dataset.set)));
+  // Tarayıcı dili Türkçe değilse İngilizce aç
+  let start = 'tr';
+  try { start = localStorage.getItem('secreter-lang') || ((navigator.language||'tr').startsWith('tr') ? 'tr' : 'en'); } catch (e) {}
+  setLang(start);
+</script>
+</body>
+</html>

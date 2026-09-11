@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ana ekran widget'ı metinleri (varsayılan: İngilizce).
+     GİZLİLİK: widget yalnızca SAYI gösterir; gönderen adı veya mesaj
+     içeriği asla kilit ekranına/ana ekrana düşmez. -->
+<resources>
+    <string name="widget_no_unread">no new messages</string>
+    <string name="widget_unread">unread messages</string>
+    <!-- Uygulama kiligi: baslaticida gorunen sahte ad.
+         Cevrilmemelidir; hedef "siradan gorunmek". -->
+    <string name="disguise_label" translatable="false">Hesap Makinesi</string>
+</resources>

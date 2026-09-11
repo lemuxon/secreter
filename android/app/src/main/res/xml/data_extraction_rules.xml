@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SECRETER — VERİ ÇIKARMA KURALLARI (Android 12+ / API 31+)
+
+  İLKE: Uygulama verisi cihazdan ASLA çıkmaz.
+   • cloud-backup  → Google Drive otomatik yedeği
+   • device-transfer → yeni telefona aktarma (Android'in kopyalama akışı)
+
+  İkisi de tamamen engellenir. Mesaj geçmişi, E2EE anahtarları, oturum
+  durumu ve PIN karması hiçbir koşulda başka bir cihaza kopyalanmamalıdır;
+  kullanıcının tek meşru taşıma yolu, parola ile şifrelenen uygulama içi
+  yedektir (BackupService) ve kurtarma anahtarıdır.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

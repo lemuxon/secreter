@@ -1,0 +1,49 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "predeploy": ["npm --prefix \"$RESOURCE_DIR\" ci"]
+  },
+  "hosting": {
+    "public": "web_public",
+    "ignore": ["**/.*"],
+    "rewrites": [
+      { "source": "/gizlilik", "destination": "/index.html" },
+      { "source": "/privacy", "destination": "/index.html" },
+      { "source": "/sil", "destination": "/account-delete.html" },
+      { "source": "/delete-account", "destination": "/account-delete.html" }
+    ]
+  },
+  "emulators": {
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "auth": { "port": 9099 },
+    "functions": { "port": 5001 },
+    "ui": { "enabled": true }
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "gizlichat-f2a99",
+          "appId": "1:403919128373:android:015d3fe827bb60f6f3ee7c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "gizlichat-f2a99",
+          "configurations": {
+            "android": "1:403919128373:android:015d3fe827bb60f6f3ee7c"
+          }
+        }
+      }
+    }
+  }
+}

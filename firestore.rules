@@ -1,0 +1,620 @@
+rules_version = '2';
+
+// ============================================================
+// SECRETER — FIRESTORE GÜVENLİK KURALLARI
+//
+// TASARIM İLKELERİ
+//  1. VARSAYILAN REDDET. En sonda catch-all `if false` var.
+//  2. Yetkilendirme SUNUCUDA. İstemcideki kontroller (GroupWriteGate,
+//     PollService yorumları vb.) yalnızca ARAYÜZ kolaylığıdır; gerçek
+//     kapı burasıdır. Değiştirilmiş bir istemci bunları aşamaz.
+//  3. YAZARLIK. Bir mesajı yalnızca göndereni düzenleyebilir; silme
+//     gönderen veya grup yöneticisine aittir.
+//  4. EN AZ VERİ. Hassas alanlar (fcmToken, blockedUids) kullanıcı
+//     dokümanında DEĞİL, yalnızca sahibine açık `users/{uid}/private/*`
+//     alt koleksiyonunda tutulur. Cloud Functions Admin SDK ile bunları
+//     kurallardan bağımsız okur.
+//  5. KEŞİF ≠ ÜYELİK. Kanal arama, tam sohbet dokümanını değil, yalnızca
+//     kamuya açık `channels/{chatId}` dizinini okur. Böylece üye olmayan
+//     biri kanalın üye listesini/son mesajını göremez.
+//
+// ROL VERİSİ: `members` dizisi kurallardan taranamaz (rules'ta döngü
+// yok). Bu yüzden chat dokümanında DÜZ diziler tutulur ve tek doğruluk
+// kaynağı olarak bunlar kullanılır:
+//   adminUids: [uid...]   → owner + admin rolündekiler
+//   mutedUids: [uid...]   → susturulmuş üyeler
+//   bannedIds: [uid...]   → yasaklılar
+// (GroupRepositoryImpl bu dizileri `members` ile birlikte güncel tutar.)
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- YARDIMCILAR ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isMe(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function chatData(chatId) {
+      return get(/databases/$(database)/documents/chats/$(chatId)).data;
+    }
+    function isChatMember(chatId) {
+      return signedIn() && request.auth.uid in chatData(chatId).memberIds;
+    }
+    // Yalnızca DEĞİŞEN alan kümesi verilen listenin içindeyse true
+    function onlyChanges(allowed) {
+      return request.resource.data.diff(resource.data)
+               .affectedKeys().hasOnly(allowed);
+    }
+    // Hedef kullanıcı beni engellemiş mi? (engelliyse yazamam/arayamam)
+    // Engel listesi artık gizli alt dokümanda; kurallar onu okuyabilir.
+    //
+    // 🐞 NULL KONTROLÜ ŞART (§4at). Eskiden doğrudan `get(...).data` deniyordu.
+    // Firestore'da OLMAYAN bir dokümanda `get()` **null** döner ve `.data`
+    // erişimi kural değerlendirmesini HATAYA düşürür — hata da REDDET demektir.
+    //
+    // `blocks` dokümanı yalnızca kişi BİRİNİ ENGELLEDİĞİNDE oluşur. Yani
+    // YENİ AÇILAN HER HESAP için o doküman YOKTUR ve o hesap
+    // ARANAMAZ HÂLDEYDİ — arama isteği sunucuda sessizce reddediliyordu.
+    // Emülatör hatası birebir şuydu: "Null value error."
+    //
+    // Tek `get()` ile çözülür (exists()+get() iki okuma ederdi).
+    function notBlockedBy(targetUid) {
+      let snap = get(/databases/$(database)/documents/users/$(targetUid)/private/blocks);
+      return snap == null || !(request.auth.uid in snap.data.get('uids', []));
+    }
+
+    // ---------- KULLANICILAR ----------
+    // Okuma: giriş yapmış herkes (profil gösterimi + kullanıcı adı arama).
+    // Hassas alanlar bu dokümanda TUTULMAZ (bkz. /private alt koleksiyonu).
+    match /users/{uid} {
+      // ── NUMARALANDIRMA KAPALI ──
+      //
+      // Eskiden `allow read: if signedIn()` idi; bu, LİSTELEME sorgusunu
+      // da kapsıyordu. Yani giriş yapmış herhangi biri
+      // `orderBy('username').limit(1000)` ile TÜM kullanıcı tabanını
+      // dökebiliyordu: kullanıcı adları, çevrimiçi durumları, avatarları.
+      // Telefon numarası istemeyen bir uygulamada bu, "kim kayıtlı"
+      // sorusunun herkese açık olması demekti.
+      //
+      // `get` KORUNUR: profil okumak için uid gerekir ve uid ancak ortak
+      // bir sohbetten ya da `usernames` dizininden öğrenilir — tahmin
+      // edilemez. Avatar, çevrimiçi durumu ve ad çözümü bununla çalışır.
+      //
+      // Ada göre arama `usernames/{ad}` dizini üzerinden yapılır
+      // (doküman kimliği = ad; orada da listeleme kapalıdır).
+      allow get: if signedIn();
+      allow list: if false;
+      // Kendi dokümanına yazabilir; ancak gizli alanları buraya SIZDIRAMAZ.
+      allow create, update: if isMe(uid)
+        && !request.resource.data.keys().hasAny(['fcmToken', 'blockedUids']);
+      allow delete: if isMe(uid);
+
+      // GİZLİ ALT KOLEKSİYON — yalnızca sahibi. Push token'ı ve engel
+      // listesi burada durur; başka kullanıcılar OKUYAMAZ.
+      // (Kural motoru `notBlockedBy` içinde okur; bu, istemci erişimi değildir.)
+      match /private/{docId} {
+        allow read, write: if isMe(uid);
+      }
+    }
+
+    // ---------- KULLANICI ADI DİZİNİ ----------
+    // Atomik kullanıcı adı rezervasyonu: doküman kimliği = küçük harfli ad.
+    // `create` + `!exists()` ile YARIŞ DURUMU sunucuda çözülür; artık
+    // "iki kişi aynı adı aldı" senaryosu mümkün değil.
+    match /usernames/{username} {
+      allow get: if signedIn();
+      allow list: if false;                     // toplu ad dökümü yok
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && !exists(/databases/$(database)/documents/usernames/$(username));
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ---------- ANAHTAR PAKETLERİ (E2EE) ----------
+    // Herkes başkasının AÇIK anahtarını okuyabilmeli (şifreleme için).
+    // Yalnızca sahibi yazar. Tek kullanımlık ön-anahtar TÜKETİMİ istemcide
+    // YAPILAMAZ; `claimPreKey` callable Cloud Function'ı ile atomik yapılır.
+    match /keyBundles/{uid} {
+      allow read: if signedIn();
+      allow write: if isMe(uid);
+    }
+
+    // ---------- GRUP ANAHTAR DAĞITIMI (Sender Key) ----------
+    //
+    // Grup mesajları artık uçtan uca şifreli. Her üye kendi "gönderen
+    // zincirini" üretir ve her üyeye AYRI AYRI, ikili E2EE kanalıyla
+    // ŞİFRELİ olarak yollar. Bu koleksiyon yalnızca o şifreli zarfları
+    // taşır — sunucu içeriği okuyamaz.
+    //
+    // Doküman kimliği: "<hedefUid>__<gönderenUid>"
+    //
+    // GİZLİLİK: kişi YALNIZCA kendisine gönderilen zarfı okuyabilir;
+    // başkasının anahtarını okumak grubun tüm mesajlarını çözmek demekti.
+    match /groupKeys/{chatId}/dist/{docId} {
+      function chat() {
+        return get(/databases/$(database)/documents/chats/$(chatId)).data;
+      }
+      function bothMembers(from, to) {
+        return from in chat().memberIds && to in chat().memberIds;
+      }
+      // Yalnızca ALICI (ve gönderen) görebilir. Liste sorgusu `to` ile
+      // kısıtlanmalıdır; aksi halde reddedilir.
+      allow read: if signedIn() && (
+        resource.data.to == request.auth.uid ||
+        resource.data.from == request.auth.uid
+      );
+      // Kişi yalnızca KENDİ adına anahtar dağıtabilir ve her iki taraf da
+      // gruba üye olmalıdır (yabancıya anahtar yollanamaz).
+      allow create, update: if signedIn()
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to != request.auth.uid
+        && bothMembers(request.auth.uid, request.resource.data.to);
+      // Rotasyon sonrası kendi eski zarflarını temizleyebilir.
+      allow delete: if signedIn() && resource.data.from == request.auth.uid;
+    }
+
+    // ---------- KANAL DİZİNİ (kamuya açık keşif) ----------
+    // Yalnızca arama için gereken alanlar: ad, açıklama, üye sayısı.
+    // Üye listesi, üye adları, son mesaj ve ayarlar BURADA YOK — bu
+    // yüzden herkese açık okunması güvenlidir.
+    //
+    // YAZMA TAMAMEN KAPALI: dizini yalnızca `syncChannelDirectory` Cloud
+    // Function'ı (Admin SDK, kuralları atlar) günceller. Böylece kimse
+    // sahte kanal ekleyemez, başkasının kanalının adını değiştiremez ve
+    // üye sayısını şişiremez.
+    match /channels/{chatId} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+
+    // ---------- SOHBETLER ----------
+    match /chats/{chatId} {
+      function isAdmin() {
+        return signedIn() && (
+          request.auth.uid == resource.data.get('adminId', '') ||
+          request.auth.uid in resource.data.get('adminUids', [])
+        );
+      }
+      // Açık kanala kendini ekleme (KATILMA) koşulları
+      function isSelfJoin() {
+        return resource.data.get('type', '') == 'channel'
+          && !(request.auth.uid in resource.data.get('bannedIds', []))
+          // yalnızca üyelik alanları değişebilir
+          && onlyChanges(['memberIds', 'memberUsernames', 'members',
+                          'memberCount'])
+          // eklenen TEK kişi kendisi olmalı
+          && request.resource.data.memberIds.toSet()
+               .difference(resource.data.memberIds.toSet())
+               == [request.auth.uid].toSet()
+          // hiç kimse çıkarılmamalı
+          && resource.data.memberIds.toSet()
+               .difference(request.resource.data.memberIds.toSet()).size() == 0;
+      }
+      // Kendi kendini çıkarma (GRUPTAN AYRIL)
+      function isSelfLeave() {
+        return onlyChanges(['memberIds', 'memberUsernames', 'members',
+                            'memberCount'])
+          && resource.data.memberIds.toSet()
+               .difference(request.resource.data.memberIds.toSet())
+               == [request.auth.uid].toSet()
+          && request.resource.data.memberIds.toSet()
+               .difference(resource.data.memberIds.toSet()).size() == 0;
+      }
+      // Her üyenin dokunabileceği "kendine ait" alanlar
+      //
+      // ⚠️ 'typingUids' KALDIRILDI: hiçbir istemci ya da fonksiyon bu
+      // alanı yazmıyordu ("yazıyor" durumu users/{uid}.typingIn'de
+      // tutulur). İzin ÖLÜ yüzeydi; her üyenin sohbet dokümanına
+      // istediği veriyi yazmasına açık kapı bırakıyordu. Doküman 1 MiB'a
+      // kadar şişirilebilir ve her üye onu her okumada indirir.
+      function isMemberSelfScoped() {
+        return onlyChanges(['lastMessage', 'lastMessageTime',
+                            'lastMessageSenderId', 'unreadCounts',
+                            'mutedBy', 'muteMentionOk', 'incognito',
+                            'disappearSeconds', 'pinnedMessageId',
+                            'pinnedPreview']);
+      }
+
+      // ── ÜYE ADLARI SOHBET DOKÜMANINDA TUTULMAZ (metadata gizliliği) ──
+      //
+      // `memberUsernames: ["ayse","mehmet"]` içerik şifreli olsa bile
+      // sosyal grafiği sunucuda ADLARIYLA okunur bırakıyordu. Alan
+      // istemciden kaldırıldı; burada da kapatılır, çünkü kaldırılan tek
+      // şey İSTEMCİNİN davranışıdır — değiştirilmiş bir istemci ya da
+      // eski bir sürüm alanı geri yazabilirdi.
+      //
+      // "Yok" değil "ARTIRILMASIN" kuralı: eski dokümanlarda alan hâlâ
+      // dolu ve `request.resource.data` yazma SONRASI dokümanı temsil
+      // ettiği için, alanın varlığını topyekûn yasaklamak o
+      // dokümanlardaki HER güncellemeyi (mesaj gönderme dahil) kırardı.
+      function noUsernameArray() {
+        return !('memberUsernames' in request.resource.data);
+      }
+      // Alan eklenemez/değiştirilemez; yalnızca SİLİNEBİLİR.
+      // Silme izni bilinçlidir: istemci eski dokümanlardaki adları
+      // temizleyebilsin (ChatMetadataScrub). Aksi halde "artık
+      // yazmıyoruz" demek, YAZILMIŞ olanı ortadan kaldırmazdı.
+      function usernameArrayNotGrown() {
+        return noUsernameArray()
+          || !request.resource.data.diff(resource.data)
+                .affectedKeys().hasAny(['memberUsernames']);
+      }
+
+      // TEK DOKÜMAN OKUMA: yalnızca üyeler.
+      allow get: if signedIn() && request.auth.uid in resource.data.memberIds;
+
+      // SORGU: yalnızca kendi sohbetlerim.
+      // Kanal keşfi artık /channels dizininden yapılır — bu yüzden
+      // "type == 'channel'" istisnası KALDIRILDI (üye olmayan biri
+      // kanalın üye listesini ve son mesajını göremez).
+      allow list: if signedIn() && request.auth.uid in resource.data.memberIds;
+
+      // OLUŞTURMA: kendini üye yazmak ZORUNLU; yöneticiyi başkası yapamaz.
+      // Yeni sohbetlerde üye adı dizisi HİÇ olamaz.
+      allow create: if signedIn()
+        && request.auth.uid in request.resource.data.memberIds
+        && request.resource.data.get('adminId', request.auth.uid)
+             == request.auth.uid
+        && noUsernameArray();
+
+      // GÜNCELLEME — dört meşru durum:
+      //  1. Yönetici: her şeyi değiştirebilir (ad, ayar, üye yönetimi)
+      //  2. Üye: yalnızca kendine ait/paylaşılan operasyonel alanlar
+      //  3. Açık kanala katılma (üye olmayan → yalnızca kendini ekler)
+      //  4. Sohbetten ayrılma (üye → yalnızca kendini çıkarır)
+      //  5. Eski ad dizisini temizleme (her üye; YALNIZCA silme)
+      //
+      // `usernameArrayNotGrown()` DÖRT YOLU DA kapsar — yönetici dahil.
+      // Yönetici yolu "her şeyi değiştirebilir" olduğu için, kısıt
+      // dışarıda tutulmasaydı adları geri yazmanın açık bir kapısı
+      // kalırdı.
+      allow update: if signedIn() && usernameArrayNotGrown() && (
+        isAdmin() ||
+        (request.auth.uid in resource.data.memberIds && isMemberSelfScoped()) ||
+        (request.auth.uid in resource.data.memberIds && isSelfLeave()) ||
+        (request.auth.uid in resource.data.memberIds
+          && onlyChanges(['memberUsernames'])) ||
+        isSelfJoin()
+      );
+
+      // SİLME: yalnızca yönetici. (Eskiden her üye tüm sohbeti silebiliyordu.)
+      allow delete: if isAdmin();
+
+      // ---------- MESAJLAR ----------
+      match /messages/{messageId} {
+        function chat() { return chatData(chatId); }
+        function member() {
+          return signedIn() && request.auth.uid in chat().memberIds;
+        }
+        function isChatAdmin() {
+          return signedIn() && (
+            request.auth.uid == chat().get('adminId', '') ||
+            request.auth.uid in chat().get('adminUids', [])
+          );
+        }
+        // Yazma hakkı: üye + susturulmamış + (yalnız-yöneticiler kapalı VEYA yönetici)
+        function canPost() {
+          return member()
+            && !(request.auth.uid in chat().get('mutedUids', []))
+            && (chat().get('onlyAdminsCanPost', false) == false || isChatAdmin());
+        }
+
+        allow read: if member();
+
+        allow create: if canPost()
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.content is string
+          && request.resource.data.content.size() <= 16384;
+
+        // GÜNCELLEME: içerik/düzenleme YALNIZCA gönderene aittir.
+        // Diğer üyeler yalnızca ortak durum alanlarına dokunabilir
+        // (okundu, tepki, oy, bende-sil). Böylece bir grup üyesi
+        // başkasının mesajını DEĞİŞTİREMEZ.
+        allow update: if member() && (
+          resource.data.senderId == request.auth.uid ||
+          onlyChanges(['readBy', 'status', 'deletedFor', 'reactions',
+                       'pollVotes', 'mediaUrl'])
+        );
+
+        // SİLME: gönderen veya grup yöneticisi.
+        allow delete: if member() && (
+          resource.data.senderId == request.auth.uid || isChatAdmin()
+        );
+      }
+    }
+
+    // ---------- PREMIUM YETKİ KULLANIMLARI ----------
+    //
+    // Kör imza ile verilen yetkilerin "tek kullanım" kaydı. İçinde
+    // satın alma jetonunun ÖZETİ ve körleştirilmiş değerin ÖZETİ durur.
+    //
+    // ⚠️ İSTEMCİYE TAMAMEN KAPALI. Yalnızca `issueEntitlement` (Admin
+    // SDK, kuralları atlar) yazar. Okuma da kapalı: bir istemci bu
+    // koleksiyonu okuyabilseydi, kayıt zamanlarına bakarak yetkileri
+    // satın almalara zamansal olarak eşleştirmeye çalışabilirdi —
+    // kör imzanın sağladığı bağlanamazlığı yan kanaldan delerdi.
+    match /entitlementRedemptions/{docId} {
+      allow read, write: if false;
+    }
+
+    // ---------- HİKÂYELER ----------
+    match /stories/{storyId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid;
+      // Sahibi her şeyi; başkaları YALNIZCA görüntüleme/tepki alanlarını.
+      // (Eskiden `if signedIn()` idi: herkes her hikâyeyi EZEBİLİYORDU.)
+      allow update: if signedIn() && (
+        resource.data.userId == request.auth.uid ||
+        onlyChanges(['viewedBy', 'reactions'])
+      );
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // ---------- ARAMALAR (WebRTC sinyalleşme) ----------
+    match /calls/{callId} {
+      // ── ÜYELİK: `participants` DİZİSİ ──
+      //
+      // Şema eskiden `callerId`/`calleeId` ikilisine ÇAKILIYDI; grup
+      // araması bu varsayım kırılmadan eklenemezdi. Artık yetkinin tek
+      // kaynağı `participants`.
+      //
+      // ⚠️ ESKİ ALANLAR YEDEK OLARAK KORUNUR: şema değişiminin tam o
+      // anında DEVAM EDEN bir arama, dizisi olmadığı için erişilemez
+      // hâle gelirdi — yani konuşma ortasında kopardı. (§4m'nin dersi:
+      // kural bir alanı zorunlu kılmadan önce eski dokümanların ne
+      // olacağı düşünülmeli.)
+      function callParty() {
+        return signedIn() && (
+          request.auth.uid in resource.data.get('participants', []) ||
+          resource.data.get('callerId', '') == request.auth.uid ||
+          resource.data.get('calleeId', '') == request.auth.uid
+        );
+      }
+      // ⚠️⚠️ `list` KURALI BELGEYE DEĞİL **SORGUYA** BAKAR (§4bq).
+      //
+      // Bu, kuralı okurken görünmeyen bir tuzak: `callParty()`
+      // `resource.data`ya baktığı için "her dönen belge tek tek
+      // denetlenir" sanılıyor. Gerçekte Firestore, sorgunun YALNIZCA
+      // izinli belgeleri döndüreceğini SORGU KISITLARINDAN kanıtlamak
+      // zorunda. Kanıtlayamazsa sorgunun TAMAMINI reddeder.
+      //
+      // Ölçüldü (emülatör): gruba ait canlı aramayı arayan
+      //   where('groupChatId', ==, x).where('status', ==, 'ringing')
+      // sorgusu, kullanıcı katılımcı OLSA BİLE reddedilir — çünkü
+      // `participants` üzerinde hiçbir kısıt yok. Aynı sorguya
+      //   .where('participants', array-contains, ben)
+      // eklenince geçer. Bu yüzden `GroupCallService._canliCagriyiBul`
+      // o üçüncü kısıtı TAŞIMAK ZORUNDA; kaldırılırsa grup araması
+      // "başlatılamadı" diye kırılır.
+      allow get: if callParty();
+      // ⚠️ `list: false` GELEN ARAMAYI TAMAMEN KIRIYORDU.
+      //
+      // İstemci gelen aramayı bulmak için LİSTELEMEK ZORUNDA:
+      //   calls.where('calleeId', == me).where('status', == 'ringing')
+      // Kural listelemeyi tümden kapattığı için bu dinleyici
+      // PERMISSION_DENIED alıyor ve kullanıcı ARAMA ALAMIYORDU.
+      //
+      // Doğru kısıt "listeleme yok" değil, "yalnızca KENDİ aramaların":
+      // Firestore list kuralını dönen HER dokümana uygular, yani tüm
+      // aramaları dökmeye çalışan bir sorgu yine reddedilir — çünkü
+      // içinde bize ait olmayan doküman bulunur.
+      allow list: if callParty();
+      // OLUŞTURMA: kendini arayan yazmak ZORUNLU ve kendini
+      // katılımcı listesine koymalısın — aksi halde başkalarının
+      // arasında yer almadığın bir çağrı uydurulabilirdi.
+      // ⚠️ GRUP ARAMASINDA `calleeId` YOKTUR (§4bq).
+      //
+      // `notBlockedBy(request.resource.data.calleeId)` eksik alanı
+      // okumaya çalışırsa kural DEĞERLENDİRME HATASI verir ve istek
+      // reddedilir — grup araması hiç başlatılamazdı. Bu, §4at'de
+      // birebir aynısı yaşanan sınıf: eksik alan → hata → RED.
+      //
+      // Engel denetimi birebir aramanın kuralıdır ve orada AYNEN
+      // korunur; grup çağrısında karşı taraf tek kişi olmadığı için
+      // anlamı da yoktur (üyelik zaten gruba katılımla belirlenir).
+      //
+      // ── 🔔 GRUP ARAMASINDA `participants` = ÇALACAK TELEFONLAR ──
+      //
+      // Gelen arama sorgusu `participants arrayContains me` olduğu için
+      // bu dizi doğrudan "kimin telefonu çalsın" listesidir. Serbest
+      // bırakılsaydı HERKES, hiç tanımadığı kullanıcıların telefonunu
+      // çaldırabilirdi — üstelik engelleme de işe yaramazdı, çünkü grup
+      // aramasında `calleeId` yok ve `notBlockedBy` uygulanamıyor.
+      //
+      // Bu yüzden grup çağrısında dizi, GRUBUN ÜYELERİYLE sınırlıdır ve
+      // çağrıyı açanın da o grubun üyesi olması gerekir.
+      function grupUyeleri(chatId) {
+        let snap = get(/databases/$(database)/documents/chats/$(chatId));
+        return snap == null ? [] : snap.data.get('memberIds', []);
+      }
+      function gecerliGrupCagrisi() {
+        let g = request.resource.data.get('groupChatId', '');
+        // ⚠️ BOŞ KİMLİK KORUMASI: `get()` boş segmentle çağrılırsa kural
+        // DEĞERLENDİRME HATASI verir — yani sessizce RED (§4at sınıfı).
+        let uyeler = g == '' ? [] : grupUyeleri(g);
+        return request.auth.uid in uyeler
+          && request.resource.data.get('participants', []).hasOnly(uyeler);
+      }
+      allow create: if signedIn()
+        && request.resource.data.callerId == request.auth.uid
+        && request.auth.uid in request.resource.data.get('participants',
+             [request.resource.data.callerId])
+        && (request.resource.data.get('isGroup', false) == true
+            ? gecerliGrupCagrisi()
+            : (!('calleeId' in request.resource.data)
+               || notBlockedBy(request.resource.data.calleeId)));
+      allow update, delete: if callParty();
+
+      // ICE ADAYLARI — KRİTİK: bunlar IP ADRESİ taşır.
+      // Eskiden `if signedIn()` idi; yani HERHANGİ bir kullanıcı her
+      // aramanın iki tarafının genel/yerel IP'sini okuyabiliyor ve sahte
+      // aday enjekte edebiliyordu. Artık yalnızca aramanın iki tarafı.
+      function callDoc() {
+        return get(/databases/$(database)/documents/calls/$(callId)).data;
+      }
+      function isPartyOf() {
+        return signedIn() && (
+          request.auth.uid in callDoc().get('participants', []) ||
+          callDoc().get('callerId', '') == request.auth.uid ||
+          callDoc().get('calleeId', '') == request.auth.uid
+        );
+      }
+      // ── ADRESLİ ADAYLAR (yeni şema) ──
+      //
+      // Eskiden `callerCandidates` / `calleeCandidates` diye iki sabit
+      // koleksiyon vardı ve bir tarafın TÜM adaylarını diğer taraf
+      // okuyabiliyordu. İki kişide sorun değildi; grup aramasında ise
+      // A, B ile C arasındaki adayları — yani onların IP ADRESLERİNİ —
+      // okuyabilirdi. C-03'ün grup hâli.
+      //
+      // Artık her aday `from`/`to` taşır ve YALNIZCA o ikisine açıktır.
+      // ── SDP (teklif/yanıt) — ADRESLİ (§4bq) ──
+      //
+      // Birebir aramada offer/answer çağrı belgesinde TEK alan olarak
+      // duruyordu; bu, şemayı iki kişiye çiviliyordu. Grup aramasında
+      // her ÇİFT kendi teklif/yanıtını üretir, bu yüzden adaylarla aynı
+      // desende adresli bir alt koleksiyon kullanılır.
+      //
+      // 🔒 SDP, ICE adaylarını da İÇEREBİLİR (trickle olmayan istemciler
+      // adayları SDP'ye gömer) — yani IP taşıyabilir. Bu yüzden okuma
+      // izni adaylarla BİREBİR aynı sıkılıkta: yalnızca gönderen ve
+      // alıcı. Grup aramasında A, B↔C'nin SDP'sini göremez.
+      match /sdp/{doc} {
+        allow get, list: if signedIn() && (
+          resource.data.get('to', '') == request.auth.uid ||
+          resource.data.get('from', '') == request.auth.uid
+        );
+        // Yeniden pazarlıkta aynı belge ÜZERİNE yazılır; bu yüzden
+        // `update` de açık ama yalnızca kendi adına.
+        allow create, update: if isPartyOf()
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.to != request.auth.uid;
+        allow delete: if signedIn() && (
+          resource.data.get('to', '') == request.auth.uid ||
+          resource.data.get('from', '') == request.auth.uid
+        );
+      }
+
+      match /candidates/{doc} {
+        // Okuma yalnızca göndericisi ve alıcısı için. İstemci
+        // `where('to', == me)` ile sorguluyor; list kuralı dönen HER
+        // dokümana uygulandığı için başkasının adaylarını dökmeye
+        // çalışan bir sorgu reddedilir.
+        allow get, list: if signedIn() && (
+          resource.data.get('to', '') == request.auth.uid ||
+          resource.data.get('from', '') == request.auth.uid
+        );
+        // Yazarken KENDİ adına yazmak zorundasın ve alıcı çağrının
+        // tarafı olmalı — aksi halde çağrıya sahte aday enjekte
+        // edilebilirdi.
+        allow create: if isPartyOf()
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.to != request.auth.uid;
+        allow update: if false;
+        allow delete: if signedIn() && (
+          resource.data.get('to', '') == request.auth.uid ||
+          resource.data.get('from', '') == request.auth.uid
+        );
+      }
+
+      // ⚠️ ESKİ ADAY KOLEKSİYONLARI KALDIRILDI. Bir sonraki
+      // geliştiriciyi yanıltmasın diye kural yüzeyi de silindi:
+      // istemci artık `candidates` yazıyor, bu yollara yazan bir kod
+      // kalmadı (bkz. §4i — ölü yazma izni bırakmama ilkesi).
+    }
+
+    // ---------- ÇAĞRI GEÇMİŞİ ----------
+    match /callLogs/{callId} {
+      allow read: if signedIn()
+        && request.auth.uid in resource.data.participants;
+      allow create: if signedIn()
+        && request.auth.uid in request.resource.data.participants;
+      // "Bende sil" işareti — katılımcı listesi DEĞİŞTİRİLEMEZ.
+      //
+      // ⚠️ 'seenBy' KALDIRILDI: çağrı geçmişinin "görüldü" durumu
+      // CİHAZDA (SharedPreferences) tutulur, sunucuda değil. İzin ölü
+      // yüzeydi.
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.participants
+        && onlyChanges(['deletedFor']);
+      allow delete: if false;
+    }
+
+    // ---------- ŞİKÂYETLER ----------
+    // Herkes şikâyet YAZAR, kimse OKUYAMAZ (yalnızca konsoldan incelenir).
+    match /reports/{reportId} {
+      allow create: if signedIn()
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.get('note', '').size() <= 2000;
+      allow read, update, delete: if false;
+    }
+
+    // ---------- ZAMANLANMIŞ MESAJLAR ----------
+    // KRİTİK: `chatId` üzerinde üyelik ZORUNLU. Aksi halde kullanıcı,
+    // üyesi OLMADIĞI bir sohbete Cloud Function eliyle (Admin SDK
+    // kuralları atlar) mesaj enjekte edebiliyordu.
+    match /scheduledMessages/{id} {
+      allow read, delete: if signedIn()
+        && resource.data.senderId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && isChatMember(request.resource.data.chatId)
+        && request.resource.data.content is string
+        && request.resource.data.content.size() <= 16384;
+      allow update: if signedIn()
+        && resource.data.senderId == request.auth.uid
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.chatId == resource.data.chatId;
+    }
+
+    // ---------- DAVET KODLARI ----------
+    match /inviteCodes/{code} {
+      // Tek doküman okuma serbest (kodu bilmek gerekir); LİSTELEME yok.
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && !exists(/databases/$(database)/documents/inviteCodes/$(code))
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if false;
+      // Eskiden `if signedIn()` idi: HERKES tüm davet kodlarını
+      // silebiliyordu (hizmet dışı bırakma). Artık yalnızca sahibi.
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ---------- SERBEST BIRAKILAN KULLANICI ADLARI ----------
+    // 14 gün rezerve. Süresi dolanların temizliği SUNUCUDA yapılır
+    // (cleanupReleasedUsernames); istemci silemez — eskiden istemci
+    // silmeye çalışıyor ve kural reddettiği için KAYIT PATLIYORDU.
+    match /releasedUsernames/{username} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    // ---------- BULUŞMA KODLARI ----------
+    match /meetCodes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid;
+      // Tek kullanımlık: yalnızca HENÜZ KULLANILMAMIŞ bir kod işaretlenebilir
+      // ve yalnızca kullanım alanları değişebilir. Böylece kod sahipliği
+      // çalınamaz, kullanılmış kod "geri alınamaz".
+      allow update: if signedIn()
+        && resource.data.get('usedBy', null) == null
+        && onlyChanges(['usedBy', 'usedByUsername', 'usedAt']);
+      allow delete: if signedIn()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ---------- GERİ KALAN HER ŞEY: KAPALI ----------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

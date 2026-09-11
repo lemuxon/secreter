@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr" data-lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SECRETER — Hesap Silme / Account Deletion</title>
+<meta name="description" content="SECRETER hesabını ve verilerini nasıl silersin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0A12;--panel:#151327;--violet:#8B5CF6;--lilac:#C4B5FD;
+    --amber:#F2B45B;--text:#E7E4F3;--muted:#9A94B8;--line:#2A2545;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --body:'IBM Plex Sans',system-ui,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);font-size:16.5px;line-height:1.65}
+  a{color:var(--lilac)}
+  .wrap{max-width:680px;margin:0 auto;padding:0 22px 90px}
+  .langbar{position:sticky;top:0;z-index:9;background:linear-gradient(var(--ink) 70%,transparent);padding:14px 0 10px}
+  .langbtns{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .langbtns button{font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;background:transparent;color:var(--muted);border:0;padding:8px 16px;cursor:pointer}
+  .langbtns button[aria-pressed="true"]{background:var(--violet);color:#fff}
+  .langbtns button:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
+  .mark{display:inline-flex;align-items:center;gap:12px;font-family:var(--display);font-weight:700;letter-spacing:.14em;font-size:15px;color:var(--lilac);text-transform:uppercase;margin-top:44px}
+  .mark span.dot{width:26px;height:26px;border-radius:9px;background:linear-gradient(150deg,#A78BFA,#6D28D9);box-shadow:0 0 0 1px #ffffff14,0 8px 24px #6d28d955}
+  h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,6vw,40px);line-height:1.12;margin:24px 0 10px;letter-spacing:-.02em}
+  h2{font-family:var(--display);font-weight:500;font-size:20px;margin:30px 0 10px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin:34px 0 6px}
+  p,li{color:#DDD9EE}
+  ul,ol{padding-left:20px}
+  li{margin:6px 0}
+  .steps{counter-reset:s;list-style:none;padding:0;margin:14px 0}
+  .steps li{counter-increment:s;position:relative;padding-left:44px;margin:14px 0}
+  .steps li::before{
+    content:counter(s);position:absolute;left:0;top:1px;
+    width:28px;height:28px;border-radius:9px;display:grid;place-items:center;
+    background:var(--panel);border:1px solid var(--line);
+    font-family:var(--mono);font-size:13px;color:var(--lilac);
+  }
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:18px 0}
+  .card.warn{border-left:3px solid var(--amber)}
+  .fill{color:var(--amber);font-family:var(--mono);font-size:14px}
+  .note{color:var(--muted);font-size:14.5px}
+  footer{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+  [data-lang="tr"] .en,[data-lang="en"] .tr{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="langbar">
+    <div class="langbtns" role="group" aria-label="Dil / Language">
+      <button type="button" data-set="tr" aria-pressed="true">TÜRKÇE</button>
+      <button type="button" data-set="en" aria-pressed="false">ENGLISH</button>
+    </div>
+  </div>
+
+  <div class="mark"><span class="dot"></span> SECRETER</div>
+  <h1 class="tr">Hesabını sil</h1>
+  <h1 class="en">Delete your account</h1>
+  <p class="tr">Hesabını uygulamanın içinden kendin silebilirsin. Uygulamaya erişemiyorsan aşağıdaki adresten talep gönder.</p>
+  <p class="en">You can delete your account yourself from inside the app. If you cannot access the app, send a request to the address below.</p>
+
+  <p class="eyebrow tr">Uygulama içinden</p>
+  <p class="eyebrow en">From inside the app</p>
+  <h2 class="tr">Üç adım</h2>
+  <h2 class="en">Three steps</h2>
+  <ol class="steps tr">
+    <li>Ayarlar sekmesini aç.</li>
+    <li><strong>Hesabımı Kaldır</strong> satırına dokun.</li>
+    <li>Uyarıyı okuyup <strong>HESABI SİL</strong> ile onayla.</li>
+  </ol>
+  <ol class="steps en">
+    <li>Open the Settings tab.</li>
+    <li>Tap <strong>Remove my account</strong>.</li>
+    <li>Read the warning and confirm with <strong>DELETE ACCOUNT</strong>.</li>
+  </ol>
+
+  <p class="eyebrow tr">Uygulamaya erişemiyorsan</p>
+  <p class="eyebrow en">If you cannot access the app</p>
+  <h2 class="tr">E-posta ile talep</h2>
+  <h2 class="en">Request by email</h2>
+  <p class="tr">Kullanıcı adını yazarak <span class="fill">[lemuxon@gmail.com]</span> adresine e-posta gönder. Talebin <strong>30 gün içinde</strong> işleme alınır. Hesabın sahibi olduğunu doğrulamak için ek bilgi isteyebiliriz.</p>
+  <p class="en">Email <span class="fill">[lemuxon@gmail.com]</span> with your username. Your request is processed <strong>within 30 days</strong>. We may ask for additional information to verify that the account is yours.</p>
+
+  <p class="eyebrow tr">Ne siliniyor</p>
+  <p class="eyebrow en">What gets deleted</p>
+  <div class="card">
+    <ul class="tr" style="margin:0">
+      <li>Profilin, profil fotoğrafın ve “Hakkında” metnin</li>
+      <li>Hikâyelerin</li>
+      <li>Sohbetlerin ve gönderdiğin medya dosyaları</li>
+      <li>Çağrı kayıtların</li>
+      <li>Bildirim kimliğin</li>
+    </ul>
+    <ul class="en" style="margin:0">
+      <li>Your profile, profile photo and “About” text</li>
+      <li>Your stories</li>
+      <li>Your chats and the media you sent</li>
+      <li>Your call logs</li>
+      <li>Your push notification token</li>
+    </ul>
+  </div>
+
+  <div class="card warn">
+    <p class="tr" style="margin:0"><strong>Kullanıcı adı 14 gün rezerve kalır.</strong> Bu süre, adının hemen başkası tarafından alınıp kimliğinin devralınmasını önlemek içindir. Sürenin sonunda ad serbest bırakılır. İşlem <strong>geri alınamaz</strong>.</p>
+    <p class="en" style="margin:0"><strong>Your username is reserved for 14 days.</strong> This prevents someone from immediately taking your name and impersonating you. After that period the name is released. The action <strong>cannot be undone</strong>.</p>
+  </div>
+
+  <p class="note tr">Silmeden önce sohbetlerini saklamak istersen: sohbet menüsü → <strong>Sohbeti dışa aktar</strong> ile metin dosyası olarak kaydedebilirsin.</p>
+  <p class="note en">If you want to keep your chats first: chat menu → <strong>Export chat</strong> saves them as a text file.</p>
+
+  <footer>
+    <p class="tr"><a href="index.html">Gizlilik Politikası</a> · İletişim: <span class="fill">[lemuxon@gmail.com]</span></p>
+    <p class="en"><a href="index.html">Privacy Policy</a> · Contact: <span class="fill">[lemuxon@gmail.com]</span></p>
+  </footer>
+</div>
+
+<script>
+  const html = document.documentElement;
+  const btns = document.querySelectorAll('.langbtns button');
+  function setLang(l){
+    html.setAttribute('data-lang', l);
+    html.setAttribute('lang', l);
+    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.set === l)));
+    try { localStorage.setItem('secreter-lang', l); } catch (e) {}
+  }
+  btns.forEach(b => b.addEventListener('click', () => setLang(b.dataset.set)));
+  let start = 'tr';
+  try { start = localStorage.getItem('secreter-lang') || ((navigator.language||'tr').startsWith('tr') ? 'tr' : 'en'); } catch (e) {}
+  setLang(start);
+</script>
+</body>
+</html>

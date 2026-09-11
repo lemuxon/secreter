@@ -1,0 +1,93 @@
+rules_version = '2';
+
+// ============================================================
+// SECRETER — FIREBASE STORAGE GÜVENLİK KURALLARI
+//
+// ÖNCEKİ DURUMUN SORUNU: `chats/**` için okuma koşulu yalnızca
+// "giriş yapmış olmak"tı. Birebir sohbet kimliği sıralı uid'lerden
+// türetildiği için (uidA_uidB) HERHANGİ bir kayıtlı kullanıcı, iki
+// kişinin sohbet kimliğini hesaplayıp TÜM medyasını indirebiliyordu.
+// Yazma da açıktı: başkasının gönderdiği fotoğrafın ÜZERİNE yazılabiliyordu.
+//
+// Ayrıca kodun kullandığı `avatars/*` ve `group_avatars/*` yolları için
+// HİÇ kural yoktu → varsayılan reddet → profil/grup fotoğrafı yükleme
+// her zaman sessizce başarısız oluyordu.
+//
+// ŞİMDİ:
+//  • Okuma/yazma, Firestore'daki sohbet üyeliğine bağlı.
+//  • Üzerine yazma (update) ve istemci silme KAPALI: medya değiştirilemez.
+//    Silme işleri Cloud Functions (Admin SDK) tarafından yapılır —
+//    böylece "tek görüntülük" ve "mesaj silindi" temizliği güvenilir olur.
+//  • Her yol için boyut + içerik türü doğrulaması var.
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Firestore'daki sohbet üyeliğini doğrula
+    function isChatMember(chatId) {
+      return signedIn() && request.auth.uid in
+        firestore.get(/databases/(default)/documents/chats/$(chatId))
+          .data.memberIds;
+    }
+
+    function sizeUnder(mb) {
+      return request.resource.size < mb * 1024 * 1024;
+    }
+
+    function isMediaType() {
+      return request.resource.contentType.matches('image/.*')
+          || request.resource.contentType.matches('audio/.*')
+          || request.resource.contentType.matches('video/.*')
+          || request.resource.contentType.matches('application/.*')
+          || request.resource.contentType.matches('text/.*');
+    }
+
+    // ---------- SOHBET MEDYASI ----------
+    // Yalnızca o sohbetin ÜYELERİ okur ve yükler.
+    match /chats/{chatId}/{allPaths=**} {
+      allow read:   if isChatMember(chatId);
+      allow create: if isChatMember(chatId) && sizeUnder(50) && isMediaType();
+      // Değiştirme/silme istemciye kapalı (medya bütünlüğü + güvenilir temizlik)
+      allow update, delete: if false;
+    }
+
+    // ---------- PROFİL FOTOĞRAFI ----------
+    // Yol: avatars/{uid}.jpg — dosya adının uid'i çağıranla eşleşmeli.
+    match /avatars/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn()
+        && fileName.split('\\.')[0] == request.auth.uid
+        && sizeUnder(5)
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // ---------- GRUP/KANAL FOTOĞRAFI ----------
+    // Yol: group_avatars/{chatId}.jpg — yalnızca o sohbetin üyeleri.
+    match /group_avatars/{fileName} {
+      allow read: if signedIn();
+      allow write: if isChatMember(fileName.split('\\.')[0])
+        && sizeUnder(5)
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // ---------- HİKÂYE MEDYASI ----------
+    // 24 saatlik içerik; süresi dolanları cleanupExpiredStories siler.
+    match /stories/{allPaths=**} {
+      allow read: if signedIn();
+      allow create: if signedIn() && sizeUnder(20)
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('video/.*'));
+      allow update, delete: if false;
+    }
+
+    // ---------- GERİ KALAN HER ŞEY: KAPALI ----------
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

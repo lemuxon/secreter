@@ -1,0 +1,53 @@
+# GizliChat lint yapılandırması
+# flutter_lints temel alınır, üstüne sıkılaştırmalar eklenir.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"        # codegen çıktıları
+    - "**/*.freezed.dart"
+    - "build/**"
+  errors:
+    invalid_annotation_target: ignore
+    unused_import: error
+    unused_local_variable: warning
+  # NOT: strict-casts/strict-raw-types KAPALI — Firestore map['key'] erişimi
+  # 'dynamic' döndürür ve String/int'e otomatik atanır (normal Dart). Bunları
+  # açmak her map erişimine elle cast eklemek demekti; gereksiz gürültü.
+
+linter:
+  rules:
+    # ── Gerçek hata yakalayanlar (açık) ──
+    avoid_print: true               # production'da print yerine logger
+    cancel_subscriptions: true      # StreamSubscription sızıntısı
+    close_sinks: true
+    avoid_empty_else: true
+    # ⚠️ SINIRI BİLİNEREK AÇILDI: `empty_catches` yalnızca `catch (e) {}`
+    # biçimini yakalar. `catch (_) {}` kuralın kendi tanımına göre
+    # "kasıtlı" sayılır ve MUAFTIR — bu kod tabanındaki 56 boş catch'in
+    # tamamı o biçimde olduğu için kural açıldığında SIFIR bulgu verdi.
+    # Yani sessiz hataları bu lint bulamaz; elle denetim gerekir.
+    # Kural yine de açık: gelecekte yazılacak `catch (e) {}` biçimini
+    # yakalar. Yutulan hataların görünür kılınması için:
+    # `core/observability/handled_error.dart` → reportHandled().
+    empty_catches: true
+    avoid_void_async: true
+    use_key_in_widget_constructors: true
+    always_declare_return_types: true
+    # NOT: unawaited_futures KALDIRILDI — kod tabanındaki tüm tetiklenmeler
+    # (navigasyon, modal, init, haptik, yazıyor sinyali) kasıtlı ateşle-unut.
+    # Flutter varsayılanı değil; gereksiz gürültüydü.
+
+    # ── Stil kuralları (HATA-AYIKLAMA FAZINDA KAPALI) ──
+    # Bunlar yüzlerce "info" üretip gerçek hataları gizler. Faz bitince
+    # aç + `dart fix --apply` ile otomatik düzelt.
+    # prefer_single_quotes: true
+    # prefer_const_constructors: true
+    # prefer_const_declarations: true
+    # prefer_final_locals: true
+    # require_trailing_commas: true
+    # avoid_dynamic_calls: true
+    # prefer_relative_imports: true
+    # directives_ordering: true
+    # sort_child_properties_last: true

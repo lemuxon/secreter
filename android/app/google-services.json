@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "403919128373",
+    "project_id": "gizlichat-f2a99",
+    "storage_bucket": "gizlichat-f2a99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403919128373:android:973ebb253437cc9bf3ee7c",
+        "android_client_info": {
+          "package_name": "com.gizlichat.gizli_chat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC_2k4S6jmvqqMLC1gePtOo3wO3GjWD3Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403919128373:android:015d3fe827bb60f6f3ee7c",
+        "android_client_info": {
+          "package_name": "com.secreter.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC_2k4S6jmvqqMLC1gePtOo3wO3GjWD3Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
