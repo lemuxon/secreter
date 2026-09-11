@@ -5,8 +5,9 @@
 >
 > Son güncelleme: **2026-09-12**
 >
-> ⚠️ Projede **git yok** — değişikliklerin tek kaydı bu dosyadaki
-> **📓 İŞLEM GÜNLÜĞÜ**. Her iş oraya tek satır olarak eklenir.
+> 📌 Kayıt İKİ yerde: **git** (ne değişti — 2026-09-12'den beri) ve
+> bu dosyadaki **📓 İŞLEM GÜNLÜĞÜ** (ne zaman ne yapıldı, neden).
+> Her iş günlüğe tek satır olarak eklenir.
 
 ---
 
@@ -19,10 +20,14 @@
 > gider; bu liste "ne zaman ne oldu" sorusunu saniyede cevaplamak için
 > var. Şişerse işlevini kaybeder.
 >
-> ⚠️ Projede **git yok** — bu dosya değişikliklerin TEK kaydı.
+> 📌 2026-09-12'den beri **git var** (ilk kayıt `a17f7ac`). Git "ne
+> değişti"yi tutar; bu günlük "ne zaman, neden"i tutar. İkisi ayrı
+> işe yarar — git'ten önceki tarihlerin tek kaydı burasıdır.
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-12 | **Git kuruldu** — `git init` + ilk kayıt (326 dosya, sır taraması temiz) | — |
+| 09-12 | `.gitignore` boşlukları kapatıldı (rules node_modules, play-sa, yedekler) | — |
 | 09-12 | İşlem günlüğü kuruldu (bu bölüm) | — |
 | 09-12 | Üretime başvuru formu taslakları yazıldı (TR+EN, 300 krk) | §3 F |
 | 09-12 | Üretim kilidinin sebebi bulundu: 12 testçi × 14 gün, sayaç 1. günde | §3 F |
