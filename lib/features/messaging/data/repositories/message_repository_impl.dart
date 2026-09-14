@@ -811,6 +811,47 @@ class MessageRepositoryImpl implements MessageRepository {
       );
 
       final editedAt = DateTime.now();
+
+      // ── ⚠️ SIRA KRİTİK: ÖNBELLEK SUNUCUDAN **ÖNCE** ──
+      //
+      // 🐞 GERÇEK KULLANICIDA GÖRÜLDÜ: *"bir mesajı düzenlediğimde
+      // çözülemedi hatası verdi."*
+      //
+      // Eski sıra sunucuya ÖNCE yazıyordu. Firestore yazması yereldeki
+      // dinleyiciyi ANINDA tetikler (iyimser yazma); akış yeni
+      // `editedAt` ile çözmeye başlar, önbellek anahtarı
+      // `<id>#<zaman>` henüz YAZILMAMIŞTIR ve gönderen kendi şifreli
+      // metnini çözemediği için `lostMarker` döner.
+      //
+      // Dahası KALICI olur: o değer `_plainMemo`ya yazılır ve sonraki
+      // her yayımda kısa devre yapar — birkaç milisaniye sonra gerçek
+      // düz metin depoya yazılsa bile mesaj "çözülemedi" kalır.
+      //
+      // `sendTextMessage` ve `sendMediaMessage` zaten DOĞRU sırayı
+      // kullanıyordu (önce önbellek, sonra sunucu); düzenleme yolu
+      // tek istisnaydı.
+      //
+      // ⚠️ Kendi içinde de sıra önemli: `forgetPlaintext` düzenleme
+      // sürümlerini (`<id>#*`) de siler. Yeni metni ondan ÖNCE
+      // yazsaydık, kendi yazdığımızı silerdik.
+
+      // 1) ESKİ düz metni cihazdan SİL — düzenlemenin amacı çoğu zaman
+      //    yazılanı geri almaktır; eski metnin depoda kalması bunu boşa
+      //    çıkarırdı.
+      try {
+        await encryptionDataSource.forgetPlaintext(messageId);
+      } catch (e, s) {
+        reportHandled('Düzenlenen mesajın eski düz metni silinemedi', e,
+            stack: s);
+      }
+      _forgetPlainMemo(messageId);
+
+      // 2) YENİ metni önbelleğe yaz (sunucudan önce).
+      final key = _plainKey(messageId, editedAt);
+      await encryptionDataSource.cachePlaintext(key, newText);
+      _rememberPlain(key, newText);
+
+      // 3) Ancak şimdi sunucuya yaz.
       await remoteDataSource.editMessage(
         chatId,
         messageId,
@@ -819,23 +860,6 @@ class MessageRepositoryImpl implements MessageRepository {
         editedAt: editedAt,
         e2eeHeader: enc.e2eeHeader,
       );
-
-      // ESKİ düz metni cihazdan SİL. Düzenlemenin amacı çoğu zaman
-      // yazılanı geri almaktır; eski metnin güvenli depoda kalması bunu
-      // boşa çıkarırdı.
-      try {
-        await encryptionDataSource.forgetPlaintext(messageId);
-      } catch (e, s) {
-        // ⚠️ Düzenlemenin amacı çoğu zaman yazılanı GERİ ALMAKTIR;
-        // eski metin cihazda kalırsa bu boşa çıkar.
-        reportHandled('Düzenlenen mesajın eski düz metni silinemedi', e,
-            stack: s);
-      }
-      _forgetPlainMemo(messageId);
-
-      final key = _plainKey(messageId, editedAt);
-      await encryptionDataSource.cachePlaintext(key, newText);
-      _rememberPlain(key, newText);
       return const Right(unit);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

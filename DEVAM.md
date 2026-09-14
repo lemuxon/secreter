@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-14 | 🐞 Mesaj düzenleyince "çözülemedi" — önbellek/sunucu sırası ters | §4bz |
 | 09-12 | **Git kuruldu** — `git init` + ilk kayıt (326 dosya, sır taraması temiz) | — |
 | 09-12 | `.gitignore` boşlukları kapatıldı (rules node_modules, play-sa, yedekler) | — |
 | 09-12 | İşlem günlüğü kuruldu (bu bölüm) | — |
@@ -82,7 +83,7 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 * ✅ **v22 (1.0.11) KAPALI TESTTE YAYINDA** — 11 Eyl 23:46.
   Ayrıntı: "PLAY SÜRÜM DURUMU" bölümü.
   ⚠️ **v21 hiç yayınlanmadı**; testçiler 20'den doğrudan 22'ye atladı.
-* ✅ **Doğrulama kapıları yeşil:** analyzer 0 bulgu · **539** Dart testi
+* ✅ **Doğrulama kapıları yeşil:** analyzer 0 bulgu · **541** Dart testi
   · **144** kural testi · **4** functions testi · `dart format` temiz.
 * ✅ **Üretimde dağıtılmış:** `firestore:rules` (grup araması + `sdp`
   kuralları dahil), `firestore:indexes` (`calls` bileşik indeksi),
@@ -1099,7 +1100,7 @@ indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
 
-## 🔍 SAHA RAPORU TURU (2026-09-11 gece) — §4bv – §4by
+## 🔍 SAHA RAPORU TURU (2026-09-11 → 09-14) — §4bv – §4bz
 
 Testçiden üç şikâyet. **İkisi aynı kökten**, üçüncüsü jest tuzağı.
 
@@ -1164,6 +1165,47 @@ ve bunu "çift tıklama gerekiyor" diye yaşıyor.
 
 ⚠️ **BU BİR ÇIKARIM.** Testçiye "emojiye/yanıt kutusuna dokunurken mi
 oluyordu?" diye soruldu; doğrulanmadı.
+
+### §4bz — MESAJ DÜZENLEYİNCE "ÇÖZÜLEMEDİ"
+
+Şikâyet: *"Bir mesajı düzenlediğimde çözülemedi hatası verdi."*
+
+**Kök neden: sıra.** `editMessage` sunucuya ÖNCE yazıyor, düz metni
+SONRA önbelleğe alıyordu.
+
+```
+enc → remoteDataSource.editMessage()   ← Firestore
+    → forgetPlaintext / cachePlaintext ← önbellek (GEÇ)
+```
+
+Firestore yazması yereldeki dinleyiciyi **anında** tetikler (iyimser
+yazma). Akış yeni `editedAt` ile çözmeye başlar, önbellek anahtarı
+`<id>#<zaman>` henüz yazılmamıştır ve **gönderen kendi şifreli metnini
+çözemez** (ratchet tek yönlü) → `lostMarker`.
+
+⚠️ **VE KALICI OLUR.** O sonuç `_plainMemo`ya yazılır; sonraki her
+yayımda kısa devre yapar. Birkaç milisaniye sonra gerçek düz metin
+depoya yazılsa bile mesaj "çözülemedi" kalır — memo'yu düşüren bir şey
+olmadıkça.
+
+**Düzeltme:** sıra tersine çevrildi. Kendi içinde de sıra önemli:
+
+1. `forgetPlaintext(messageId)` — eskiyi sil (`<id>#*` sürümleri dahil)
+2. `cachePlaintext(<id>#<zaman>, yeniMetin)` — yeniyi yaz
+3. `remoteDataSource.editMessage(...)` — **en son** sunucu
+
+(2'yi 1'den önce yapmak yeni metni sildirirdi: `forgetPlaintext`
+düzenleme sürümlerini de temizliyor.)
+
+> 📌 **Diğer iki yol zaten DOĞRUYDU.** `sendTextMessage` (500→507) ve
+> `sendMediaMessage` (637→643) önce önbelleğe yazıyor. Düzenleme tek
+> istisnaydı — yani hata "bilinmeyen bir tuzak" değil, var olan
+> desene uymama.
+
+Kilit: `message_repository_impl_test.dart` → *"DÜZ METİN SUNUCUDAN ÖNCE
+ÖNBELLEĞE YAZILIR"* (`verifyInOrder`) + damganın ISO-8601 **UTC**
+olduğunu ölçen ikinci test. Kırılabilirlik denetlendi: sıra geri
+alınınca test düşüyor.
 
 ### §4by — YAYIN VE GELİŞTİRİCİ DOĞRULAMASI (tarayıcıdan)
 
@@ -1247,7 +1289,7 @@ Hafızaya da yazıldı.
 
 
 ### Kapılar
-`flutter analyze` temiz · Dart **539** · kural **144** · functions **4**
+`flutter analyze` temiz · Dart **541** · kural **144** · functions **4**
 
 ## 🛡️ KALİTE VE GİZLİLİK TURU (2026-09-11 gece) — §4br – §4bu
 

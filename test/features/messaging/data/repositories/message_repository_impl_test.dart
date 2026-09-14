@@ -389,6 +389,67 @@ void main() {
           ));
     });
 
+    test('🔴 DÜZ METİN SUNUCUDAN ÖNCE ÖNBELLEĞE YAZILIR', () async {
+      // ── GERÇEK ŞİKÂYET ──
+      // *"Bir mesajı düzenlediğimde çözülemedi hatası verdi."*
+      //
+      // Firestore yazması yereldeki dinleyiciyi ANINDA tetikler. Sunucuya
+      // önce yazılırsa akış yeni `editedAt` ile çözmeye başlar, önbellek
+      // anahtarı `<id>#<zaman>` henüz yazılmamıştır ve GÖNDEREN kendi
+      // şifreli metnini çözemediği için "çözülemedi" görür.
+      //
+      // Dahası KALICI olur: o sonuç `_plainMemo`ya yazılır ve sonraki her
+      // yayımda kısa devre yapar — düz metin milisaniyeler sonra depoya
+      // yazılsa bile mesaj "çözülemedi" kalır.
+      //
+      // Sıra kendi içinde de önemli: `forgetPlaintext` düzenleme
+      // sürümlerini (`<id>#*`) de siler, yani yeni metin ondan SONRA
+      // yazılmalı; aksi halde kendi yazdığımızı sileriz.
+      stubEdit();
+
+      await repository.editMessage(
+        chatId: chatId,
+        messageId: 'm1',
+        newText: 'düzeltilmiş',
+      );
+
+      verifyInOrder([
+        () => mockEncryption.forgetPlaintext('m1'),
+        () => mockEncryption.cachePlaintext(
+            any(that: startsWith('m1#')), 'düzeltilmiş'),
+        () => mockRemote.editMessage(
+              chatId,
+              'm1',
+              any(),
+              isEncrypted: any(named: 'isEncrypted'),
+              editedAt: any(named: 'editedAt'),
+              e2eeHeader: any(named: 'e2eeHeader'),
+            ),
+      ]);
+    });
+
+    test('önbellek anahtarı DÜZENLEME DAMGASI taşır', () async {
+      // Anahtar yalnızca mesaj kimliği olsaydı alıcı önbellekteki ESKİ
+      // metni okumaya devam eder ve düzenlemeyi HİÇ görmezdi.
+      stubEdit();
+
+      await repository.editMessage(
+        chatId: chatId,
+        messageId: 'm1',
+        newText: 'düzeltilmiş',
+      );
+
+      final cagri = verify(
+          () => mockEncryption.cachePlaintext(captureAny(), 'düzeltilmiş'));
+      cagri.called(1);
+      final anahtar = cagri.captured.single as String;
+      expect(anahtar, startsWith('m1#'),
+          reason: 'damga düşerse düzenleme alıcıya ulaşmaz');
+      // Damga, sunucuya yazılan ISO-8601 UTC dizesiyle AYNI olmalı.
+      expect(anahtar.substring(3), endsWith('Z'),
+          reason: 'yerel saat yazılırsa okuma tarafındaki anahtar tutmaz');
+    });
+
     test('ESKİ düz metin cihazdan silinir', () async {
       // Düzenlemenin amacı çoğu zaman yazılanı geri almaktır; eski metin
       // güvenli depoda kalırsa bu boşa çıkar.
