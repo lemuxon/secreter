@@ -112,6 +112,44 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
 
   Size _canvas = Size.zero;
 
+  /// 🖼️ ÜZERİNDE ÇALIŞILAN GÖRÜNTÜNÜN EN/BOY ORANI.
+  ///
+  /// ⚠️ TUVAL BUNA GÖRE DARALTILIR — yoksa kaydedilen dosya ekranın
+  /// dikdörtgeni olur. 🐞 Gerçek kullanıcıda görüldü: *"9:16 bir resmi
+  /// 1:1 kırpınca arka planda 9:16'lık boşluk kalıyor."* Sebebi
+  /// `RepaintBoundary`nin tüm kullanılabilir alanı kaplaması ve
+  /// görüntünün onun içine `BoxFit.contain` ile ORTALANMASIYDI;
+  /// kaydedilen PNG kırpılmış görüntüyü değil, o boşluklu dikdörtgeni
+  /// içeriyordu.
+  ///
+  /// Kırpma sonrası yeniden okunur (`_workingPath` değişince).
+  double? _imgOran;
+
+  @override
+  void initState() {
+    super.initState();
+    _oraniOku(_workingPath);
+  }
+
+  /// Görüntünün gerçek boyutlarını dosyadan oku.
+  Future<void> _oraniOku(String yol) async {
+    try {
+      final bytes = await File(yol).readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final kare = await codec.getNextFrame();
+      final g = kare.image.width;
+      final y = kare.image.height;
+      kare.image.dispose();
+      codec.dispose();
+      if (!mounted || g <= 0 || y <= 0) return;
+      setState(() => _imgOran = g / y);
+    } catch (e) {
+      // Oran okunamazsa editör yine açılmalı; tuval kareye düşer.
+      debugPrint('Görüntü oranı okunamadı: $e');
+      if (mounted) setState(() => _imgOran ??= 1);
+    }
+  }
+
   static const _palette = [
     Colors.white,
     Colors.black,
@@ -289,6 +327,8 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
     final cropped = await ImagePickerHelper.cropExisting(context, _workingPath);
     if (cropped == null || !mounted) return;
     setState(() => _workingPath = cropped);
+    // Kırpma oranı değiştirir; tuval yeni orana göre daralsın.
+    await _oraniOku(cropped);
   }
 
   Future<void> _addSticker() async {
@@ -388,50 +428,59 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
           _hintBar(),
           Expanded(
             child: Center(
-              child: LayoutBuilder(builder: (context, box) {
-                final s = Size(box.maxWidth, box.maxHeight);
-                if (_canvas != s) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() => _canvas = s);
-                  });
-                }
-                return RepaintBoundary(
-                  key: _canvasKey,
-                  // ⬇️ TEK JEST KAPISI
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onScaleStart: _onStart,
-                    onScaleUpdate: _onUpdate,
-                    onScaleEnd: _onEnd,
-                    child: Stack(
-                      children: [
-                        Image.file(
-                          File(_workingPath),
-                          fit: BoxFit.contain,
-                          width: box.maxWidth,
-                          height: box.maxHeight,
-                          // Kırpma sonrası yeni dosya gösterilsin diye
-                          // anahtar yola bağlı (Flutter görüntü önbelleği)
-                          key: ValueKey(_workingPath),
-                        ),
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _DrawPainter(
-                              strokes: _strokes,
-                              current: _currentStroke,
-                              currentColor: _penColor,
-                              currentWidth: _penWidth,
+              // ⚠️ TUVAL GÖRÜNTÜNÜN ORANINDA. `RepaintBoundary` ne
+              // kaplıyorsa kaydedilen dosya o olur; tüm alanı kaplarsa
+              // kırpılmış görüntünün etrafında boşluk kalır.
+              child: _imgOran == null
+                  ? const CircularProgressIndicator(color: AppTheme.primary)
+                  : AspectRatio(
+                      aspectRatio: _imgOran!,
+                      child: LayoutBuilder(builder: (context, box) {
+                        final s = Size(box.maxWidth, box.maxHeight);
+                        if (_canvas != s) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) setState(() => _canvas = s);
+                          });
+                        }
+                        return RepaintBoundary(
+                          key: _canvasKey,
+                          // ⬇️ TEK JEST KAPISI
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onScaleStart: _onStart,
+                            onScaleUpdate: _onUpdate,
+                            onScaleEnd: _onEnd,
+                            child: Stack(
+                              children: [
+                                Image.file(
+                                  File(_workingPath),
+                                  fit: BoxFit.contain,
+                                  width: box.maxWidth,
+                                  height: box.maxHeight,
+                                  // Kırpma sonrası yeni dosya gösterilsin diye
+                                  // anahtar yola bağlı (Flutter görüntü önbelleği)
+                                  key: ValueKey(_workingPath),
+                                ),
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: _DrawPainter(
+                                      strokes: _strokes,
+                                      current: _currentStroke,
+                                      currentColor: _penColor,
+                                      currentWidth: _penWidth,
+                                    ),
+                                  ),
+                                ),
+                                for (var i = 0; i < _items.length; i++)
+                                  _itemWidget(i, box.maxWidth, box.maxHeight),
+                                if (_activeIndex != null && !_saving)
+                                  ..._buttons(),
+                              ],
                             ),
                           ),
-                        ),
-                        for (var i = 0; i < _items.length; i++)
-                          _itemWidget(i, box.maxWidth, box.maxHeight),
-                        if (_activeIndex != null && !_saving) ..._buttons(),
-                      ],
+                        );
+                      }),
                     ),
-                  ),
-                );
-              }),
             ),
           ),
           if (_drawMode) _penTools(),

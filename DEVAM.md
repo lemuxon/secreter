@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-14 | 🐞 Kırpılan resim ekran oranında kaydediliyordu — tuval görüntüye daraltıldı | §4ca |
 | 09-14 | 🐞 Mesaj düzenleyince "çözülemedi" — önbellek/sunucu sırası ters | §4bz |
 | 09-12 | **Git kuruldu** — `git init` + ilk kayıt (326 dosya, sır taraması temiz) | — |
 | 09-12 | `.gitignore` boşlukları kapatıldı (rules node_modules, play-sa, yedekler) | — |
@@ -115,6 +116,7 @@ cihazda çalışmadı**:
 | Notlarım (kendine mesaj) | Yeni şifreleme yolu, hiç çalışmadı |
 | `in_app_update` | v21'de eklenen native bağımlılık |
 | Hikaye dokunma düzeltmesi | **Çıkarıma dayanıyor** — bkz. §4bx |
+| Resim kırpma (§4ca) | Otomatik testi YOK, layout düzeltmesi |
 
 #### 🔴 TURN hâlâ yok — mesh'te bu daha ağır
 
@@ -1100,7 +1102,7 @@ indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
 
-## 🔍 SAHA RAPORU TURU (2026-09-11 → 09-14) — §4bv – §4bz
+## 🔍 SAHA RAPORU TURU (2026-09-11 → 09-14) — §4bv – §4ca
 
 Testçiden üç şikâyet. **İkisi aynı kökten**, üçüncüsü jest tuzağı.
 
@@ -1165,6 +1167,53 @@ ve bunu "çift tıklama gerekiyor" diye yaşıyor.
 
 ⚠️ **BU BİR ÇIKARIM.** Testçiye "emojiye/yanıt kutusuna dokunurken mi
 oluyordu?" diye soruldu; doğrulanmadı.
+
+### §4ca — KIRPILAN RESİM EKRAN ORANINDA KAYDEDİLİYORDU
+
+Şikâyet: *"9:16 bir resmi 1:1 kırptım; bıraktığı arka plan kırpılma
+boyutunda değil, 9:16'lık boşluk bırakıyor."*
+
+**Kök neden:** `_save()` görüntüyü değil, **ekrandaki tuvali**
+fotoğraflıyor:
+
+```dart
+final b = _canvasKey.currentContext!.findRenderObject()
+    as RenderRepaintBoundary;
+final img = await b.toImage(pixelRatio: 2.0);
+```
+
+`RepaintBoundary` ise tüm kullanılabilir alanı kaplıyordu
+(`width: box.maxWidth, height: box.maxHeight`) ve görüntü onun içine
+`BoxFit.contain` ile **ortalanıyordu**. Kaydedilen PNG = ekran
+dikdörtgeni + ortasında kırpılmış resim. Telefon ekranı kabaca 9:16
+olduğu için semptom tam olarak bildirilen şekilde görünüyordu.
+
+**Düzeltme:** tuval görüntünün oranında —
+`AspectRatio` → `LayoutBuilder` → `RepaintBoundary`. Oran dosyadan
+okunuyor (`ui.instantiateImageCodec`) ve **kırpma sonrası tazeleniyor**.
+
+> 📐 **Koordinatlar neden bozulmadı:** öğeler ORANSAL
+> (`pos.dx * _canvas.width`), çizimler tuvale YEREL. `_canvas` zaten
+> `LayoutBuilder`ın kutusundan geliyor; kutu daralınca ikisi de
+> kendiliğinden doğru yere düşüyor.
+
+⚠️ **OTOMATİK TESTİ YOK.** Widget testi yazıldı ama bu ortamda
+çalışmadı: `ui.PictureRecorder().toImage()` / kodek çağrıları
+`flutter_test` içinde asılı kalıyor (üç denemede de "did not
+complete"). Emeğini savunamayan test bırakmak yerine silindi.
+**Cihazda doğrulanmalı** — bkz. açılış bloğundaki "cihazda hiç
+denenmemiş olanlar".
+
+#### 🔎 AYNI FONKSİYONDA İKİNCİ KUSUR (düzeltilmedi)
+
+`pixelRatio: 2.0` ile **ekran boyutundaki** bir widget fotoğraflanıyor.
+Yani 4000 piksellik bir fotoğraf ekran çözünürlüğüne (~1500 px)
+düşürülerek gönderiliyor — editörden geçen HER fotoğrafta, kırpma olsun
+olmasın. Çıktı ayrıca PNG, yani bir fotoğraf için JPEG'den kat kat
+büyük.
+
+Kapsam dışı bırakıldı: kullanıcı bunu bildirmedi ve düzeltmek çıktı
+boyutunu büyütür. Ölçülüp ayrı iş olarak yapılmalı.
 
 ### §4bz — MESAJ DÜZENLEYİNCE "ÇÖZÜLEMEDİ"
 
