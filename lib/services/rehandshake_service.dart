@@ -56,8 +56,36 @@ class RehandshakeService {
   /// kez yeter; uygulama yeniden açılınca küme boşalır.
   static final Set<String> _yayimlanan = {};
 
+  /// Bu çalıştırmada yayımlayan hesabın uid'si (çakışma hakemliği).
+  static String _benimUid = '';
+
   /// Hesap değişti — kümeyi düşür (önceki hesabın sohbetleri sayılmasın).
-  static void setActiveAccount(String? uid) => _yayimlanan.clear();
+  static void setActiveAccount(String? uid) {
+    _yayimlanan.clear();
+    _benimUid = uid ?? '';
+  }
+
+  /// ⚖️ ÇAKIŞMA HAKEMİ — benim el sıkışmam mı kazanır?
+  ///
+  /// İki taraf da aynı anda yayımlarsa her biri diğerininkini benimser
+  /// ve **farklı oturumlarda** kalır; sohbet tamamen kırılır. Hakem
+  /// deterministik olmak ZORUNDA: iki istemci de aynı cevabı vermezse
+  /// ya ikisi de kendininkinde kalır ya da ikisi de diğerine geçer.
+  ///
+  /// Kural: **uid'i sözlükbilimsel olarak KÜÇÜK olan kazanır.**
+  /// (Grup aramasındaki `teklifiBenVeririm` ile aynı desen — §4bq.)
+  ///
+  /// [benYayimladim] false ise hakemlik gerekmez: ortada çakışma yok,
+  /// gelen başlık benimsenir.
+  static bool benimkiKazanir({
+    required bool benYayimladim,
+    required String benimUid,
+    required String gonderenUid,
+  }) {
+    if (!benYayimladim) return false;
+    if (benimUid.isEmpty || gonderenUid.isEmpty) return false;
+    return benimUid.compareTo(gonderenUid) < 0;
+  }
 
   /// Ölü oturumu onarmak için sessiz el sıkışma yayımla.
   ///
@@ -69,6 +97,7 @@ class RehandshakeService {
     required String myUid,
   }) async {
     if (otherUserId.isEmpty || myUid.isEmpty) return;
+    _benimUid = myUid;
     if (!_yayimlanan.add(chatId)) return;
 
     try {
@@ -135,6 +164,33 @@ class RehandshakeService {
         Map<String, dynamic>.from(ham),
       );
       if (!header.isValid) return;
+
+      // ── ⚠️ ÇAKIŞAN EL SIKIŞMA (glare) ──
+      //
+      // İki taraf da aynı anda ölü oturum tespit edip el sıkışma
+      // yayımlarsa, her biri diğerininkini benimser ve **farklı
+      // oturumlarda** kalırlar: sohbet tamamen kırılır. Yani onarım
+      // mekanizması, onarmaya çalıştığı şeyi bozabilir.
+      //
+      // Pazarlık YOK, deterministik hakem: **uid'i sözlükbilimsel olarak
+      // KÜÇÜK olan tarafın el sıkışması kazanır.** İki istemci de aynı
+      // sonuca varır.
+      //   • Ben de yayımladıysam ve uid'im küçükse → onunkini YOK SAY
+      //     (o benimkini benimseyecek).
+      //   • Diğer her durumda benimserim.
+      //
+      // (Grup aramasındaki `teklifiBenVeririm` ile aynı desen — §4bq.)
+      final gonderen = (doc.data()?['from'] ?? '').toString();
+      if (benimkiKazanir(
+        benYayimladim: _yayimlanan.contains(chatId),
+        benimUid: _benimUid,
+        gonderenUid: gonderen,
+      )) {
+        return;
+      }
+      // Onunkini benimsiyorum → kendi yayımımı "kazanan" saymayı bırak,
+      // yoksa sonraki gelen başlıkları haksız yere yok sayardım.
+      _yayimlanan.remove(chatId);
 
       // Aynı başlık tekrar gelirse burası hiçbir şey yapmaz: yenileme
       // yalnızca EFEMERAL değiştiyse olur (§4ax). Replay koruması bu.

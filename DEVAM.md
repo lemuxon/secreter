@@ -26,6 +26,8 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-16 | ⚖️ El sıkışma çakışması hakemi — iki taraf aynı anda onarınca ayrışma | §4cc |
+| 09-16 | ☁️ `handshakes` kuralları + `init` alan geçersiz kılma **dağıtıldı** | §4cc |
 | 09-16 | 🤝 Sessiz yeniden el sıkışma — onarım artık kullanıcıyı beklemiyor | §4cc |
 | 09-16 | 🐞 Ratchet ilerleyip düz metin yazılmadan ölüm — mesaj kalıcı kayboluyordu | §4cb |
 | 09-14 | 🐞 Kırpılan resim ekran oranında kaydediliyordu — tuval görüntüye daraltıldı | §4ca |
@@ -1221,12 +1223,52 @@ başlık açık anahtar taşır ama "kim kiminle el sıkışıyor" üstveridir.
 `where('to', ==, ben)` kısıtı süsleme değil, iznin kendisi (§4bq dersi).
 Test bunu ayrıca ölçüyor.
 
+#### ⚖️ ÇAKIŞAN EL SIKIŞMA — onarım onarmaya çalıştığını bozabilirdi
+
+Göndermeden önce yakalandı: iki taraf da aynı anda ölü oturum tespit
+edip yayımlarsa, her biri **diğerininkini** benimser ve farklı
+oturumlarda kalır. Sohbet tamamen kırılır.
+
+Çözüm, grup aramasındaki desenin aynısı (§4bq): pazarlık yok,
+**deterministik hakem — uid'i küçük olan kazanır.**
+
+| Durum | A (küçük uid) | B |
+|---|---|---|
+| İkisi de yayımladı | kendi oturumunda kalır | A'nınkini benimser |
+| Yalnız A yayımladı | — | benimser |
+| Yalnız B yayımladı | benimser | — |
+
+⚠️ Hakem **yalnızca çakışmada** devreye girer. "Ben yayımlamadıysam
+gelen başlığı her zaman benimserim" — asıl senaryo budur (genelde tek
+taraf bozuktur) ve orada kazanmaya çalışmak onarımı hiç yaptırmazdı.
+
+Kilit: `rehandshake_glare_test.dart` — her çiftte TAM BİR tarafın
+kazandığını ölçüyor (ikisi de kazanırsa ayrışma, ikisi de kaybederse
+onarım yok).
+
+#### 🪤 İNDEKS: BİLEŞİK DEĞİL, ALAN GEÇERSİZ KILMA
+
+İlk dağıtım denemesi şununla düştü:
+
+```
+HTTP 400: this index is not necessary,
+configure using single field index controls
+```
+
+Tek alanlı koleksiyon-grubu sorgusu (`where('to', ==, ben)`) bileşik
+indeks istemez; **`fieldOverrides` içinde COLLECTION_GROUP kapsamlı tek
+alan indeksi** ister. ⚠️ O denemede kurallar da yayımlanmadı — indeks
+adımı düşünce dağıtım tümden durdu; çıktıda "released rules" satırının
+olmaması bunun işareti.
+
 #### Kapılar ve dağıtım
 
-Kural testleri **144 → 153** (9 yeni). ⚠️ **Kurallar ve
-`init` koleksiyon-grubu indeksi DAĞITILMADAN bu yol çalışmaz** —
-yayımlama `permission-denied` alır. Güvenli bozulma: eski davranışa
-düşülür (kullanıcı yazınca onarım) ve `reportHandled` ile ölçülür.
+Kural testleri **144 → 153** (9 yeni). ✅ **DAĞITILDI** (2026-09-16, `gizlichat-f2a99`): `handshakes` kuralları
++ `init.to` alan geçersiz kılma üretimde.
+
+Güvenli bozulma korunuyor: yayımlama bir sebeple başarısız olursa eski
+davranışa düşülür (kullanıcı yazınca onarım) ve `reportHandled` ile
+ölçülür — sessizce ölmez.
 
 ### §4cb — "ARKA PLANDAN SİLİNCE MESAJ ULAŞMIYOR" — ÖLÜM PENCERESİ
 
@@ -1462,7 +1504,7 @@ Hafızaya da yazıldı.
 
 
 ### Kapılar
-`flutter analyze` temiz · Dart **543** · kural **153** · functions **4**
+`flutter analyze` temiz · Dart **549** · kural **153** · functions **4**
 
 ## 🛡️ KALİTE VE GİZLİLİK TURU (2026-09-11 gece) — §4br – §4bu
 
