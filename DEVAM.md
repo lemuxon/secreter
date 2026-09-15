@@ -3,7 +3,7 @@
 > Bu dosya, sohbet geçmişi kaybolsa bile çalışmanın kaldığı yerden
 > sürmesi için yazıldı. **Yeni bir oturuma başlarken bu dosyayı okut.**
 >
-> Son güncelleme: **2026-09-12**
+> Son güncelleme: **2026-09-16**
 >
 > 📌 Kayıt İKİ yerde: **git** (ne değişti — 2026-09-12'den beri) ve
 > bu dosyadaki **📓 İŞLEM GÜNLÜĞÜ** (ne zaman ne yapıldı, neden).
@@ -85,13 +85,17 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 
 #### Durum
 
-* ✅ **v22 (1.0.11) KAPALI TESTTE YAYINDA** — 11 Eyl 23:46.
-  Ayrıntı: "PLAY SÜRÜM DURUMU" bölümü.
+* 🔴 **v23 (1.0.12) DERLENDİ, HENÜZ YÜKLENMEDİ** — paket
+  `build/app/outputs/bundle/release/app-release.aab` (88,5 MB,
+  16 Eyl 02:23). Sürüm notu `scripts/surum_notlari.json` (en-US, 331
+  karakter). **Sıradaki iş bu:** Play Console → Kapalı test → yükle.
+* ✅ **v22 (1.0.11) kapalı testte yayında** — 11 Eyl 23:46.
   ⚠️ **v21 hiç yayınlanmadı**; testçiler 20'den doğrudan 22'ye atladı.
-* ✅ **Doğrulama kapıları yeşil:** analyzer 0 bulgu · **543** Dart testi
-  · **144** kural testi · **4** functions testi · `dart format` temiz.
-* ✅ **Üretimde dağıtılmış:** `firestore:rules` (grup araması + `sdp`
-  kuralları dahil), `firestore:indexes` (`calls` bileşik indeksi),
+* ✅ **Doğrulama kapıları yeşil:** analyzer 0 bulgu · **549** Dart testi
+  · **153** kural testi · **4** functions testi · `dart format` temiz.
+* ✅ **Üretimde dağıtılmış:** `firestore:rules` (grup araması `sdp` ve
+  sessiz el sıkışma `handshakes` kuralları dahil), `firestore:indexes`
+  (`calls` bileşik indeksi + `init.to` alan geçersiz kılma),
   `functions`, `storage`, `hosting`.
   ⚠️ Tek bilinçli istisna hâlâ **`issueEntitlement`** (premium; Play
   doğrulaması bağlanmadan açılırsa herkese premium dağıtır).
@@ -121,6 +125,40 @@ cihazda çalışmadı**:
 | `in_app_update` | v21'de eklenen native bağımlılık |
 | Hikaye dokunma düzeltmesi | **Çıkarıma dayanıyor** — bkz. §4bx |
 | Resim kırpma (§4ca) | Otomatik testi YOK, layout düzeltmesi |
+| **Sessiz el sıkışma (§4cc)** | 🔴 **En riskli.** E2EE oturum kurulumuna dokunuyor |
+
+#### 📌 AÇIK UÇLAR — cevabı yalnızca kullanıcıda/testçide
+
+Bunlar koddan çıkarılamaz; sorulmadan ilerlenmemeli.
+
+**1. Hikaye dokunma düzeltmesi DOĞRULANMADI (§4bx).**
+Testçiye sorulacak soru: *"Hikayelerde 'iki kere basmak gerekiyor'
+dediğin şey, alttaki tepki emojilerine / 'yanıtla' kutusuna basarken mi
+oluyordu, yoksa hikayenin ortasında herhangi bir yere basarken mi?"*
+→ **"Ortasında"** derse yanlış şey düzeltilmiş demektir; şerit
+dokunuşlarını yutma çözümü o vakayı kapsamaz.
+
+**2. Sessiz el sıkışma cihazda denenmedi (§4cc).**
+En değerli senaryo, iki telefonla:
+```
+A'da uygulamayı sil → kurtarma anahtarıyla dön   (A'nın oturumu bozulur)
+B'den A'ya mesaj at
+A'da HİÇBİR ŞEY YAZMADAN bekle
+→ B'nin mesajları okunur hâle geliyor mu?
+```
+Geliyorsa asıl şikâyet kapanmış demektir.
+
+**3. Testçilere v23 ile birlikte söylenmesi gereken:**
+> *"Bu sürümde mesajlaşma onarımı değişti. Daha önce 'çözülemedi' yazan
+> bir sohbet, siz bir şey yazmadan kendi kendine düzelecek. Tuhaf bir
+> şey görürseniz (mesajlar kaybolursa, sohbet aniden bozulursa) hemen
+> haber verin."*
+
+**4. Foto editöründe BİLEREK ertelenen kusur (§4ca).**
+`pixelRatio: 2.0` ile ekran boyutundaki widget fotoğraflanıyor: 4000
+piksellik fotoğraf ~1500'e düşüyor ve çıktı PNG (fotoğraf için JPEG'den
+kat kat büyük). Kullanıcı bunu bildirmedi; düzeltmek çıktı boyutunu
+büyütür. Ölçülüp ayrı iş olarak yapılmalı.
 
 #### 🔴 TURN hâlâ yok — mesh'te bu daha ağır
 
