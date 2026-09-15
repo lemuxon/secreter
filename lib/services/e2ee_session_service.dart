@@ -311,9 +311,25 @@ class E2EESessionService {
     return result.ciphertext;
   }
 
+  /// Gelen mesajı çöz.
+  ///
+  /// ⚠️ [messageId] VERİLİRSE düz metin, ratchet durumu kalıcılaşmadan
+  /// ÖNCE önbelleğe yazılır. Sırası tersine dönerse şu pencere açılır:
+  ///
+  ///   ratchet ilerledi + kaydedildi → **uygulama ölür** → düz metin
+  ///   hiç yazılmadı
+  ///
+  /// Açılışta mesaj yeniden çözülmeye çalışılır ama zincir o mesajın
+  /// ötesine geçmiştir ve anahtar `skipped`e de girmemiştir (atlanmadı,
+  /// TÜKETİLDİ). Sonuç: o mesaj **kalıcı olarak** "çözülemedi" olur.
+  ///
+  /// Ters sırada risk yok: düz metin yazılıp ratchet kaydedilmezse mesaj
+  /// önbellekten okunur (çözme yolunun ilk adımı) ve zincir olduğu yerde
+  /// kalır.
   static Future<String?> decryptMessage({
     required String chatId,
     required String ciphertext,
+    String? messageId,
   }) async {
     final state = await _loadSession(chatId);
     if (state == null) return null;
@@ -338,6 +354,11 @@ class E2EESessionService {
         encryptedPacket: ciphertext,
       );
       if (result == null) return null;
+
+      // ⚠️ RATCHET KAYDINDAN ÖNCE (bkz. imzadaki açıklama).
+      if (messageId != null) {
+        await cachePlaintext(messageId, result.plaintext);
+      }
 
       await _saveSession(
         chatId,
@@ -369,6 +390,11 @@ class E2EESessionService {
       encryptedPacket: ciphertext,
     );
     if (result == null) return null;
+
+    // ⚠️ RATCHET KAYDINDAN ÖNCE (bkz. imzadaki açıklama).
+    if (messageId != null) {
+      await cachePlaintext(messageId, result.plaintext);
+    }
 
     await _saveSession(
       chatId,

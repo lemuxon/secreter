@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-16 | 🐞 Ratchet ilerleyip düz metin yazılmadan ölüm — mesaj kalıcı kayboluyordu | §4cb |
 | 09-14 | 🐞 Kırpılan resim ekran oranında kaydediliyordu — tuval görüntüye daraltıldı | §4ca |
 | 09-14 | 🐞 Mesaj düzenleyince "çözülemedi" — önbellek/sunucu sırası ters | §4bz |
 | 09-12 | **Git kuruldu** — `git init` + ilk kayıt (326 dosya, sır taraması temiz) | — |
@@ -84,7 +85,7 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 * ✅ **v22 (1.0.11) KAPALI TESTTE YAYINDA** — 11 Eyl 23:46.
   Ayrıntı: "PLAY SÜRÜM DURUMU" bölümü.
   ⚠️ **v21 hiç yayınlanmadı**; testçiler 20'den doğrudan 22'ye atladı.
-* ✅ **Doğrulama kapıları yeşil:** analyzer 0 bulgu · **541** Dart testi
+* ✅ **Doğrulama kapıları yeşil:** analyzer 0 bulgu · **543** Dart testi
   · **144** kural testi · **4** functions testi · `dart format` temiz.
 * ✅ **Üretimde dağıtılmış:** `firestore:rules` (grup araması + `sdp`
   kuralları dahil), `firestore:indexes` (`calls` bileşik indeksi),
@@ -1102,7 +1103,7 @@ indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
 
-## 🔍 SAHA RAPORU TURU (2026-09-11 → 09-14) — §4bv – §4ca
+## 🔍 SAHA RAPORU TURU (2026-09-11 → 09-14) — §4bv – §4cb
 
 Testçiden üç şikâyet. **İkisi aynı kökten**, üçüncüsü jest tuzağı.
 
@@ -1167,6 +1168,70 @@ ve bunu "çift tıklama gerekiyor" diye yaşıyor.
 
 ⚠️ **BU BİR ÇIKARIM.** Testçiye "emojiye/yanıt kutusuna dokunurken mi
 oluyordu?" diye soruldu; doğrulanmadı.
+
+### §4cb — "ARKA PLANDAN SİLİNCE MESAJ ULAŞMIYOR" — ÖLÜM PENCERESİ
+
+Şikâyet (iki parçalı): *"Bazı kişilere ben mesaj göndermediğim sürece
+mesajları çözülemedi geliyor… Ama telefonum kapalıyken veya arka plandan
+sildiğimde mesajları bana ulaşmıyor."*
+
+#### Bulunan: iki yazma arasında ÖLÜM PENCERESİ
+
+`decryptMessage` başarılı çözmeden sonra ratchet durumunu kalıcı
+yazıyordu; düz metin önbelleği ise ÇAĞIRAN tarafta, **ayrı bir
+yazmayla** tutuluyordu:
+
+```
+decryptMessage() → _saveSession()   ← zincir İLERLEDİ, kalıcı
+      ↓  (uygulama burada ölürse)
+cachePlaintext()                    ← HİÇ ÇALIŞMADI
+```
+
+Açılışta mesaj yeniden çözülmeye çalışılır ama zincir o mesajın ötesine
+geçmiştir. Anahtar `skipped` haritasına da girmemiştir: **atlanmadı,
+TÜKETİLDİ.** Sonuç: o mesaj **kalıcı olarak** "çözülemedi".
+
+"Arka plandan silince" tam olarak bu pencereyi açan davranış.
+
+**Düzeltme — sıra:** `decryptMessage` artık `messageId` alıyor ve düz
+metni **ratchet kaydından önce** yazıyor. Ters sırada risk yok: düz
+metin yazılıp ratchet kaydedilmezse mesaj önbellekten okunur (çözme
+yolunun ilk adımı) ve zincir olduğu yerde kalır.
+
+> 📌 §4bz ile **aynı sınıf** hata: iki kalıcı yazma arasındaki sıra.
+> Orada Firestore/önbellek, burada ratchet/önbellek.
+
+Kilit: `ratchet_kill_window_test.dart` — tüketilen anahtarın geri
+gelmediğini ve bunun "atlanan" durumdan farkını ölçüyor.
+
+#### ⏳ ŞİKÂYETİN İLK YARISI HÂLÂ AÇIK
+
+*"Ben yazana kadar çözülemedi"* kısmı **tasarım gereği** ve
+düzeltilmedi. Oturum bozulduğunda kurtarma yolu şu:
+
+```
+çözemedim → kendi oturumumu sıfırla → KULLANICI bir şey yazınca
+X3DH baştan kurulur ve başlık gider → karşı taraf onarılır
+```
+
+Yani onarım **kullanıcının yazmasını bekliyor**; o ana kadar gelen her
+mesaj çözülemez ve kalıcı kaybolur. §4av bunu zaten "yama, tasarım
+düzeltmesi değil" diye kaydetmişti.
+
+**Önerilen çözüm (yapılmadı, karar bekliyor):** oturum ölü tespit
+edilince istemci, kullanıcı hiçbir şey yazmadan **sessiz bir el
+sıkışma** yayımlasın. Grup anahtar dağıtımındaki desenin aynısı:
+
+```
+e2eeHandshakes/{chatId}/{gonderenUid} = { init başlığı, ts }
+```
+
+Karşı taraf bunu dinleyip `ensureSessionFromHeader` çağırır. Sohbete
+görünür mesaj düşmez.
+
+⚠️ Bu bir **protokol değişikliği**: yeni koleksiyon + yeni güvenlik
+kuralı + dağıtım gerektirir ve uygulamanın en hassas yerine dokunur.
+Kullanıcı onayı olmadan yapılmadı.
 
 ### §4ca — KIRPILAN RESİM EKRAN ORANINDA KAYDEDİLİYORDU
 
@@ -1338,7 +1403,7 @@ Hafızaya da yazıldı.
 
 
 ### Kapılar
-`flutter analyze` temiz · Dart **541** · kural **144** · functions **4**
+`flutter analyze` temiz · Dart **543** · kural **144** · functions **4**
 
 ## 🛡️ KALİTE VE GİZLİLİK TURU (2026-09-11 gece) — §4br – §4bu
 

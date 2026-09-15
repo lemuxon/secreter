@@ -287,6 +287,9 @@ class EncryptionDataSourceImpl implements EncryptionDataSource {
       var decrypted = await E2EESessionService.decryptMessage(
         chatId: chatId,
         ciphertext: ciphertext,
+        // Düz metin, ratchet ilerlemesi kalıcılaşmadan ÖNCE yazılsın:
+        // arada uygulama ölürse mesaj kalıcı olarak çözülemez olurdu.
+        messageId: messageId,
       );
 
       // ── KURTARMA: BOZUK OTURUMU BAŞLIKTAN YENİDEN KUR (§4av) ──
@@ -320,6 +323,7 @@ class EncryptionDataSourceImpl implements EncryptionDataSource {
         decrypted = await E2EESessionService.decryptMessage(
           chatId: chatId,
           ciphertext: ciphertext,
+          messageId: messageId,
         );
       }
 
