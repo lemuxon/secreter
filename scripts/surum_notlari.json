@@ -1,10 +1,6 @@
 [
   {
-    "language": "tr-TR",
-    "text": "• Çözülemeyen fotoğraf/video artık \"bozuk resim\" yerine sebebini söylüyor\n• Hikayelerde tepki ve yanıt şeridine dokunurken hikayenin atlanması giderildi\n• Mesaj çözme hatalarının kaydı iyileştirildi (arıza teşhisi için)"
-  },
-  {
     "language": "en-US",
-    "text": "• Undecryptable photos/videos now explain why instead of showing a broken image\n• Fixed stories skipping when tapping the reaction and reply bar\n• Improved logging of message decryption failures for diagnostics"
+    "text": "Messaging reliability\n\n• Chats that got stuck on \"couldn't decrypt\" now repair themselves — you no longer have to send a message first\n• Fixed messages being permanently lost when the app was closed while receiving\n• Fixed \"couldn't decrypt\" after editing a message\n• Cropped photos no longer keep the original photo's empty border"
   }
 ]
