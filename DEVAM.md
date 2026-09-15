@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-16 | 🤝 Sessiz yeniden el sıkışma — onarım artık kullanıcıyı beklemiyor | §4cc |
 | 09-16 | 🐞 Ratchet ilerleyip düz metin yazılmadan ölüm — mesaj kalıcı kayboluyordu | §4cb |
 | 09-14 | 🐞 Kırpılan resim ekran oranında kaydediliyordu — tuval görüntüye daraltıldı | §4ca |
 | 09-14 | 🐞 Mesaj düzenleyince "çözülemedi" — önbellek/sunucu sırası ters | §4bz |
@@ -1103,7 +1104,7 @@ indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
 
-## 🔍 SAHA RAPORU TURU (2026-09-11 → 09-14) — §4bv – §4cb
+## 🔍 SAHA RAPORU TURU (2026-09-11 → 09-14) — §4bv – §4cc
 
 Testçiden üç şikâyet. **İkisi aynı kökten**, üçüncüsü jest tuzağı.
 
@@ -1168,6 +1169,64 @@ ve bunu "çift tıklama gerekiyor" diye yaşıyor.
 
 ⚠️ **BU BİR ÇIKARIM.** Testçiye "emojiye/yanıt kutusuna dokunurken mi
 oluyordu?" diye soruldu; doğrulanmadı.
+
+### §4cc — SESSİZ YENİDEN EL SIKIŞMA (onarım kullanıcıyı beklemiyor)
+
+Kullanıcının itirazı §4cb'deki "tasarım gereği" gerekçesini geçersiz
+kıldı ve haklıydı:
+
+> *"WhatsApp ve Signal'de bu böyle çalışmaz. Hem karşı tarafa aynı şeyi
+> tekrar tekrar anlatmak zorunda bıraktırır… 3 saat sonra mesajımı yeni
+> gören biri için yeniden açıklama yaptırmak tam bir eziyet olur."*
+
+Doğru: Signal'de çözme başarısız olunca istemci karşı tarafı yeni
+oturuma **kendisi** zorlar (null message / oturum arşivleme); kullanıcı
+müdahalesi beklenmez. Bizim yaptığımız o mekanizmanın eksik hâliydi.
+
+#### Nasıl çalışıyor
+
+Ölü oturum tespit edilince istemci:
+1. kendi oturumunu sıfırlar,
+2. **X3DH'i başlatır** (karşı tarafın açık paketiyle),
+3. init başlığını yayımlar:
+
+```
+handshakes/{chatId}/init/{gonderenUid} = { from, to, header, ts }
+```
+
+Karşı taraf bunu **uygulama genelinde tek bir koleksiyon-grubu akışıyla**
+dinler ve `ensureSessionFromHeader` ile kendi tarafını onarır.
+
+> ⚠️ **Dinleyici sohbet ekranına BAĞLANMAZ.** Onarımın bütün değeri,
+> karşı tarafın o sohbeti açmasını beklememesinde; sohbete bağlı bir
+> dinleyici bu değeri tamamen yok ederdi.
+
+Sohbete **görünür hiçbir mesaj düşmez**.
+
+#### Replay koruması bedava geliyor
+
+`ensureSessionFromHeader` yalnızca EFEMERAL anahtar değişmişse oturumu
+yeniler (§4ax). Aynı belge tekrar okunsa bile ikinci kezinde efemeral
+aynıdır → hiçbir şey olmaz. Ayrı bir "en son ne uyguladım" durumu
+tutmaya gerek kalmadı.
+
+#### Güvenlik sınırı
+
+Yazma yalnızca **sohbetin üyesi** ve yalnızca **kendi adına**. Yabancı
+yazabilseydi istediği kişinin oturumunu sürekli sıfırlatabilirdi —
+sohbeti yeniden kurduran bir hizmet reddi. Okuma da iki tarafla sınırlı:
+başlık açık anahtar taşır ama "kim kiminle el sıkışıyor" üstveridir.
+
+⚠️ Koleksiyon-grubu `list` kuralı **sorguya** bakar: istemcideki
+`where('to', ==, ben)` kısıtı süsleme değil, iznin kendisi (§4bq dersi).
+Test bunu ayrıca ölçüyor.
+
+#### Kapılar ve dağıtım
+
+Kural testleri **144 → 153** (9 yeni). ⚠️ **Kurallar ve
+`init` koleksiyon-grubu indeksi DAĞITILMADAN bu yol çalışmaz** —
+yayımlama `permission-denied` alır. Güvenli bozulma: eski davranışa
+düşülür (kullanıcı yazınca onarım) ve `reportHandled` ile ölçülür.
 
 ### §4cb — "ARKA PLANDAN SİLİNCE MESAJ ULAŞMIYOR" — ÖLÜM PENCERESİ
 
@@ -1403,7 +1462,7 @@ Hafızaya da yazıldı.
 
 
 ### Kapılar
-`flutter analyze` temiz · Dart **543** · kural **144** · functions **4**
+`flutter analyze` temiz · Dart **543** · kural **153** · functions **4**
 
 ## 🛡️ KALİTE VE GİZLİLİK TURU (2026-09-11 gece) — §4br – §4bu
 
@@ -1526,7 +1585,7 @@ söylüyor, 16 dilde.
 
 ### Kapılar
 
-`flutter analyze` temiz · Dart **533** · kural **144** · functions **4**
+`flutter analyze` temiz · Dart **533** · kural **153** · functions **4**
 · `node --check` OK
 
 

@@ -157,6 +157,51 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.from == request.auth.uid;
     }
 
+    // ---------- SESSİZ YENİDEN EL SIKIŞMA (§4cc) ----------
+    //
+    // Oturum bozulduğunda onarım KULLANICININ mesaj yazmasını bekliyordu;
+    // karşı taraf saatler sonra dönüp mesajlarının "çözülemedi" olduğunu
+    // görüyordu. Artık istemci, ölü oturumu tespit edince X3DH init
+    // başlığını buraya yayımlar ve karşı taraf o sohbeti AÇMADAN kendi
+    // tarafını onarır.
+    //
+    // İçerik yalnızca AÇIK anahtarlardır (kimlik + efemeral + ön-anahtar
+    // kimlikleri). Gizli anahtar ya da mesaj metni TAŞIMAZ; yine de
+    // "kim kiminle el sıkışıyor" bilgisi olduğu için okuma iki tarafla
+    // sınırlıdır.
+    match /handshakes/{chatId}/init/{fromUid} {
+      allow get: if signedIn() && (
+        resource.data.get('to', '') == request.auth.uid ||
+        resource.data.get('from', '') == request.auth.uid
+      );
+
+      // Yalnızca KENDİ adına ve yalnızca sohbetin üyesi yazabilir.
+      // ⚠️ Bu kısıt olmadan yabancı bir hesap başkasının oturumunu
+      // sıfırlatabilirdi (hizmet reddi: sohbet sürekli yeniden kurulur).
+      allow create, update: if signedIn()
+        && fromUid == request.auth.uid
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to != request.auth.uid
+        && isChatMember(chatId);
+
+      allow delete: if signedIn() && fromUid == request.auth.uid;
+    }
+
+    // ── KOLEKSİYON-GRUBU OKUMA ──
+    //
+    // İstemci tek bir akışla TÜM sohbetlerdeki el sıkışmaları dinler
+    // (`collectionGroup('init').where('to', ==, ben)`). Sohbet başına
+    // dinleyici açmak, onarımın değerini yok ederdi: asıl kazanç karşı
+    // tarafın o sohbeti AÇMASINI beklememek.
+    //
+    // ⚠️ `list` kuralı belgeye değil SORGUYA bakar (§4bq). `to == ben`
+    // kısıtı sorguda YOKSA tamamı reddedilir — istemcideki o kısıt
+    // süsleme değil, iznin kendisidir.
+    match /{yol=**}/init/{fromUid} {
+      allow list: if signedIn()
+        && resource.data.get('to', '') == request.auth.uid;
+    }
+
     // ---------- KANAL DİZİNİ (kamuya açık keşif) ----------
     // Yalnızca arama için gereken alanlar: ad, açıklama, üye sayısı.
     // Üye listesi, üye adları, son mesaj ve ayarlar BURADA YOK — bu

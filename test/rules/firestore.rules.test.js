@@ -1699,6 +1699,116 @@ describe("sohbeti temizle — yalnızca bende (§4aw)", () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+// §4cc — SESSİZ YENİDEN EL SIKIŞMA
+//
+// Oturum bozulduğunda onarım KULLANICININ mesaj yazmasını bekliyordu.
+// Artık istemci ölü oturumu tespit edince X3DH init başlığını yayımlıyor
+// ve karşı taraf o sohbeti AÇMADAN onarılıyor.
+//
+// Buradaki kritik sınır: yayımlama yetkisi. Yabancı biri yazabilseydi
+// başkasının oturumunu istediği zaman sıfırlatabilirdi — sohbeti sürekli
+// yeniden kurduran bir hizmet reddi.
+// ─────────────────────────────────────────────────────────────
+describe("sessiz yeniden el sıkışma (§4cc)", () => {
+  const baslik = { identityKey: "ik", ephemeralKey: "ek", ratchetVersion: 3 };
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), `handshakes/${DM}/init/${ALICE}`), {
+        from: ALICE,
+        to: BOB,
+        header: baslik,
+        ts: new Date().toISOString(),
+      });
+    });
+  });
+
+  it("sohbetin üyesi KENDİ adına el sıkışma yayımlayabilir", async () => {
+    await assertSucceeds(
+      setDoc(doc(as(BOB), `handshakes/${DM}/init/${BOB}`), {
+        from: BOB,
+        to: ALICE,
+        header: baslik,
+        ts: new Date().toISOString(),
+      })
+    );
+  });
+
+  it("🔴 BAŞKASININ adına el sıkışma yayımlanamaz", async () => {
+    // Doküman kimliği Alice ama yazan Bob → sahte "Alice el sıkışmak
+    // istiyor" sinyali üretilemez.
+    await assertFails(
+      setDoc(doc(as(BOB), `handshakes/${DM}/init/${ALICE}`), {
+        from: ALICE,
+        to: BOB,
+        header: baslik,
+        ts: new Date().toISOString(),
+      })
+    );
+  });
+
+  it("🔴 YABANCI bu sohbete el sıkışma yayımlayamaz", async () => {
+    // ⚠️ ASIL KORUMA: yabancı yazabilseydi istediği kişinin oturumunu
+    // sürekli sıfırlatabilirdi.
+    await assertFails(
+      setDoc(doc(as(MALLORY), `handshakes/${DM}/init/${MALLORY}`), {
+        from: MALLORY,
+        to: BOB,
+        header: baslik,
+        ts: new Date().toISOString(),
+      })
+    );
+  });
+
+  it("🔴 kendine el sıkışma gönderilemez", async () => {
+    await assertFails(
+      setDoc(doc(as(BOB), `handshakes/${DM}/init/${BOB}`), {
+        from: BOB,
+        to: BOB,
+        header: baslik,
+        ts: new Date().toISOString(),
+      })
+    );
+  });
+
+  it("alıcı kendine gelen el sıkışmayı OKUYABİLİR", async () => {
+    await assertSucceeds(
+      getDoc(doc(as(BOB), `handshakes/${DM}/init/${ALICE}`))
+    );
+  });
+
+  it("🔴 YABANCI el sıkışmayı okuyamaz", async () => {
+    // Başlık açık anahtar taşır ama "kim kiminle" bilgisi de üstveridir.
+    await assertFails(
+      getDoc(doc(as(MALLORY), `handshakes/${DM}/init/${ALICE}`))
+    );
+  });
+
+  // ── KOLEKSİYON-GRUBU SORGUSU ──
+  // İstemci TÜM sohbetleri tek akışla dinliyor. Bu sorgu çalışmazsa
+  // onarım hiç tetiklenmez ve özellik sessizce ölü kalır.
+  it("alıcı TÜM sohbetlerdeki el sıkışmalarını tek sorguyla bulur", async () => {
+    const snap = await getDocs(
+      query(collectionGroup(as(BOB), "init"), where("to", "==", BOB))
+    );
+    expect(snap.docs.map((d) => d.id)).to.include(ALICE);
+  });
+
+  it("🔴 `to` kısıtı OLMADAN koleksiyon-grubu sorgusu REDDEDİLİR", async () => {
+    // ⚠️ `list` kuralı belgeye değil SORGUYA bakar (§4bq). İstemcideki
+    // `where('to', ==, ben)` kısıtı süsleme değil, iznin kendisidir.
+    await assertFails(getDocs(collectionGroup(as(BOB), "init")));
+  });
+
+  it("🔴 BAŞKASININ el sıkışmaları sorguyla dökülemez", async () => {
+    const snap = await getDocs(
+      query(collectionGroup(as(MALLORY), "init"), where("to", "==", MALLORY))
+    );
+    expect(snap.empty).to.equal(true);
+  });
+});
+
 describe("grup araması — mesh sinyalleşmesi (§4bq)", () => {
   // ⚠️ GRUP ÇAĞRISINDA `calleeId` YOKTUR.
   //

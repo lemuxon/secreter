@@ -3,6 +3,7 @@ import '../../../../core/privacy/message_padding.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/e2ee_session_service.dart';
 import '../../../../services/group_key_service.dart';
+import '../../../../services/rehandshake_service.dart';
 import '../../../../services/self_note_service.dart';
 import '../../../../services/x3dh_service.dart';
 import 'encryption_datasource.dart';
@@ -208,6 +209,19 @@ class EncryptionDataSourceImpl implements EncryptionDataSource {
     }
   }
 
+  /// Birebir sohbette karşı tarafın uid'si; grup/kanal ise null.
+  ///
+  /// `chatId` sıralı uid'lerin birleşimidir (`a_b`). Kendine sohbette
+  /// iki parça AYNI olduğu için null döner — orada el sıkışacak kimse
+  /// yoktur.
+  static String? _birebirKarsiTaraf(String chatId, String? myUid) {
+    if (myUid == null || myUid.isEmpty) return null;
+    final parts = chatId.split('_');
+    if (parts.length != 2) return null;
+    final karsi = parts.firstWhere((p) => p != myUid, orElse: () => '');
+    return karsi.isEmpty ? null : karsi;
+  }
+
   @override
   Future<String> decrypt({
     required String chatId,
@@ -344,10 +358,33 @@ class EncryptionDataSourceImpl implements EncryptionDataSource {
       if (decrypted == null && _sifirlanan.add(chatId)) {
         reportHandled(
             'E2EE oturumu çözemedi ve başlık yok — oturum sıfırlandı, '
-            'sonraki gönderim yeniden el sıkışacak',
+            'sessiz el sıkışma yayımlanıyor',
             StateError('session_reset_for_rehandshake'),
             context: {'chatId': chatId});
         await E2EESessionService.resetSession(chatId);
+
+        // ── 🤝 SESSİZ YENİDEN EL SIKIŞMA (§4cc) ──
+        //
+        // Eskiden burada DURULUYOR ve onarım KULLANICININ bir şey
+        // yazmasına bırakılıyordu. Gerçek kullanımda bu eziyet üretti:
+        // karşı taraf saatler sonra dönüp mesajlarının "çözülemedi"
+        // olduğunu görüyor ve konuşmanın tamamı yeniden anlatılıyordu.
+        // WhatsApp/Signal böyle davranmaz.
+        //
+        // Artık X3DH'i biz başlatır ve başlığı yayımlarız; karşı taraf
+        // o sohbeti AÇMADAN kendi tarafını onarır.
+        //
+        // ⚠️ Yalnızca BİREBİR sohbette. Grupta oturum kavramı farklıdır
+        // (sender key) ve bu yol uygulanamaz.
+        final ben = AuthService.currentUid;
+        final karsi = _birebirKarsiTaraf(chatId, ben);
+        if (!isGroup && ben != null && karsi != null) {
+          await RehandshakeService.yayinla(
+            chatId: chatId,
+            otherUserId: karsi,
+            myUid: ben,
+          );
+        }
       }
 
       if (decrypted == null) return lostMarker;

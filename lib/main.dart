@@ -16,6 +16,7 @@ import 'services/e2ee_session_service.dart';
 import 'services/group_key_service.dart';
 import 'services/key_management_service.dart';
 import 'services/self_note_service.dart';
+import 'services/rehandshake_service.dart';
 import 'services/privacy_service.dart';
 import 'utils/app_theme.dart';
 import 'services/deep_link_service.dart';
@@ -43,6 +44,7 @@ void _hesapKapsaminiKur(String? uid) {
   ChatLockService.setActiveAccount(uid);
   KeyManagementService.setActiveAccount(uid);
   SelfNoteService.setActiveAccount(uid);
+  RehandshakeService.setActiveAccount(uid);
 }
 
 void main() {

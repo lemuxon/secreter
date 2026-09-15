@@ -29,6 +29,7 @@ import '../../../../services/mute_service.dart';
 import '../../../../core/i18n/app_localizations.dart';
 import '../../../../services/direct_chat_service.dart';
 import '../../../../services/self_note_service.dart';
+import '../../../../services/rehandshake_service.dart';
 import '../../../../core/observability/handled_error.dart';
 import '../../../security/presentation/app_lock_wrapper.dart';
 import '../../../../services/privacy_service.dart';
@@ -74,6 +75,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
   // icine StreamBuilder koymak (ikonun kendisi olarak) alisilmadik bir
   // yapiydi; sadelestirildi.
   StreamSubscription<int>? _missedSub;
+  StreamSubscription? _handshakeSub;
   int _missedCount = 0;
 
   /// Play'e göre yeni sürüm var mı (§4bl).
@@ -121,6 +123,13 @@ class _HomeShellState extends ConsumerState<HomeShell>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) ref.read(connectivityProvider);
     });
+    // 🤝 SESSİZ EL SIKIŞMA DİNLEYİCİSİ (§4cc) — uygulama genelinde.
+    //
+    // ⚠️ Sohbet ekranına bağlanamaz: onarımın bütün değeri, karşı tarafın
+    // o sohbeti AÇMASINI beklememesinde. Tek koleksiyon-grubu akışı
+    // bütün sohbetleri kapsar.
+    _handshakeSub = RehandshakeService.dinle(widget.myUid);
+
     WidgetsBinding.instance.addObserver(this);
     PresenceService.setOnline(true);
   }
@@ -147,6 +156,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
   @override
   void dispose() {
     _missedSub?.cancel();
+    _handshakeSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     PresenceService.setOnline(false);
     _pageController.dispose();
