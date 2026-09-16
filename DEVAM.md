@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-16 | 🚀 **v23 kapalı teste (Alpha) incelemeye gönderildi** | §4cg |
 | 09-16 | 📦 v23 paketi §4cd–§4cf ile YENİDEN derlendi; içeriği pakette doğrulandı | §4cd |
 | 09-16 | 📞 Arama rozetinden açıklama kaldırıldı (kullanıcı isteği) — IP uyarısı artık gösterilmiyor | §4cf |
 | 09-16 | ✂️ Güvenlik bantları kırpılıyordu; kimlik bandı da taşındı ve 16 dilde kilitlendi | §4ce |
@@ -89,7 +90,17 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 
 #### Durum
 
-* 🔴 **v23 (1.0.12) DERLENDİ ve DOĞRULANDI, HENÜZ YÜKLENMEDİ.**
+* 🚀 **v23 (1.0.12) KAPALI TESTE GÖNDERİLDİ** (2026-09-16).
+  Yayın özeti → *"İncelenmekte olan değişiklikler"* → Kapalı test –
+  Alpha → **23 (1.0.12)**. Yönetilen yayınlama KAPALI olduğu için
+  inceleme biter bitmez testçilere kendiliğinden sunulur.
+  ⏳ Gönderim öncesi hızlı kontroller (~15 dk) önce tamamlanır;
+  geri çekmek gerekirse Yayın özeti → **"Değişiklikleri kaldır"**.
+  📌 Sürüm adı bu kez elle `23 (1.0.12)` yazıldı — etiket tuzağı
+  (§ SÜRÜM ADI ≠ PAKET SÜRÜMÜ) bu sürümde tekrarlanmadı.
+
+* ✅ **Paket derlendi ve DOĞRULANDI** (16 Eyl 03:15).
+  SHA-256 `a67c132b…`, 92.842.068 bayt.
   Paket `build/app/outputs/bundle/release/app-release.aab`
   (88,5 MB, **16 Eyl 03:15**), GIF anahtarıyla derlendi.
   Sürüm notu `scripts/surum_notlari.json` (en-US, **483**/500 karakter)
@@ -1173,6 +1184,72 @@ dinleyicileri `to == ben` kısıtıyla geçer, kısıtsız döküm reddedilir.
 indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
+
+---
+
+## 📤 v23 YÜKLEME TURU (2026-09-16) — §4cg
+
+### §4cg — 🪤 "SÜRÜM KODU DAHA ÖNCE KULLANILDI"
+
+Yükleme üç kez denendi ve ikisi başarısız göründü. Gerçek sebep
+sonunda Play'in kendi hata metninden çıktı:
+
+> **"23 sürüm kodu daha önce kullanıldı. Başka bir sürüm kodunu
+> deneyin."**
+
+#### Ne olmuştu
+
+İlk yükleme **başarılıydı** (16 Eyl 07:27) ama paket **sürüme
+bağlanmadı**; Play onu *kütüphaneye* aldı. Sürüm hazırlama sayfası
+boş göründüğü için "yükleme olmadı" sanıldı ve aynı dosya tekrar
+yüklendi — bu kez Play reddetti, çünkü **bir sürüm kodu Play'de bir
+kez kullanılır ve asla geri gelmez** (paket hiçbir sürüme bağlanmamış
+olsa bile).
+
+#### 🔴 Doğru çözüm: YENİDEN DERLEME DEĞİL, "Kitaplıktan ekle"
+
+İlk refleks `pubspec`'i `+24`'e çıkarıp yeniden derlemekti. **Gereksiz
+olurdu ve yanlıştı:** paket zaten Play'deydi. Doğru yol:
+
+```
+Sürüm hazırla → Uygulama paketleri → "Kitaplıktan ekle" → 23'ü seç
+```
+
+⚠️ Sürüm kodunu bump etmek burada sessiz bir maliyet yaratırdı: 23
+sonsuza dek "kullanılmış ama hiç yayınlanmamış" olarak kalır ve
+sürüm geçmişinde §4by'deki v21 gibi bir boşluk daha açılırdı.
+
+#### 🪤 Teşhisi zorlaştıran üç şey
+
+1. **"Dahil olmayanlar" başlığı yanıltıyor.** Sürüm sayfasındaki
+   tabloda `22 (1.0.11)` görünüyordu ve bu "yüklenen paket" sanıldı.
+   Oysa o bölüm *önceki sürümden gelen ve bu sürüme DAHİL EDİLMEYECEK*
+   paketleri listeler. Dahil edilen paketler ayrı bir tabloda.
+2. **Hata metni katlanmış durumdaydı.** Reddedilen dosya kutuda
+   kırmızı bir satır olarak duruyordu ama sayfa dar pencerede
+   kaydırılmadan görünmüyordu.
+3. **Konsol o gün ayrıca `637A51D4` hatası veriyordu** ve kapalı test
+   sayfası bir kez tamamen boş yüklendi — bu da "yükleme düştü"
+   izlenimini güçlendirdi.
+
+#### ✅ Hangi derlemenin yüklendiği NASIL doğrulandı
+
+02:23'teki **eski** paket de `1.0.12+23`'tü ve arayüz düzeltmelerini
+içermiyordu — yani "kod 23" tek başına yeterli kanıt değildi.
+
+Diskteki tüm `.aab` dosyaları tarandı: yalnızca iki kopya vardı
+(proje çıktısı ve `Downloads`), **SHA-256'ları birebir aynı**
+(`a67c132b…`) ve ikisi de 03:15 derlemesi. Eski paket yerine yazılmış,
+başka kopyası kalmamış. Play'e 07:27'de giren dosya bu olabilirdi
+yalnızca.
+
+> 📌 Ders: **paket kimliği tarih/boyutla değil, ÖZETLE doğrulanır.**
+> Aynı sürüm kodunu taşıyan iki farklı derleme olabilir.
+
+### Sürüm notu
+
+`scripts/surum_notlari.json` (en-US, 483/500) `<en-US>…</en-US>`
+bloğuyla yapıştırıldı; §4cd–§4ce düzeltmeleri de listede.
 
 ---
 
