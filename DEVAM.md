@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-16 | 📦 v23 paketi §4cd–§4cf ile YENİDEN derlendi; içeriği pakette doğrulandı | §4cd |
 | 09-16 | 📞 Arama rozetinden açıklama kaldırıldı (kullanıcı isteği) — IP uyarısı artık gösterilmiyor | §4cf |
 | 09-16 | ✂️ Güvenlik bantları kırpılıyordu; kimlik bandı da taşındı ve 16 dilde kilitlendi | §4ce |
 | 09-16 | 🐞 "Son görülme" başlıkta okunmuyordu — genişlik bütçesi + YANLIŞ çeviri anahtarı | §4cd |
@@ -88,20 +89,30 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 
 #### Durum
 
-* 🔴 **PAKET ESKİ — YENİDEN DERLENMELİ.** Diskteki
-  `build/app/outputs/bundle/release/app-release.aab` **16 Eyl 02:23**
-  tarihli; §4cd–§4cf (arayüz okunabilirliği turu) ondan **sonra**
-  yazıldı. Yani o paket "son görülme" düzeltmesini, bant düzeltmesini
-  ve arama rozeti değişikliğini **İÇERMİYOR**.
-  ⚠️ Yüklemeden önce `flutter build appbundle --release` ve paket
-  tarihinin en yeni kaynak dosyasından SONRA olduğunu doğrula:
-  `find lib -name '*.dart' -newer build/app/outputs/bundle/release/app-release.aab`
-  → **boş dönmeli.**
-* 🔴 **v23 (1.0.12) HENÜZ YÜKLENMEDİ.** Sürüm kodu 23 serbest, çünkü
-  Play'e hiç çıkmadı — yeni derleme aynı kodla yüklenebilir, bump
-  gerekmez. ⚠️ **Sürüm notu güncellenmeli**:
-  `scripts/surum_notlari.json` yalnızca mesajlaşma güvenilirliğinden
-  söz ediyor, arayüz düzeltmeleri yazılı değil (en-US, 500 krk sınırı).
+* 🔴 **v23 (1.0.12) DERLENDİ ve DOĞRULANDI, HENÜZ YÜKLENMEDİ.**
+  Paket `build/app/outputs/bundle/release/app-release.aab`
+  (88,5 MB, **16 Eyl 03:15**), GIF anahtarıyla derlendi.
+  Sürüm notu `scripts/surum_notlari.json` (en-US, **483**/500 karakter)
+  §4cd–§4ce düzeltmelerini de anlatıyor.
+  **Sıradaki iş bu:** Play Console → Kapalı test → yükle.
+  Sürüm kodu 23 serbest (Play'e hiç çıkmadı), bump gerekmez.
+
+  🪤 **Paket tazeliği VARSAYILMAZ, ölçülür.** Bu turda paket bir kez
+  eski kaldı: derleme 02:23'teydi, §4cd–§4cf ondan sonra yazıldı.
+  Yeniden derledikten sonra iki kapı birden çalıştırıldı:
+
+  ```
+  find lib -name '*.dart' -newer build/app/outputs/bundle/release/app-release.aab
+  ```
+  → **boş dönmeli** (döndü).
+
+  ⚠️ Boyut kapı DEĞİL: yeni paket eskisinden **1 bayt** farklıydı
+  (88,5 MB'ın çoğu değişmeyen yerel kitaplıklar). "Boyut aynı, demek ki
+  derlenmemiş" yanlış sonuç olurdu. Kesin kanıt, `libapp.so` içinde
+  YENİ dizeleri aramaktır — `presence_typing`, `yazıyor` (UTF-16LE),
+  `πληκτρολογεί` ve GIPHY anahtarı arandı, dördü de bulundu.
+  Kodlama kuralı için `SIR_DONDURME.md` ve bu dosyadaki dize arama
+  notu (üç kodlama: ascii / latin-1 / UTF-16LE).
 * ✅ **v22 (1.0.11) kapalı testte yayında** — 11 Eyl 23:46.
   ⚠️ **v21 hiç yayınlanmadı**; testçiler 20'den doğrudan 22'ye atladı.
 * ✅ **Doğrulama kapıları yeşil** (2026-09-16, §4cd–§4cf sonrası):
