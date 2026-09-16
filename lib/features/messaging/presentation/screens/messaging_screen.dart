@@ -83,6 +83,43 @@ import '../../../../services/group_key_service.dart';
 import '../../../../core/observability/handled_error.dart';
 import '../widgets/security_banners.dart';
 
+// ─────────────────────────────────────────────────────────────────────
+// 📏 BAŞLIK ÇUBUĞU GENİŞLİK BÜTÇESİ
+//
+// Başlık çubuğundaki her sabit genişlikli öğe, başlığın ve ALT SATIRIN
+// ("son görülme 14:32") payından düşer. 360dp'lik bir telefonda eski
+// düzen şöyleydi:
+//
+//   dolgu 16 + geri 48 + avatar 38 + boşluk 12 + 4×48 düğme = 306
+//   → başlık + alt satıra kalan: 54dp
+//
+// 54dp'ye "Son görülme 14:32" sığmaz; kullanıcı yalnızca "Son görülme…"
+// görüyordu, yani bilginin TAMAMI kayboluyordu. Arama düğmesi taşma
+// menüsüne alındı ve kalan düğmeler sıkıştırıldı → 134dp.
+//
+// ⚠️ Buraya beşinci bir düğme eklemeden önce `chat_appbar_budget_test`
+// dosyasına bak: bütçe orada ölçülüyor ve düşer.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Sıkıştırılmış başlık düğmesi: 48 → 40dp.
+const VisualDensity kAppBarIconDensity =
+    VisualDensity(horizontal: -2, vertical: -2);
+
+/// `kAppBarIconDensity` uygulanmış bir `IconButton`ın kapladığı genişlik.
+const double kAppBarIconSize = 40;
+
+/// Başlık çubuğunda sabit genişlikli her şeyin toplamı (birebir sohbet:
+/// geri + avatar + boşluk + sesli + görüntülü + menü + yatay dolgu).
+const double kAppBarFixedWidth =
+    Spacing.sm * 2 + kAppBarIconSize + 38 + Spacing.md + kAppBarIconSize * 3;
+
+/// En dar yaygın telefon genişliği.
+const double kDarEkranGenisligi = 360;
+
+/// Başlık ve alt satıra kalan genişlik. Alt satırın okunabilir kalması
+/// için ölçülen değer budur.
+const double kAppBarBaslikPayi = kDarEkranGenisligi - kAppBarFixedWidth;
+
 /// Mesaj ekranı — "Buzlu Obsidyen" tasarımıyla (referans implementasyon).
 ///
 /// Yenilikler (v14 UI):
@@ -1638,19 +1675,26 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     return Consumer(builder: (context, ref, _) {
       final presence = ref.watch(presenceProvider(other)).asData?.value;
       if (presence == null) return secureRow;
-      final text = presenceText(context, presence, forChatId: widget.chatId);
-      if (text.isEmpty) return secureRow;
-      final isTyping = text == 'yazıyor...';
-      return Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: isTyping || text == 'çevrimiçi'
-              ? AppTheme.primary
-              : AppTheme.textSecondary,
-          fontSize: 12,
-          fontStyle: isTyping ? FontStyle.italic : FontStyle.normal,
+      final label = presenceLabel(context, presence, forChatId: widget.chatId);
+      if (label.text.isEmpty) return secureRow;
+      final isTyping = label.kind == PresenceKind.typing;
+      // 🪤 KIRPILMAKTANSA KÜÇÜL. Başlık alanı dar ve uzun dillerde
+      // ("zuletzt online gestern 14:32") hiçbir bütçe yetmez. Kırpma
+      // burada bilgiyi TAMAMEN yok ediyordu — kullanıcı "Son görülme…"
+      // görüp saati hiç göremiyordu. `scaleDown` yalnızca gerektiğinde
+      // ve yalnızca sığacak kadar küçültür; sığan dillerde 12dp kalır.
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          label.text,
+          maxLines: 1,
+          softWrap: false,
+          style: TextStyle(
+            color: label.vurgulu ? AppTheme.primary : AppTheme.textSecondary,
+            fontSize: 12,
+            fontStyle: isTyping ? FontStyle.italic : FontStyle.normal,
+          ),
         ),
       );
     });
@@ -1760,6 +1804,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
           IconButton(
             icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
             onPressed: () => Navigator.of(context).maybePop(),
+            visualDensity: kAppBarIconDensity,
           ),
           // Hero: sohbet listesindeki avatarla eşleşmeye hazır
           Hero(
@@ -1858,22 +1903,24 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.search, color: AppTheme.textPrimary),
-            onPressed: () => setState(() => _searchActive = true),
-            tooltip: context.tr('search_in_msgs_tip'),
-          ),
+          // ⚠️ ARAMA İKONU BURADAN KALDIRILDI, taşma menüsüne taşındı.
+          // Dördüncü bir 48dp'lik düğme, 360dp'lik bir telefonda başlığa
+          // 54dp bırakıyordu; alt satır ("son görülme 14:32") okunamaz
+          // hâle geliyordu. WhatsApp ve Telegram da sohbet içi aramayı
+          // taşma menüsünde tutar — arama, çağrıdan seyrek kullanılır.
           // Arama butonları (sadece direkt sohbet — kendinle arama yok)
           if (!widget.isGroup && !_kendineSohbet) ...[
             IconButton(
               icon: const Icon(Icons.call, color: AppTheme.textPrimary),
               onPressed: () => _startCall(CallType.audio),
               tooltip: context.tr('voice_call'),
+              visualDensity: kAppBarIconDensity,
             ),
             IconButton(
               icon: const Icon(Icons.videocam, color: AppTheme.textPrimary),
               onPressed: () => _startCall(CallType.video),
               tooltip: context.tr('video_call'),
+              visualDensity: kAppBarIconDensity,
             ),
           ] else if (!_isChannel) ...[
             // 👥 GRUP ARAMASI (mesh) — kanallarda YOK.
@@ -1881,17 +1928,23 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               icon: const Icon(Icons.groups, color: AppTheme.textPrimary),
               onPressed: () => _startGroupCall(video: false),
               tooltip: context.tr('group_call'),
+              visualDensity: kAppBarIconDensity,
             ),
             IconButton(
               icon: const Icon(Icons.videocam, color: AppTheme.textPrimary),
               onPressed: () => _startGroupCall(video: true),
               tooltip: context.tr('group_call'),
+              visualDensity: kAppBarIconDensity,
             ),
           ],
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: AppTheme.textPrimary),
+            // PopupMenuButton `visualDensity` almaz ama `style`ı içteki
+            // IconButton'a geçirir; sıkıştırma oraya böyle ulaşıyor.
+            style: IconButton.styleFrom(visualDensity: kAppBarIconDensity),
             color: AppTheme.surface,
             onSelected: (v) {
+              if (v == 'search') setState(() => _searchActive = true);
               if (v == 'clear') _confirmClearChat();
               if (v == 'theme') {
                 showBubbleThemePicker(context, ref, chatId: widget.chatId);
@@ -1911,6 +1964,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               }
             },
             itemBuilder: (_) => [
+              // 🔍 Başlıktaki arama düğmesi buraya taşındı (genişlik
+              // bütçesi — yukarıdaki nota bak). Erişilebilirlik açısından
+              // kaybı yok: menü öğesinin dokunma alanı düğmeden büyük.
+              PopupMenuItem(
+                value: 'search',
+                child: Text(context.tr('search_in_msgs'),
+                    style: const TextStyle(color: AppTheme.textPrimary)),
+              ),
               PopupMenuItem(
                 value: 'theme',
                 child: Text(context.tr('chat_color'),
@@ -2974,36 +3035,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   /// Column cocugu olarak degil OVERLAY olarak cizilir: bu ekranda
   /// extendBodyBehindAppBar acik oldugu icin Column'un ilk cocugu
   /// appbar'in ARKASINDA kalir (sabit mesaj bandinda ayni desen).
-  Widget _buildSafetyBanner() => Material(
-        color: const Color(0xFF3A1B23),
-        child: InkWell(
-          onTap: _openSafetyNumber,
-          child: SizedBox(
-            height: 38,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
-              child: Row(
-                children: [
-                  const Icon(Icons.gpp_maybe_rounded,
-                      color: AppTheme.danger, size: 17),
-                  const SizedBox(width: Spacing.sm),
-                  Expanded(
-                    child: Text(
-                      context.tr('safety_banner_changed'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: AppTheme.danger, fontSize: 12.5),
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right,
-                      color: AppTheme.danger, size: 18),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
+  Widget _buildSafetyBanner() =>
+      IdentityChangedBanner(onOpen: _openSafetyNumber);
 
   Widget _buildRotationBanner() =>
       GroupKeyRotationBanner(onRetry: _retryKeyRotation);
@@ -3168,15 +3201,22 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     // yalnızca öneri. İkisi aynı anda gösterilmez — kimlik değiştiyse
     // zaten doğrulama düşmüştür ve kullanıcıyı iki ayrı bantla
     // yormanın anlamı yok.
-    final banners = <Widget>[
+    // ⚠️ Her bandın yüksekliği AYRI. Eskiden tek bir sabit vardı
+    // (`kSecurityBannerHeight`) ve bütün bantlar ona sıkıştırılıyordu;
+    // metinler kırpılıyordu. Ortak yüksekliğe çıkmak ise en uzun
+    // metnin bedelini herkese ödetirdi — doğrulama önerisi neredeyse
+    // her doğrulanmamış sohbette görünüyor. Yükseklikler bantların
+    // kendisinden okunuyor.
+    final banners = <({Widget widget, double height})>[
       if (!widget.isGroup && (_safety?.identityChanged ?? false))
-        _buildSafetyBanner()
+        (widget: _buildSafetyBanner(), height: IdentityChangedBanner.height)
       else if (!widget.isGroup &&
           !_verifyPromptDismissed &&
           (_safety?.hasSession ?? false) &&
           !(_safety?.userVerified ?? false))
-        _buildVerifyPromptBanner(),
-      if (widget.isGroup && _keyRotationFailed) _buildRotationBanner(),
+        (widget: _buildVerifyPromptBanner(), height: VerifyPromptBanner.height),
+      if (widget.isGroup && _keyRotationFailed)
+        (widget: _buildRotationBanner(), height: GroupKeyRotationBanner.height),
       // 🔓 Şifreleme etkin değilse bunu SÖYLE. Balon başına rozet
       // koymak yanlış olurdu: `isEncrypted == false` gönderim
       // sırasındaki yer tutucularda, GIF'lerde, anketlerde ve geri
@@ -3185,9 +3225,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
       // ⚠️ BİREBİR sohbetlerde de gösterilir. §4aa yalnızca grup yolunu
       // kapsıyordu; oysa karşı tarafın anahtar paketi yoksa birebir mesaj
       // da şifresiz gidiyor ve o durum tamamen sinyalsizdi.
-      if (_groupPlaintext) const GroupPlaintextBanner(),
+      if (_groupPlaintext)
+        (
+          widget: const GroupPlaintextBanner(),
+          height: GroupPlaintextBanner.height
+        ),
     ];
-    final safetyOffset = kSecurityBannerHeight * banners.length;
+    final safetyOffset =
+        banners.fold<double>(0, (toplam, b) => toplam + b.height);
 
     final listView = ListView.builder(
       controller: _scrollController,
@@ -3444,10 +3489,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
         // 🔐 Güvenlik bantları — her şeyin üstünde, sırayla.
         for (var i = 0; i < banners.length; i++)
           Positioned(
-            top: topInset + kSecurityBannerHeight * i,
+            // Kümülatif: bantların yükseklikleri artık eşit değil.
+            top: topInset +
+                banners
+                    .take(i)
+                    .fold<double>(0, (toplam, b) => toplam + b.height),
             left: 0,
             right: 0,
-            child: banners[i],
+            child: banners[i].widget,
           ),
         // 📌 Sabit mesaj banner'i — appbar'in hemen altinda (extendBody
         // duzeninde Column cocugu appbar arkasinda kalirdi; overlay dogru).

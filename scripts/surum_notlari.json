@@ -1,6 +1,6 @@
 [
   {
     "language": "en-US",
-    "text": "Messaging reliability\n\n• Chats that got stuck on \"couldn't decrypt\" now repair themselves — you no longer have to send a message first\n• Fixed messages being permanently lost when the app was closed while receiving\n• Fixed \"couldn't decrypt\" after editing a message\n• Cropped photos no longer keep the original photo's empty border"
+    "text": "Messaging reliability and readability\n\n• Chats that got stuck on \"couldn't decrypt\" now repair themselves — you no longer have to send a message first\n• Fixed messages being permanently lost when the app was closed while receiving\n• Fixed \"couldn't decrypt\" after editing a message\n• The chat header now shows the full \"last seen\" time instead of cutting it off\n• Security notices are no longer truncated mid-sentence\n• Cropped photos no longer keep the original photo's empty border"
   }
 ]

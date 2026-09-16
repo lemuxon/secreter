@@ -21,6 +21,29 @@ import 'package:gizli_chat/core/i18n/app_localizations.dart';
 ///
 /// Bu kapı, açıklamanın 16 dilin HİÇBİRİNDE boşalmamasını ve IP'den söz
 /// etmeyi bırakmamasını garanti eder.
+///
+/// ───────────────────────────────────────────────────────────────────
+/// 🔴 2026-09-16 — KAPININ KAPSAMI DARALDI. OKUMADAN GEÇME.
+///
+/// Yukarıda öngörülen şey OLDU: kullanıcı isteğiyle **birebir arama
+/// ekranındaki dokunmalı açıklama kaldırıldı**
+/// (`call_screen.dart:_buildPrivacyBadge`). Rozet artık yalnızca
+/// "Doğrudan bağlantı" diyor; bilgi simgesi ve diyalog yok.
+///
+/// Yani bu dosyadaki `call_ip_visible_detail` / `call_ip_hidden_detail`
+/// testleri artık **kullanıcıya ULAŞAN bir metni değil, yalnızca
+/// sözlükte DURAN bir metni** ölçüyor. Bu tam olarak §4am'de yakalanan
+/// sınıf: yeşil yanan ama hiçbir şey kanıtlamayan kapı. Yeşil olmaları
+/// "kullanıcı IP'sinin paylaşıldığını öğreniyor" demek DEĞİLDİR.
+///
+/// Silmek yerine tutuluyorlar çünkü kararı geri almak `detail:`
+/// argümanını geri eklemekten ibaret; metinler o gün 16 dilde hazır
+/// olsun.
+///
+/// ✅ HÂLÂ GERÇEK KAPI: `group_call_*` testleri. Grup araması ekranı bu
+/// değişikliğin dışında; mesh'te IP aramadaki HERKESE açıldığı için
+/// açıklama orada duruyor ve gösteriliyor.
+/// ───────────────────────────────────────────────────────────────────
 void main() {
   final diller = AppLocalizations.keysByLanguage.keys.toList();
 

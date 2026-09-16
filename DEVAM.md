@@ -26,6 +26,9 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-16 | 📞 Arama rozetinden açıklama kaldırıldı (kullanıcı isteği) — IP uyarısı artık gösterilmiyor | §4cf |
+| 09-16 | ✂️ Güvenlik bantları kırpılıyordu; kimlik bandı da taşındı ve 16 dilde kilitlendi | §4ce |
+| 09-16 | 🐞 "Son görülme" başlıkta okunmuyordu — genişlik bütçesi + YANLIŞ çeviri anahtarı | §4cd |
 | 09-16 | ⚖️ El sıkışma çakışması hakemi — iki taraf aynı anda onarınca ayrışma | §4cc |
 | 09-16 | ☁️ `handshakes` kuralları + `init` alan geçersiz kılma **dağıtıldı** | §4cc |
 | 09-16 | 🤝 Sessiz yeniden el sıkışma — onarım artık kullanıcıyı beklemiyor | §4cc |
@@ -78,21 +81,32 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 | `MIGRATION_STATUS.md`, `ARCHITECTURE.md` | Mimari arka plan |
 | `scripts/` | Tek komutluk işler: `turn_kur.sh` (coturn), `imza_parolasi_dondur.sh` (parola rotasyonu), `play_yukle.js` (Play'e yükleme) |
 
-### 🔴 EN SON NEREDE KALDIK (2026-09-12)
+### 🔴 EN SON NEREDE KALDIK (2026-09-16)
 
 > **Önce bunu oku.** Her maddenin tam gerekçesi bu dosyadaki tur
-> bölümlerinde (§4bf–§4by) ve `GUVENLIK_DUZELTMELERI.md`de.
+> bölümlerinde (§4bf–§4cf) ve `GUVENLIK_DUZELTMELERI.md`de.
 
 #### Durum
 
-* 🔴 **v23 (1.0.12) DERLENDİ, HENÜZ YÜKLENMEDİ** — paket
-  `build/app/outputs/bundle/release/app-release.aab` (88,5 MB,
-  16 Eyl 02:23). Sürüm notu `scripts/surum_notlari.json` (en-US, 331
-  karakter). **Sıradaki iş bu:** Play Console → Kapalı test → yükle.
+* 🔴 **PAKET ESKİ — YENİDEN DERLENMELİ.** Diskteki
+  `build/app/outputs/bundle/release/app-release.aab` **16 Eyl 02:23**
+  tarihli; §4cd–§4cf (arayüz okunabilirliği turu) ondan **sonra**
+  yazıldı. Yani o paket "son görülme" düzeltmesini, bant düzeltmesini
+  ve arama rozeti değişikliğini **İÇERMİYOR**.
+  ⚠️ Yüklemeden önce `flutter build appbundle --release` ve paket
+  tarihinin en yeni kaynak dosyasından SONRA olduğunu doğrula:
+  `find lib -name '*.dart' -newer build/app/outputs/bundle/release/app-release.aab`
+  → **boş dönmeli.**
+* 🔴 **v23 (1.0.12) HENÜZ YÜKLENMEDİ.** Sürüm kodu 23 serbest, çünkü
+  Play'e hiç çıkmadı — yeni derleme aynı kodla yüklenebilir, bump
+  gerekmez. ⚠️ **Sürüm notu güncellenmeli**:
+  `scripts/surum_notlari.json` yalnızca mesajlaşma güvenilirliğinden
+  söz ediyor, arayüz düzeltmeleri yazılı değil (en-US, 500 krk sınırı).
 * ✅ **v22 (1.0.11) kapalı testte yayında** — 11 Eyl 23:46.
   ⚠️ **v21 hiç yayınlanmadı**; testçiler 20'den doğrudan 22'ye atladı.
-* ✅ **Doğrulama kapıları yeşil:** analyzer 0 bulgu · **549** Dart testi
-  · **153** kural testi · **4** functions testi · `dart format` temiz.
+* ✅ **Doğrulama kapıları yeşil** (2026-09-16, §4cd–§4cf sonrası):
+  analyzer 0 bulgu · **623** Dart testi · **153** kural testi ·
+  **4** functions testi · `dart format` temiz · `node --check` OK.
 * ✅ **Üretimde dağıtılmış:** `firestore:rules` (grup araması `sdp` ve
   sessiz el sıkışma `handshakes` kuralları dahil), `firestore:indexes`
   (`calls` bileşik indeksi + `init.to` alan geçersiz kılma),
@@ -154,7 +168,14 @@ Geliyorsa asıl şikâyet kapanmış demektir.
 > şey görürseniz (mesajlar kaybolursa, sohbet aniden bozulursa) hemen
 > haber verin."*
 
-**4. Foto editöründe BİLEREK ertelenen kusur (§4ca).**
+**4. Grup arama rozeti: açıklama kalsın mı? (§4cf) — KARAR GEREKİYOR.**
+Birebir arama ekranındaki IP açıklaması kullanıcı isteğiyle kaldırıldı.
+Grup araması ekranı **dokunulmadan bırakıldı**: mesh'te IP tek kişiye
+değil aramadaki HERKESE açılıyor, yani ödünleşim daha ağır. İstek
+"arayınca" diyordu; daha ağır olanı istenmeden değiştirmek doğru
+olmazdı. → *Grup aramasında da yalnızca etiket mi kalsın?*
+
+**5. Foto editöründe BİLEREK ertelenen kusur (§4ca).**
 `pixelRatio: 2.0` ile ekran boyutundaki widget fotoğraflanıyor: 4000
 piksellik fotoğraf ~1500'e düşüyor ve çıktı PNG (fotoğraf için JPEG'den
 kat kat büyük). Kullanıcı bunu bildirmedi; düzeltmek çıktı boyutunu
@@ -1141,6 +1162,183 @@ dinleyicileri `to == ben` kısıtıyla geçer, kısıtsız döküm reddedilir.
 indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
+
+---
+
+## 🖥️ ARAYÜZ OKUNABİLİRLİĞİ TURU (2026-09-16) — §4cd – §4cf
+
+Kullanıcı üç şey bildirdi; ikisi aynı sınıf (**metin sığmıyor, kırpma
+bilgiyi tamamen yok ediyor**), üçüncüsü bilinçli bir kaldırma. Ayrıca
+birincisini incelerken **bildirilmemiş bir hata** çıktı (§4cd/2).
+
+### §4cd — SOHBET BAŞLIĞINDA "SON GÖRÜLME" OKUNMUYORDU
+
+Şikâyet: *"'Son görülme....' yazıyor ama o metin sığmadığından tamamen
+okunmuyor. İnsanlar son görülme aktifliğini göremiyor."*
+
+**İki ayrı sebep vardı ve ikisi de sessizdi.**
+
+#### 1. Genişlik bütçesi — bu bir ARİTMETİK hatası, çizim hatası değil
+
+Başlık çubuğundaki her sabit genişlikli düğme, başlığın ve alt satırın
+payından düşüyor. 360dp'lik bir telefonda:
+
+```
+dolgu 16 + geri 48 + avatar 38 + boşluk 12 + 4×48 düğme = 306
+→ başlık + alt satıra kalan:                              54 dp
+```
+
+54dp'ye "son görülme 14:32" sığmaz. `TextOverflow.ellipsis` devreye
+girip **bilginin tamamını** yutuyordu: kullanıcı "Son görülme…" görüp
+saati hiç göremiyordu — yani satır hiçbir işe yaramıyordu.
+
+**Düzeltme üç parçalı:**
+
+* **Arama düğmesi taşma menüsüne alındı.** Dördüncü düğme bütçeyi
+  bitiriyordu; WhatsApp ve Telegram da sohbet içi aramayı menüde tutar.
+* **Kalan düğmeler sıkıştırıldı** (`VisualDensity`, 48 → 40dp).
+  ⚠️ `PopupMenuButton` `visualDensity` almaz ama `style`ını içteki
+  `IconButton`a geçirir; sıkıştırma oraya böyle ulaşıyor.
+* **Kırpma yerine küçültme** (`FittedBox(scaleDown)`). Uzun dillerde
+  hiçbir bütçe yetmez — ama küçülen metin okunur, kırpılan okunmaz.
+
+Pay 54 → **134dp**. Ayrıca "son görülme dün 14:32" biçimindeki ön ek
+kaldırıldı ("dün 14:32"); ismin altında zaten son görülme olarak okunur
+ve Almanca/Yunanca/Portekizcede payı aşan biçim buydu. **Tarih
+biçiminde ön ek KALDI** — yalnız "28.02" ne olduğu belirsiz kalırdı.
+
+#### 2. 🐞 BİLDİRİLMEMİŞ HATA: "yazıyor" satırı yanlış anahtarı okuyordu
+
+`presence.dart`, "yazıyor" için `typing_indicator` anahtarını
+okuyordu — **o bir AYAR BAŞLIĞIDIR** ("Yazıyor göstergesi" / "Typing
+indicator", `typing_indicator_sub` ile birlikte ayarlar ekranında
+kullanılıyor). Sohbet başlığında şu yazıyordu:
+
+| Dil | Görünen | Olması gereken |
+|---|---|---|
+| tr | `Yazıyor göstergesi...` | `yazıyor...` |
+| en | `Typing indicator...` | `typing...` |
+
+**Hiçbir kapı düşmedi:** anahtar 16 dilde tamdı, metin boş değildi,
+analyzer temizdi. Yalnızca YANLIŞ anahtardı. Yeni anahtar
+`presence_typing` 16 dile eklendi.
+
+Yanında ikinci bir hata: çağıran taraf stili **Türkçe dizeyle**
+karşılaştırarak seçiyordu.
+
+```dart
+final isTyping = text == 'yazıyor...';       // HİÇ tutmuyordu (1 yüzünden)
+color: isTyping || text == 'çevrimiçi' ...   // yalnızca Türkçede tutar
+```
+
+Yani "yazıyor" ve "çevrimiçi" vurgusu 15 dilde sessizce kayboluyordu —
+ve Türkçede de kayıptı, çünkü metin zaten eşleşmiyordu. `presenceText`
+artık `PresenceLabel(text, kind)` döndürüyor; **vurgu metinden değil,
+veriden geliyor.**
+
+> 📌 Sınıf tanıdık: *çalışmayan bir şey hata vermiyor, o yüzden
+> görünmüyor.* §4ai (çeviri) ve §4ah (yutulan hata) ile aynı aile.
+
+#### Kapılar
+
+* `chat_appbar_budget_test.dart` — bütçeyi ekranın KULLANDIĞI
+  sabitlerden okur; beşinci bir düğme eklenirse düşer. `kAppBarIconSize`
+  varsayılmıyor, **çizilip ölçülüyor**.
+* `presence_label_test.dart` — 16 dilde ayar başlığının durum satırına
+  sızmadığını ve vurgunun türden geldiğini ölçer.
+  **Kırılabilirlik ölçüldü:** eski anahtar geri kondu, kapı düştü.
+
+### §4ce — GÜVENLİK BANTLARI KIRPILIYORDU
+
+Şikâyet: *"Aynısı 'güvenlik numarası karşılaştırarak bu sohb....'
+kısmında da öyle."*
+
+Bantların hepsi `kSecurityBannerHeight = 38` ile **tek satıra**
+sıkıştırılmıştı. Yarısı görünen bir güvenlik bandı, görünmeyenle aynı
+işe yarar: kullanıcı ne istendiğini anlamaz.
+
+#### 🪤 Sözleşme zaten TUTMUYORDU
+
+Bant yüksekliği tek sabitti ve sohbet ekranı `kSecurityBannerHeight * i`
+ile dizip `* banners.length` ile liste dolgusu hesaplıyordu. Ama
+**kimlik değişimi bandı** sohbet ekranının içinde ayrı yazılmıştı ve
+yüksekliği elle `38` girilmişti. Sabit değişseydi bantlar mesaj
+listesiyle çakışacaktı — sessizce. (Üstelik o bant `maxLines: 1` idi,
+yani en ağır uyarı — *araya girme girişimi olabilir* — de kırpılıyordu.)
+
+O bant `security_banners.dart`'a taşındı: kardeşleriyle aynı yerde,
+aynı kapının altında.
+
+#### Ortak yükseklik yanlış cevaptı
+
+Gereken satır sayısı 16 dilde **gerçek Roboto metrikleriyle** ölçüldü:
+
+| Bant | Gereken satır | Ne zaman görünür |
+|---|---|---|
+| Doğrulama önerisi | 2 | neredeyse HER doğrulanmamış sohbette |
+| Şifresiz grup | 3 | şifreleme kurulamadığında |
+| Kimlik değişimi | 3 | anahtar değiştiğinde |
+| Anahtar rotasyonu | 4 | rotasyon başarısız olduğunda (nadir) |
+
+Hepsini en uzuna (4 satır ≈ 84dp) eşitlemek, **en sık görünen bandın**
+bedelini en nadirine ödetirdi. Her bant artık kendi yüksekliğini
+söylüyor (`Banner.height`), ekran kümülatif topluyor.
+
+#### 🪤 Çevrilmiş DÜĞME, uyarı metninin payını yiyor
+
+Rotasyon bandındaki "Tekrar dene" bazı dillerde çok geniş
+("Спробувати ще раз", "Erneut versuchen") ve metne kalan payı
+daraltıyordu — Almanca 4 satıra bile sığmıyordu. Düğme 84dp ile
+sınırlandı ve etiketi `FittedBox` ile küçülüyor: **düğme kısalır,
+uyarı metni kırpılmaz.**
+
+#### Kapı
+
+`security_banners_test.dart` → `kırpılma` grubu, **16 dil × 4 bant**,
+`didExceedMaxLines` ile ölçüyor.
+
+⚠️ **Gerçek font ŞART.** Widget testinde varsayılan yedek font her
+glifi 1em genişlikte çizer (Roboto'da Latin harfler ~yarısı). Yedek
+fontla ölçmek yanlış alarm veriyordu: altı bandın altısı da düşüyordu.
+Roboto artık `FLUTTER_ROOT` önbelleğinden yükleniyor.
+
+**Kırılabilirlik ölçüldü:** `maxLines` 1'e çekildi, 12 test düştü.
+
+### §4cf — ARAMA ROZETİNDEN AÇIKLAMA KALDIRILDI (kullanıcı kararı)
+
+İstek: *"Arayınca doğrudan bağlantı yazsın sadece, üzerinde bakınca
+açıklama yazmasın."*
+
+Birebir arama ekranındaki rozet artık yalnızca etiket: bilgi simgesi ve
+dokununca açılan diyalog yok.
+
+#### 🔴 BİLİNÇLİ KAYIP — yeni oturum bunu bilsin
+
+**TURN kurulana kadar HER arama doğrudan kurulur**, yani IP adresi
+karşı tarafa açılır (§3 A). Kaldırılan açıklama, kullanıcının bunu
+öğrenebileceği **tek yerdi.**
+
+Bu tam olarak `ip_disclosure_test.dart`'ın önceden yazıp uyardığı adım:
+*"yumuşatma, bir sonraki elde sessizce kaldırmaya dönüşebilir."*
+
+**Ne yapıldı, ne yapılmadı:**
+
+* Metinler (`call_ip_*_detail`) 16 dilde **SİLİNMEDİ**; geri getirmek
+  `detail:` argümanını eklemekten ibaret.
+* **Grup araması ekranı DIŞARIDA bırakıldı.** Mesh'te IP tek kişiye
+  değil aramadaki HERKESE açılıyor; istek "arayınca" diyordu ve daha
+  ağır olan yolu istenmeden değiştirmek doğru olmazdı.
+  → **Karar bekliyor:** grup da aynı olsun mu?
+* `ip_disclosure_test.dart`'ın başına kapsam daralması yazıldı. Testler
+  hâlâ yeşil ama birebir yol için artık **kullanıcıya ulaşan** bir
+  metni değil, yalnızca sözlükte duran bir metni ölçüyorlar — §4am'de
+  yakalanan "yeşil ama hiçbir şey kanıtlamayan kapı" sınıfı. Yeşil
+  olmaları "kullanıcı IP'sinin paylaşıldığını öğreniyor" demek DEĞİL.
+
+### Kapılar
+
+`flutter analyze` temiz · Dart **623** (549 → 623, +74) · kural **153**
+· functions **4** · `dart format` temiz · `node --check` OK
 
 ---
 

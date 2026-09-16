@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gizli_chat/core/i18n/app_localizations.dart';
@@ -22,7 +26,7 @@ Widget _wrap(Widget child, {String lang = 'tr'}) => MaterialApp(
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('tr'), Locale('en')],
+      supportedLocales: [Locale(lang)],
       home: Scaffold(body: child),
     );
 
@@ -129,22 +133,145 @@ void main() {
   });
 
   group('yükseklik sözleşmesi', () {
-    testWidgets('iki bant da AYNI yüksekliktedir', (tester) async {
-      // ⚠️ Sohbet ekranı bantları üst üste dizerken bu sabite dayanıyor;
-      // biri farklı olsaydı bantlar mesaj listesiyle çakışırdı.
+    // ⚠️ Eskiden "hepsi AYNI yükseklikte" ölçülüyordu ve sohbet ekranı
+    // buna dayanıyordu. Sözleşme DEĞİŞTİ: her bant kendi yüksekliğini
+    // söylüyor, ekran onları topluyor. Ölçülmesi gereken şey artık
+    // eşitlik değil, **bildirilen yüksekliğin çizilenle uyuşması** —
+    // uyuşmazsa bantlar mesaj listesiyle çakışır ya da araya boşluk
+    // girer, ikisi de sessizdir.
+    testWidgets('her bant BİLDİRDİĞİ yükseklikte çizilir', (tester) async {
       await tester.pumpWidget(_wrap(Column(children: [
+        IdentityChangedBanner(onOpen: () {}),
         GroupKeyRotationBanner(onRetry: () {}),
         VerifyPromptBanner(onOpen: () {}, onDismiss: () {}),
         const GroupPlaintextBanner(),
       ])));
       await tester.pumpAndSettle();
 
+      expect(tester.getSize(find.byType(IdentityChangedBanner)).height,
+          IdentityChangedBanner.height);
       expect(tester.getSize(find.byType(GroupKeyRotationBanner)).height,
-          kSecurityBannerHeight);
+          GroupKeyRotationBanner.height);
       expect(tester.getSize(find.byType(VerifyPromptBanner)).height,
-          kSecurityBannerHeight);
+          VerifyPromptBanner.height);
       expect(tester.getSize(find.byType(GroupPlaintextBanner)).height,
-          kSecurityBannerHeight);
+          GroupPlaintextBanner.height);
     });
+
+    test('yükseklik, satır sayısıyla birlikte büyür', () {
+      // Satır sayısı artırılıp yükseklik unutulursa metin yine kırpılır;
+      // bağın kendisi ölçülüyor.
+      expect(VerifyPromptBanner.height,
+          bantYuksekligi(VerifyPromptBanner.maxLines));
+      expect(GroupPlaintextBanner.height,
+          bantYuksekligi(GroupPlaintextBanner.maxLines));
+      expect(GroupKeyRotationBanner.height,
+          bantYuksekligi(GroupKeyRotationBanner.maxLines));
+      expect(IdentityChangedBanner.height,
+          bantYuksekligi(IdentityChangedBanner.maxLines));
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────
+  // ✂️ KIRPILMA
+  //
+  // Saha raporu: *"'güvenlik numarası karşılaştırarak bu sohb....'
+  // kısmında da öyle"* — bant metni tek satıra sığmadığı için yarısı
+  // görünmüyordu.
+  //
+  // Yarısı görünen bir güvenlik bandı, görünmeyen bir bantla aynı işe
+  // yarar: kullanıcı ne istendiğini anlamaz. Bant yüksekliği 38 → 52
+  // yapıldı ve metinler iki satıra açıldı.
+  // ───────────────────────────────────────────────────────────────────
+  group('kırpılma', () {
+    // ⚠️ GERÇEK FONT ŞART. Widget testinde varsayılan yedek font her
+    // glifi 1em genişlikte çizer — Roboto'da Latin harfler yaklaşık
+    // yarısı kadardır. Yedek fontla ölçmek "kırpılıyor" diye YANLIŞ
+    // alarm verir (ölçüldü: altı bandın altısı da düşüyordu). Roboto,
+    // Flutter SDK'sının önbelleğinden yükleniyor.
+    setUpAll(() async {
+      final kok = Platform.environment['FLUTTER_ROOT'];
+      expect(kok, isNotNull,
+          reason: 'FLUTTER_ROOT yok — bu kapı gerçek font metrikleri '
+              'olmadan ölçemez ve sessizce yanlış sonuç verir');
+      final dosya =
+          File('$kok/bin/cache/artifacts/material_fonts/roboto-regular.ttf');
+      expect(dosya.existsSync(), isTrue, reason: 'Roboto bulunamadı: $dosya');
+
+      final loader = FontLoader('Roboto')
+        ..addFont(dosya.readAsBytes().then(ByteData.sublistView));
+      await loader.load();
+    });
+
+    /// `Text` gerçekten kırpıldı mı? `didExceedMaxLines` bunu doğrudan
+    /// söyler — metni gözle karşılaştırmak (`find.text`) kırpılmayı
+    /// GÖRMEZ, çünkü widget'ın `data`sı tamdır, yalnızca ÇİZİM kesiktir.
+    bool kirpildi(WidgetTester tester, Finder bant) {
+      final paragraflar = tester
+          .renderObjectList<RenderParagraph>(
+              find.descendant(of: bant, matching: find.byType(RichText)))
+          .toList();
+      expect(paragraflar, isNotEmpty);
+      return paragraflar.any((p) => p.didExceedMaxLines);
+    }
+
+    /// En dar yaygın telefon. Bantlar ekran genişliğini kaplar.
+    const darEkran = Size(360, 800);
+
+    // ⚠️ İKİ DİL YETMEZ. tr+en ölçüp geçmek, bu projede tekrar eden
+    // "yeşil ama hiçbir şey kanıtlamayan kapı" desenine düşerdi:
+    // Almanca anahtar rotasyonu uyarısı İngilizcenin 1,5 katı, Yunanca
+    // şifresizlik uyarısı hepsinden uzun. Kapı 16 dilin TAMAMINI ölçer.
+    for (final dil in AppLocalizations.keysByLanguage.keys) {
+      testWidgets('[$dil] doğrulama önerisi bandı kırpılmıyor', (tester) async {
+        await tester.binding.setSurfaceSize(darEkran);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(_wrap(
+            VerifyPromptBanner(onOpen: () {}, onDismiss: () {}),
+            lang: dil));
+        await tester.pumpAndSettle();
+
+        expect(kirpildi(tester, find.byType(VerifyPromptBanner)), isFalse,
+            reason: 'öneri metni kesiliyor — kullanıcı ne yapması '
+                'gerektiğini okuyamaz');
+      });
+
+      testWidgets('[$dil] şifresiz grup bandı kırpılmıyor', (tester) async {
+        await tester.binding.setSurfaceSize(darEkran);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(_wrap(const GroupPlaintextBanner(), lang: dil));
+        await tester.pumpAndSettle();
+
+        expect(kirpildi(tester, find.byType(GroupPlaintextBanner)), isFalse,
+            reason: 'şifrelemenin kapalı olduğu uyarısı yarım görünüyor');
+      });
+
+      testWidgets('[$dil] kimlik değişimi bandı kırpılmıyor', (tester) async {
+        await tester.binding.setSurfaceSize(darEkran);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester
+            .pumpWidget(_wrap(IdentityChangedBanner(onOpen: () {}), lang: dil));
+        await tester.pumpAndSettle();
+
+        expect(kirpildi(tester, find.byType(IdentityChangedBanner)), isFalse,
+            reason: 'araya girme ihtimalini anlatan uyarı yarım görünüyor');
+      });
+
+      testWidgets('[$dil] anahtar rotasyonu bandı kırpılmıyor', (tester) async {
+        await tester.binding.setSurfaceSize(darEkran);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+            _wrap(GroupKeyRotationBanner(onRetry: () {}), lang: dil));
+        await tester.pumpAndSettle();
+
+        expect(kirpildi(tester, find.byType(GroupKeyRotationBanner)), isFalse,
+            reason: 'atılan üyenin mesajları okumaya devam ettiği uyarısı '
+                'yarım görünüyor');
+      });
+    }
   });
 }

@@ -92,26 +92,70 @@ final presenceProvider =
       .map((doc) => PresenceInfo.fromMap(doc.data()));
 });
 
-/// Son görülme metnini biçimlendir ("çevrimiçi" / "son görülme 14:32" vb.)
-String presenceText(BuildContext context, PresenceInfo p, {String? forChatId}) {
+/// Başlıktaki varlık satırının TÜRÜ.
+///
+/// ⚠️ Eskiden çağıran taraf bunu **metni Türkçe dizeyle karşılaştırarak**
+/// anlıyordu (`text == 'yazıyor...'`). İki şekilde birden kırıktı: metin
+/// yanlış anahtardan geldiği için karşılaştırma HİÇ tutmuyordu, ve
+/// tutsaydı bile yalnızca Türkçede tutardı — diğer 15 dilde "yazıyor" ve
+/// "çevrimiçi" vurgusu sessizce kayboluyordu. Tür artık metinden değil,
+/// verinin kendisinden geliyor.
+enum PresenceKind { typing, online, lastSeen, none }
+
+/// Varlık satırı: ne yazacağı VE nasıl vurgulanacağı.
+class PresenceLabel {
+  final String text;
+  final PresenceKind kind;
+
+  const PresenceLabel(this.text, this.kind);
+
+  static const empty = PresenceLabel('', PresenceKind.none);
+
+  /// "yazıyor" ve "çevrimiçi" vurgulanır; "son görülme" nötr kalır.
+  bool get vurgulu =>
+      kind == PresenceKind.typing || kind == PresenceKind.online;
+}
+
+/// Varlık satırını biçimlendir ("yazıyor..." / "çevrimiçi" /
+/// "son görülme 14:32").
+PresenceLabel presenceLabel(BuildContext context, PresenceInfo p,
+    {String? forChatId}) {
   if (forChatId != null && p.typingIn == forChatId) {
-    return '${context.tr('typing_indicator')}...';
+    // 🪤 ESKİDEN `typing_indicator` OKUNUYORDU — o bir AYAR BAŞLIĞIDIR
+    // ("Yazıyor göstergesi" / "Typing indicator"), durum metni değil.
+    // Sohbet başlığında "Yazıyor göstergesi..." yazıyordu: hem yanlış
+    // hem de dar başlık alanına sığmayacak kadar uzun.
+    return PresenceLabel(
+        '${context.tr('presence_typing')}...', PresenceKind.typing);
   }
-  if (p.online) return context.tr('online_now');
+  if (p.online) {
+    return PresenceLabel(context.tr('online_now'), PresenceKind.online);
+  }
   final t = p.lastSeen;
-  if (t == null) return '';
+  if (t == null) return PresenceLabel.empty;
   final now = DateTime.now();
   String two(int n) => n.toString().padLeft(2, '0');
   final hm = '${two(t.hour)}:${two(t.minute)}';
   final isToday =
       t.year == now.year && t.month == now.month && t.day == now.day;
-  if (isToday) return '${context.tr('last_seen')} $hm';
+  if (isToday) {
+    return PresenceLabel(
+        '${context.tr('last_seen')} $hm', PresenceKind.lastSeen);
+  }
   final yesterday = now.subtract(const Duration(days: 1));
   final isYesterday = t.year == yesterday.year &&
       t.month == yesterday.month &&
       t.day == yesterday.day;
   if (isYesterday) {
-    return '${context.tr('last_seen')} ${context.tr('yesterday')} $hm';
+    // 📏 "son görülme" ÖN EKİ BİLEREK YOK. "son görülme dün 14:32"
+    // Almanca/Yunanca/Portekizcede başlık payını aşıyordu; "dün 14:32"
+    // ismin altında zaten son görülme olarak okunur (WhatsApp da böyle
+    // yazar). Tarih biçiminde ön ek KALIYOR: yalnız "28.02" ne olduğu
+    // belirsiz kalırdı.
+    return PresenceLabel(
+        '${context.tr('yesterday')} $hm', PresenceKind.lastSeen);
   }
-  return '${context.tr('last_seen')} ${two(t.day)}.${two(t.month)}';
+  return PresenceLabel(
+      '${context.tr('last_seen')} ${two(t.day)}.${two(t.month)}',
+      PresenceKind.lastSeen);
 }

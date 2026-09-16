@@ -318,12 +318,23 @@ class _CallScreenState extends State<CallScreen> {
   /// istemeyen bir uygulamada IP, kimliğin en güçlü belirleyicilerinden
   /// biridir; bunu sessizce geçmek kullanıcıyı yanıltmak olurdu.
   ///
-  /// ⚠️ Rozetin kendisi kısa ve NÖTRDÜR, ödünleşim DOKUNUNCA açılır
-  /// (§4ay). Eski hâli uyarı sarısıyla "IP adresin karşı tarafa
-  /// görünüyor" diyordu ve "arama güvensiz" diye okunuyordu — oysa ses
-  /// her iki durumda da şifreli. Metin YUMUŞATILDI, bilgi SİLİNMEDİ:
-  /// `test/features/call/ip_disclosure_test.dart` 16 dilde açıklamanın
-  /// IP'den söz etmeyi bırakmamasını zorunlu kılar.
+  /// ⚠️ Rozet artık YALNIZCA ETİKET — dokununca açılan açıklama YOK.
+  ///
+  /// Geçmişi: metin önce uyarı sarısıyla "IP adresin karşı tarafa
+  /// görünüyor" diyordu ve "arama güvensiz" diye okunuyordu; §4ay bunu
+  /// nötr bir etikete indirip ödünleşimi dokunmalı açıklamaya taşıdı.
+  /// 2026-09-16'da kullanıcı açıklamayı da kaldırmayı istedi: arama
+  /// ekranında rozetin üstüne gelince/ dokununca çıkan metin gürültü
+  /// sayıldı.
+  ///
+  /// 🔴 BİLİNÇLİ KAYIP — yeni oturum bunu bilsin: TURN kurulana kadar
+  /// (`TURN_KURULUMU.md`) HER arama doğrudan kurulur, yani IP karşı
+  /// tarafa AÇILIR. Bu açıklama, kullanıcının bunu öğrenebileceği tek
+  /// yerdi. Metinler (`call_ip_*_detail`) 16 dilde SİLİNMEDİ, yalnızca
+  /// bu ekranda gösterilmiyor — geri getirmek `detail:` argümanını
+  /// eklemekten ibarettir.
+  /// Grup araması ekranı bu değişikliğin DIŞINDA bırakıldı: mesh'te IP
+  /// tek kişiye değil aramadaki HERKESE açılıyor.
   Widget _buildPrivacyBadge() {
     // TURN yapılandırılmış ama erişilemiyor: arama hiç kurulamaz.
     // Bunu "arama başarısız" diye geçmek, sorunu saatlerce yanlış yerde
@@ -345,7 +356,6 @@ class _CallScreenState extends State<CallScreen> {
             icon: Icons.lock_rounded,
             color: AppTheme.secure,
             text: context.tr('call_ip_hidden'),
-            detail: context.tr('call_ip_hidden_detail'),
           )
         : _badge(
             // ⚠️ TON BİLİNÇLİ OLARAK NÖTR: eskiden uyarı sarısı + dünya
@@ -356,39 +366,15 @@ class _CallScreenState extends State<CallScreen> {
             icon: Icons.swap_horiz_rounded,
             color: AppTheme.primary,
             text: context.tr('call_ip_visible'),
-            detail: context.tr('call_ip_visible_detail'),
           );
-  }
-
-  /// Rozetin tam açıklaması. Rozet iki satıra sığmak zorunda; gerçek
-  /// ödünleşimi anlatacak yer yok. Metni kısaltıp açıklamayı buraya almak,
-  /// kısaltıp yok saymaktan iyidir.
-  void _showBadgeDetail(String baslik, String metin) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: Text(baslik,
-            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 17)),
-        content: Text(metin,
-            style: const TextStyle(color: AppTheme.textSecondary, height: 1.4)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(context.tr('ok')),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _badge({
     required IconData icon,
     required Color color,
     required String text,
-    String? detail,
   }) {
-    final govde = Container(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.45),
@@ -407,20 +393,8 @@ class _CallScreenState extends State<CallScreen> {
               style: TextStyle(color: color, fontSize: 12),
             ),
           ),
-          // Dokunulabilir olduğunu gösteren tek işaret; dile bağlı değil.
-          if (detail != null) ...[
-            const SizedBox(width: 5),
-            Icon(Icons.info_outline_rounded,
-                color: color.withValues(alpha: 0.75), size: 13),
-          ],
         ],
       ),
-    );
-
-    if (detail == null) return govde;
-    return GestureDetector(
-      onTap: () => _showBadgeDetail(text, detail),
-      child: govde,
     );
   }
 
