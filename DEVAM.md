@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-20 | 🔎 v23 saha kontrolü: yayında, 0 çökme — ama testçi sayısı **tam sınırda 12** | §4ci |
 | 09-20 | 📞 Grup aramasından da IP açıklaması kaldırıldı — kapı artık hiçbir ekranı ölçmüyor | §4ch |
 | 09-16 | 🚀 **v23 kapalı teste (Alpha) incelemeye gönderildi** | §4cg |
 | 09-16 | 📦 v23 paketi §4cd–§4cf ile YENİDEN derlendi; içeriği pakette doğrulandı | §4cd |
@@ -91,14 +92,13 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 
 #### Durum
 
-* 🚀 **v23 (1.0.12) KAPALI TESTE GÖNDERİLDİ** (2026-09-16).
-  Yayın özeti → *"İncelenmekte olan değişiklikler"* → Kapalı test –
-  Alpha → **23 (1.0.12)**. Yönetilen yayınlama KAPALI olduğu için
-  inceleme biter bitmez testçilere kendiliğinden sunulur.
-  ⏳ Gönderim öncesi hızlı kontroller (~15 dk) önce tamamlanır;
-  geri çekmek gerekirse Yayın özeti → **"Değişiklikleri kaldır"**.
-  📌 Sürüm adı bu kez elle `23 (1.0.12)` yazıldı — etiket tuzağı
-  (§ SÜRÜM ADI ≠ PAKET SÜRÜMÜ) bu sürümde tekrarlanmadı.
+* ✅ **v23 (1.0.12) KAPALI TESTTE YAYINDA** — 16 Eyl **11:08**'de
+  kullanıma sunuldu. Kanal özeti: *Etkin · Son sürüm: 23 (1.0.12) ·
+  177 ülke/bölge*. Sürüm özetindeki **"Sürüm kodları: 23"** alanı
+  doğrulandı (etiket değil, gerçek alan — § SÜRÜM ADI ≠ PAKET SÜRÜMÜ).
+* ✅ **4 günlük sahada 0 çökme / 0 ANR** (20 Eyl kontrolü).
+  Android vitals → Kilitlenmeler ve ANR'ler: 28 günlük grafik düz
+  sıfır, sorun tablosu *"Sonuç yok"*. ⚠️ Sınırı için §4ci.
 
 * ✅ **Paket derlendi ve DOĞRULANDI** (16 Eyl 03:15).
   SHA-256 `a67c132b…`, 92.842.068 bayt.
@@ -559,10 +559,22 @@ Kurulunca yükleme tek komut olur; tarayıcıdan yüklemek **mümkün değil**
 
 ### 🔴 F. ÜRETİME BAŞVURU — 25 Eylül 2026'dan sonra
 
-**Durum (12 Eyl):** "Üretime başvur" düğmesi **pasif**. Kişisel
-geliştirici hesabı şartı: en az 12 test kullanıcısıyla **14 gün
-aralıksız** kapalı test. Play'in sayacı **1. günde** (11 Eyl'de 12 kişi
-kayıtlı oldu) → yaklaşık **25 Eylül**'de açılır.
+**Durum (20 Eyl — Play'in kendi sayacından okundu):** "Üretime
+başvur" düğmesi hâlâ **pasif**. Kontrol paneli birebir şunu yazıyor:
+
+> *"An itibarıyla **12** test kullanıcısı kesintisiz olarak **9 gündür**
+> kayıtlı"*
+
+Yani 1. gün 11 Eyl'di ve tahmin tutuyor: 14. gün ≈ **25 Eylül**.
+
+🔴 **SAYI TAM SINIRDA: 12/12. PAYI YOK.** Şart "en az 12" ve elde tam
+12 var — **bir kişi ayrılırsa sayaç sıfırlanabilir** ve 14 gün baştan
+başlar.
+
+⚠️ Buradaki sayı, uygulamayı yükleyen kişi sayısıyla AYNI DEĞİL.
+Uygulama listesi "21 kullanıcı" gösteriyor ama şartı ölçen sayaç
+**12**'de. Yükleme sayısına bakıp "rahatız" demek yanlış okuma olur —
+ölçülen şey *teste kayıtlı kalmak*, *uygulamayı kurmuş olmak* değil.
 
 ⚠️ **SAYAÇ SIFIRLANABİLİR.** 12 kişinin **kesintisiz** kayıtlı kalması
 gerekiyor. Biri testten ayrılırsa sayı 12'nin altına düşer ve gün sayacı
@@ -1206,6 +1218,54 @@ dinleyicileri `to == ben` kısıtıyla geçer, kısıtsız döküm reddedilir.
 indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
+
+---
+
+## 🔎 v23 SAHA KONTROLÜ (2026-09-20) — §4ci
+
+### §4ci — "ÇÖKME YOK" NE KADAR KANIT?
+
+v23 dört gündür sahada (16 Eyl 11:08). Play Console'da bakılanlar:
+
+| Nereye | Ne çıktı |
+|---|---|
+| Android vitals → Kilitlenmeler ve ANR'ler | 28 gün düz **0**, tablo *"Sonuç yok"* |
+| Test geri bildirimleri | En yenisi **11 Eyl** — v23'ten sonra **yeni yok** |
+| Kanal durumu | Etkin, son sürüm 23 (1.0.12), 177 ülke |
+
+#### 🪤 Crashlytics'e bakmak YANILTICI OLURDU
+
+`crashReportingConsent` **varsayılan `false`** (`privacy_settings.dart`)
+ve telemetri yalnızca kullanıcı ayarlardan açarsa başlatılıyor
+(`main.dart`, ertelenmiş blok). Gizlilik açısından doğru tercih, ama
+sonucu şu: **Crashlytics'in sessizliği hiçbir şey kanıtlamaz** —
+testçilerin çoğu o ayarı açmamıştır.
+
+Bu yüzden Android vitals'a bakıldı: onun verisi Google Play
+Hizmetleri'nden gelir ve uygulamanın kendi onay bayrağına BAKMAZ.
+
+> 📌 Sınıfın aynısı: *ölçmediğin bir şeyin sessizliğini "iyi haber"
+> sanmak.* §4am ve §4bw ile aynı aile.
+
+#### ⚠️ YİNE DE ZAYIF KANIT — neden
+
+* Android vitals da yalnızca **Google'la tanılama paylaşımını açmış**
+  cihazlardan veri toplar; 12–21 kişilik bir kitlede bu birkaç cihaz
+  demek olabilir.
+* **Kaç testçinin v23'e güncellediği ölçülmedi.** Güncellemeyen bir
+  testçi çökmez — v22 çalıştırıyordur.
+* Çökmeyen ama BOZAN hatalar buraya hiç düşmez. §4cc (sessiz yeniden
+  el sıkışma) tam olarak bu tür: başarısız olursa uygulama çökmez,
+  **mesaj okunamaz** olur. Vitals bunu göremez.
+
+#### ✅ ASIL DOĞRULAMA HÂLÂ AÇIK
+
+§4cc'nin iki telefonlu senaryosu (bu dosyada "AÇIK UÇLAR" md. 2)
+çalıştırılmadı. Sahadan sessizlik gelmesi onun yerini tutmaz;
+testçiye **sorulması** gerekiyor:
+
+> *"Daha önce 'çözülemedi' yazan bir sohbet, sen bir şey yazmadan
+> kendi kendine düzeldi mi?"*
 
 ---
 
