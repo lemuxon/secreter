@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-20 | 🔍 Saha teshisi: §4cc ÇALIŞIYOR — ama kaybolan mesaj kurtarılmıyor, onarım görünmüyor | §4ck |
 | 09-20 | 📖 Açık kaynak hazırlığı: AGPL-3.0 lisansı, sır taraması temiz, iddia kapıya bağlandı | §4cj |
 | 09-20 | 🔎 v23 saha kontrolü: yayında, 0 çökme — ama testçi sayısı **tam sınırda 12** | §4ci |
 | 09-20 | 📞 Grup aramasından da IP açıklaması kaldırıldı — kapı artık hiçbir ekranı ölçmüyor | §4ch |
@@ -1226,6 +1227,77 @@ dinleyicileri `to == ben` kısıtıyla geçer, kısıtsız döküm reddedilir.
 indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
+
+---
+
+## 🔍 SAHA TEŞHİSİ: §4cc ÇALIŞTI, KAYIP SÜRÜYOR (2026-09-20) — §4ck
+
+### §4ck — "2 MESAJ ÇÖZÜLEMEDİ, SONRA DÜZELDİ"
+
+Kullanıcı raporu (SECRET ↔ testçi B, 20 Eyl):
+
+> *"SECRET selam yazıyor, testçi B 2 mesaj atıyor ama ikisi de
+> çözülemedi diyor. Sonra SECRET 1 mesaj daha atıyor, sonra sohbet
+> düzeliyor."*
+
+Bu, §4cc'nin **tam olarak önlemesi gereken** senaryo gibi okunuyor.
+Değilmiş.
+
+#### 🔬 KANIT — Firestore'dan okundu, çıkarım değil
+
+`handshakes` koleksiyonunda 4 sohbet, 5 belge var; yani sessiz el
+sıkışma sahada **çalışıyor**. İlgili sohbette:
+
+| Sohbet | Yayımlayan | ts |
+|---|---|---|
+| `<sohbet-kimliği>` (SECRET↔B) | SECRET | **2026-09-20T14:08:18Z** |
+
+⚠️ **Zamanlama kanıtı koddan geliyor, damgadan değil:**
+`RehandshakeService.yayinla`, YALNIZCA çözme başarısız olan yoldan
+çağrılıyor (`encryption_datasource_impl.dart`) — gönderme yolundan
+DEĞİL. Yani 14:08, testçi B'nin mesajlarının çözülemediği andır ve
+SECRET'in 3. mesajından ÖNCEdir.
+
+Ayrıca o sohbette **tek** belge var: testçi B karşı-yayım yapmamış,
+yani onun tarafı bozulmamış — sessizce onarılmış. Çakışma (glare)
+yaşanmamış.
+
+#### ✅ Sonuç: mekanizma çalıştı, rapor YANLIŞ OKUMA
+
+```
+1. SECRET "selam"   → gider
+2. testçi B 2 mesaj  → SECRET çözemez
+                    → oturumu sıfırlar + el sıkışmayı YAYIMLAR (14:08)
+                    → testçi B'nin istemcisi sessizce onarılır
+3. SECRET 1 mesaj   → yeni oturumla gider
+4. Sohbet düzgün
+```
+
+Sohbetin "SECRET yazınca düzelmesi" arıza değil: onarım 14:08'de
+olmuştu, ama **14:08 ile 3. mesaj arasında kimse bir şey göndermediği
+için görünür olmadı.** Fark ancak testçi B önce yazsaydı ortaya
+çıkardı — eski sürümde onun mesajı da çözülemezdi.
+
+#### 🔴 AMA İKİ GERÇEK EKSİK VAR
+
+Rapor yanlış okumaydı; **şikâyet haklıydı.** İki mesaj kalıcı kayboldu.
+
+**1. Yeniden gönderim isteği YOK.**
+§4cc oturumu onarıyor, **içeriği kurtarmıyor.** Kod bunu zaten kabul
+ediyor: *"Mesajı KURTARMAZ — sohbetin bundan SONRASINI kurtarır."*
+testçi B'nin istemcisi, gönderdiği iki mesajın okunamadığını HİÇ
+öğrenmiyor. Signal bunu retry-receipt ile çözer: alıcı çözemeyince
+göndericiden o mesajı yeni oturumla tekrar ister.
+
+**2. Onarım GÖRÜNMÜYOR.**
+Ekranda iki "çözülemedi" balonu duruyor ve kullanıcının oturumun
+düzeldiğini anlamasının hiçbir yolu yok. Bu yüzden "sohbet bozuk
+kaldı, ben yazınca düzeldi" diye okunuyor — raporun kendisi bunun
+kanıtı. Algı sorunu değil, **eksik geri bildirim.**
+
+> 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
+> çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
+> (çözülemeyen medya "bozuk resim" görünüyordu).
 
 ---
 
