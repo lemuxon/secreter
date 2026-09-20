@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-20 | 📦 **v24 (1.0.13+24) derlendi ve içeriği doğrulandı** — henüz yüklenmedi | §4cl |
 | 09-20 | ♻️ Yeniden gönderim isteği + onarımı görünür kılan metin **dağıtıldı** | §4cl |
 | 09-20 | 🔍 Saha teshisi: §4cc ÇALIŞIYOR — ama kaybolan mesaj kurtarılmıyor, onarım görünmüyor | §4ck |
 | 09-20 | 📖 Açık kaynak hazırlığı: AGPL-3.0 lisansı, sır taraması temiz, iddia kapıya bağlandı | §4cj |
@@ -94,6 +95,22 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 > bölümlerinde (§4bf–§4cf) ve `GUVENLIK_DUZELTMELERI.md`de.
 
 #### Durum
+
+* 🔴 **v24 (1.0.13+24) DERLENDİ, HENÜZ YÜKLENMEDİ.**
+  Paket `build/app/outputs/bundle/release/app-release.aab`
+  (88,6 MB, **20 Eyl 18:05**), SHA-256 `c6f0754f…`, GIF anahtarıyla.
+  Sürüm notu `scripts/surum_notlari.json` (en-US, 360/500).
+  **Sıradaki iş bu:** Play Console → Kapalı test → yükle.
+
+  ✅ **İçerik doğrulandı** (tarih damgasına güvenilmedi, §4cg dersi):
+  manifest `1.0.13` diyor ve `1.0.12`/`1.0.11` hiç geçmiyor;
+  `libapp.so` içinde `resendRequests`, `E2EE_RETRY`, `e2ee_lost_retry`,
+  `open_source`, `AGPL-3.0` ve GIPHY anahtarı **var**; eski önek işaret
+  `E2EE_LOST_RETRY` **yok**.
+
+  ⚠️ **Açık kaynak satırı bu pakette GÖRÜNMEZ** — `depoAdresi` boş
+  (§4cj). Depo yayımlanıp adres doldurulunca bir sonraki sürümde
+  kendiliğinden belirir.
 
 * ✅ **v23 (1.0.12) KAPALI TESTTE YAYINDA** — 16 Eyl **11:08**'de
   kullanıma sunuldu. Kanal özeti: *Etkin · Son sürüm: 23 (1.0.12) ·

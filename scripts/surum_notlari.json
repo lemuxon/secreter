@@ -1,6 +1,6 @@
 [
   {
     "language": "en-US",
-    "text": "Messaging reliability and readability\n\n• Chats that got stuck on \"couldn't decrypt\" now repair themselves — you no longer have to send a message first\n• Fixed messages being permanently lost when the app was closed while receiving\n• Fixed \"couldn't decrypt\" after editing a message\n• The chat header now shows the full \"last seen\" time instead of cutting it off\n• Security notices are no longer truncated mid-sentence\n• Cropped photos no longer keep the original photo's empty border"
+    "text": "Messages that failed to decrypt now recover\n\n• When a message can't be decrypted, your device now asks the sender to send it again automatically — the message is restored in place instead of being lost\n• The \"couldn't decrypt\" notice now tells you whether the message is gone for good or on its way back\n• Group calls: the connection badge is now a plain label"
   }
 ]
