@@ -40,9 +40,26 @@ import 'package:gizli_chat/core/i18n/app_localizations.dart';
 /// argümanını geri eklemekten ibaret; metinler o gün 16 dilde hazır
 /// olsun.
 ///
-/// ✅ HÂLÂ GERÇEK KAPI: `group_call_*` testleri. Grup araması ekranı bu
-/// değişikliğin dışında; mesh'te IP aramadaki HERKESE açıldığı için
-/// açıklama orada duruyor ve gösteriliyor.
+/// 🔴 2026-09-20 — GRUP YOLU DA KAPANDI. KAPI ARTIK HİÇBİR EKRANI
+/// ÖLÇMÜYOR.
+///
+/// Kullanıcı kararıyla grup arama ekranındaki açıklama da kaldırıldı
+/// (§4ch). Yani bu dosyadaki testlerin TAMAMI — birebir ve grup —
+/// yalnızca sözlükte DURAN metinleri ölçüyor; hiçbiri kullanıcıya
+/// ULAŞAN bir şeyi ölçmüyor.
+///
+/// ⚠️ Bu kapının yeşil olması artık ŞU DEMEK DEĞİL:
+///   ✗ "kullanıcı IP'sinin paylaşıldığını öğreniyor"
+/// Yalnızca şu demek:
+///   ✓ "geri getirmek istenirse metinler 16 dilde hazır duruyor"
+///
+/// Silmek yerine tutuluyorlar çünkü kararı geri almak `detay:`/`detail:`
+/// argümanını geri eklemekten ibaret ve o gün metinlerin çevrilmiş
+/// olması gerekiyor. Ama bir sonraki oturum bu kapıya bakıp
+/// "IP açıklaması korunuyor" sonucunu ÇIKARMAMALI.
+///
+/// 📌 TURN kurulursa (§3 A) bu ödünleşim kökten kalkar: aramalar
+/// aktarma üzerinden gider ve IP hiç paylaşılmaz. Asıl çözüm orası.
 /// ───────────────────────────────────────────────────────────────────
 void main() {
   final diller = AppLocalizations.keysByLanguage.keys.toList();

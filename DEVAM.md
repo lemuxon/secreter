@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-20 | 📞 Grup aramasından da IP açıklaması kaldırıldı — kapı artık hiçbir ekranı ölçmüyor | §4ch |
 | 09-16 | 🚀 **v23 kapalı teste (Alpha) incelemeye gönderildi** | §4cg |
 | 09-16 | 📦 v23 paketi §4cd–§4cf ile YENİDEN derlendi; içeriği pakette doğrulandı | §4cd |
 | 09-16 | 📞 Arama rozetinden açıklama kaldırıldı (kullanıcı isteği) — IP uyarısı artık gösterilmiyor | §4cf |
@@ -190,12 +191,33 @@ Geliyorsa asıl şikâyet kapanmış demektir.
 > şey görürseniz (mesajlar kaybolursa, sohbet aniden bozulursa) hemen
 > haber verin."*
 
-**4. Grup arama rozeti: açıklama kalsın mı? (§4cf) — KARAR GEREKİYOR.**
-Birebir arama ekranındaki IP açıklaması kullanıcı isteğiyle kaldırıldı.
-Grup araması ekranı **dokunulmadan bırakıldı**: mesh'te IP tek kişiye
-değil aramadaki HERKESE açılıyor, yani ödünleşim daha ağır. İstek
-"arayınca" diyordu; daha ağır olanı istenmeden değiştirmek doğru
-olmazdı. → *Grup aramasında da yalnızca etiket mi kalsın?*
+**4. ✅ KAPANDI — grup arama rozeti (§4ch).** 2026-09-20'de grup
+ekranındaki açıklama da kullanıcı kararıyla kaldırıldı. Artık iki
+arama ekranında da rozet yalnızca etiket.
+
+**4b. 🔴 "AÇIK KAYNAK" İDDİASI — HENÜZ DOĞRU DEĞİL, KARAR GEREKİYOR.**
+Kullanıcının gerekçesi: *"İnsanlar uygulamanın açık kaynak olduklarını
+bilmesini istiyorum."* Ama 2026-09-20 itibarıyla proje açık kaynak
+DEĞİL ve bu üç eksikle ölçülebilir:
+
+| Ne | Durum |
+|---|---|
+| `LICENSE` dosyası | **YOK** — lisanssız kod "tüm hakları saklı"dır |
+| Uzak depo (`git remote`) | **YOK** — kod yalnızca bu bilgisayarda |
+| Uygulamada/mağazada ibare | **YOK** — hiçbir yerde geçmiyor |
+
+⚠️ Uygulamaya "açık kaynak" yazmak, kod yayımlanmadan **yanlış
+beyan** olur; gizlilik iddiası taşıyan bir uygulamada bu, güveni
+kazandırmak yerine tam tersini yapar. Sıra önemli: **önce yayımla,
+sonra iddia et.**
+
+⚠️ Yayımlamadan önce yapılması gerekenler (kod tarafı hazır ama
+konsol/karar işi):
+* `SIR_DONDURME.md` — Giphy anahtarı ve imzalama parolası; anahtar
+  `--dart-define` ile veriliyor, depoda değil, ama geçmiş taranmalı.
+* `.jks` ve `key.properties` **asla** yayımlanmamalı (`.gitignore`
+  kapsıyor — §4ab'deki gömülü sır kapısı bunu ölçüyor).
+* Lisans seçimi kullanıcının kararı (izin verici mi, copyleft mi).
 
 **5. Foto editöründe BİLEREK ertelenen kusur (§4ca).**
 `pixelRatio: 2.0` ile ekran boyutundaki widget fotoğraflanıyor: 4000
@@ -1184,6 +1206,48 @@ dinleyicileri `to == ben` kısıtıyla geçer, kısıtsız döküm reddedilir.
 indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
+
+---
+
+## 📞 GRUP ARAMASI ROZETİ (2026-09-20) — §4ch
+
+### §4ch — GRUP ARAMASINDAN DA IP AÇIKLAMASI KALDIRILDI
+
+§4cf birebir aramada açıklamayı kaldırmış, grup ekranını **bilerek
+dışarıda** bırakıp kullanıcıya sormuştu. Cevap geldi: grup da aynı
+olsun.
+
+Artık iki arama ekranında da rozet yalnızca etiket ("Doğrudan
+bağlantı" / "Aktarmalı bağlantı"); bilgi simgesi ve dokunmalı diyalog
+yok.
+
+#### 🔴 Bu, §4cf'den DAHA ağır bir kayıp
+
+Mesh'te her katılımcı diğer **herkese** doğrudan bağlanıyor. Birebir
+aramada IP tek kişiye açılırken grupta **aramadaki herkese** açılıyor
+(§4br bu yüzden yazılmıştı). TURN kurulana kadar (§3 A) bu gerçek ve
+sürekli.
+
+Metinler (`group_call_ip_*_detail`) 16 dilde **silinmedi**; geri
+getirmek `detay:` argümanını eklemekten ibaret.
+
+#### ⚠️ `ip_disclosure_test.dart` ARTIK HİÇBİR EKRANI ÖLÇMÜYOR
+
+Bu turdan sonra kapının 113 testinin tamamı — birebir ve grup —
+yalnızca **sözlükte duran** metinleri ölçüyor. Yeşil olması artık
+"kullanıcı IP'sinin paylaşıldığını öğreniyor" DEMEK DEĞİL; yalnızca
+"geri getirilmek istenirse metinler 16 dilde hazır" demek.
+
+Bu, §4am'de yakalanan sınıfın ta kendisi (yeşil ama hiçbir şey
+kanıtlamayan kapı), bu yüzden test dosyasının başına büyük harflerle
+yazıldı. **Silinmedi**, çünkü silmek metinleri de götürürdü.
+
+> 📌 Asıl çözüm rozet metni değil: **TURN kurulursa** aramalar aktarma
+> üzerinden gider ve IP hiç paylaşılmaz. Ödünleşim kökten kalkar.
+
+#### Kapılar
+
+`flutter analyze` temiz · Dart **623** · `dart format` temiz
 
 ---
 

@@ -249,11 +249,17 @@ class _GroupCallScreenState extends State<GroupCallScreen> {
   /// IP'n aramadaki N-1 kişiye açılır. Aynı cümleyi grupta kullanmak,
   /// ödünleşimi olduğundan küçük göstermek olurdu.
   ///
-  /// ⚠️ Rozetin kendisi kısa ve NÖTR (§4ay'nin dersi): doğrudan bağlantı
-  /// WebRTC'nin normal hâlidir ve ses/görüntü her hâlükârda şifrelidir.
-  /// Ödünleşim dokununca açılır — metin YUMUŞATILDI, bilgi SİLİNMEDİ.
-  /// `test/features/call/ip_disclosure_test.dart` 16 dilde açıklamanın
-  /// hem IP'den hem de "herkes" boyutundan söz etmesini zorunlu kılar.
+  /// ⚠️ Rozet YALNIZCA ETİKET — dokununca açılan açıklama YOK (§4ch).
+  /// Birebir aramada 2026-09-16'da kaldırılmıştı (§4cf); grup o turda
+  /// bilerek dışarıda bırakılıp kullanıcıya sorulmuştu, 09-20'de grup
+  /// için de kaldırılması istendi.
+  ///
+  /// 🔴 BİLİNÇLİ KAYIP: mesh'te her katılımcı diğer HERKESE doğrudan
+  /// bağlanır, yani TURN kurulana kadar (§3 A) IP adresi aramadaki
+  /// herkese açılıyor. Kaldırılan açıklama bunun söylendiği tek yerdi
+  /// ve ödünleşim burada birebir aramadan AĞIR.
+  /// Metinler (`group_call_ip_*_detail`) 16 dilde SİLİNMEDİ; geri
+  /// getirmek `detay:` argümanını eklemekten ibaret.
   Widget _gizlilikRozeti() {
     if (_servis.relayErisilemez) {
       return _rozet(
@@ -271,13 +277,11 @@ class _GroupCallScreenState extends State<GroupCallScreen> {
             ikon: Icons.lock_rounded,
             renk: AppTheme.secure,
             metin: context.tr('call_ip_hidden'),
-            detay: context.tr('group_call_ip_hidden_detail'),
           )
         : _rozet(
             ikon: Icons.swap_horiz_rounded,
             renk: AppTheme.primary,
             metin: context.tr('call_ip_visible'),
-            detay: context.tr('group_call_ip_visible_detail'),
           );
   }
 
@@ -285,34 +289,26 @@ class _GroupCallScreenState extends State<GroupCallScreen> {
     required IconData ikon,
     required Color renk,
     required String metin,
-    String? detay,
   }) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-      child: GestureDetector(
-        onTap: detay == null ? null : () => _detayGoster(metin, detay),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: renk.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(ikon, size: 15, color: renk),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(metin,
-                    style: TextStyle(color: renk, fontSize: 12),
-                    overflow: TextOverflow.ellipsis),
-              ),
-              if (detay != null) ...[
-                const SizedBox(width: 4),
-                Icon(Icons.info_outline, size: 13, color: renk),
-              ],
-            ],
-          ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: renk.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(ikon, size: 15, color: renk),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(metin,
+                  style: TextStyle(color: renk, fontSize: 12),
+                  overflow: TextOverflow.ellipsis),
+            ),
+          ],
         ),
       ),
     );
@@ -321,24 +317,6 @@ class _GroupCallScreenState extends State<GroupCallScreen> {
   /// Rozetin tam açıklaması. Rozet tek satıra sığmak zorunda; gerçek
   /// ödünleşimi anlatacak yer yok. Metni kısaltıp açıklamayı buraya
   /// almak, kısaltıp yok saymaktan iyidir.
-  void _detayGoster(String baslik, String metin) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        title: Text(baslik,
-            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 17)),
-        content: Text(metin,
-            style: const TextStyle(color: AppTheme.textSecondary, height: 1.4)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(context.tr('ok')),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _karolar() {
     if (!_hazir) {
