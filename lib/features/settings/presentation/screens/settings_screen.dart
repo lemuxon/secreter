@@ -23,6 +23,9 @@ import 'recovery_key_screen.dart';
 import '../../../../core/security/app_disguise_service.dart';
 import '../../../../core/security/native_security_bridge.dart';
 import '../../../../core/widgets/user_avatar.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/proje_kimligi.dart';
+import '../../../../core/observability/handled_error.dart';
 
 /// Ayarlar ekranı (yeni mimari).
 /// v15'te kurulan metadata gizlilik kontrollerini UI'a bağlar.
@@ -623,6 +626,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onChanged: privacyNotifier.setCrashReportingConsent,
           ),
 
+          // ── 📖 HAKKINDA ──
+          // ⚠️ Bu bölüm depo adresi BOŞKEN hiç çizilmez. "Açık kaynak"
+          // demek, kodun gidip görülebildiği anlamına gelir; yayımlamadan
+          // önce söylemek yanlış beyan olur (bkz. `proje_kimligi.dart`).
+          if (acikKaynakGosterilebilir) ...[
+            _sectionHeader(context.tr('sec_about')),
+            ListTile(
+              leading: const Icon(Icons.code_rounded, color: AppTheme.secure),
+              title: Text(context.tr('open_source'),
+                  style: const TextStyle(color: AppTheme.textPrimary)),
+              subtitle: Text(
+                context.tr('open_source_sub').replaceAll('{lisans}', lisansAdi),
+                style: const TextStyle(color: AppTheme.textSecondary),
+              ),
+              trailing: const Icon(Icons.open_in_new,
+                  size: 18, color: AppTheme.textSecondary),
+              onTap: _depoyuAc,
+            ),
+          ],
+
           const SizedBox(height: Spacing.lg),
           // ── Maksimum gizlilik ──
           Padding(
@@ -682,6 +705,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  /// Depoyu dış tarayıcıda aç. Açılamazsa sessiz kalmaz — yutulan hata
+  /// bu projede tekrar eden kök sebep (§4ah).
+  Future<void> _depoyuAc() async {
+    try {
+      final acildi = await launchUrl(
+        Uri.parse(depoAdresi),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!acildi) throw Exception('launchUrl false döndü: $depoAdresi');
+    } catch (e, st) {
+      if (!mounted) return;
+      reportHandled('Depo adresi açılamadı', e, stack: st);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('err_unexpected'))),
+      );
+    }
   }
 
   void _confirmSignOut() {

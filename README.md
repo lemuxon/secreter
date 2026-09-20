@@ -419,6 +419,50 @@ gizlichat/
 
 ---
 
+## 📖 Lisans — AGPL-3.0
+
+Bu proje **GNU Affero General Public License v3.0** ile dağıtılır. Tam
+metin: kök dizindeki [`LICENSE`](LICENSE).
+
+Kısaca ne demek:
+
+* Kodu **kullanabilir, inceleyebilir, değiştirebilir ve dağıtabilirsin.**
+* Değiştirilmiş bir sürümü **dağıtırsan** (veya ağ üzerinden hizmet olarak
+  sunarsan), **kaynağını da açmak zorundasın** — aynı lisansla.
+* Garanti verilmez.
+
+AGPL, gizlilik iddiası taşıyan bir uygulama için bilinçli bir tercih:
+kodun kapatılıp yeniden paketlenememesi, kullanıcının "bu gerçekten
+iddia ettiği şeyi mi yapıyor" sorusunu sorabilmesini kalıcı kılar.
+
+### ⚠️ Fork'layacaksan — güvenlik uyarısı
+
+Bu uygulamanın güvenliği yalnızca istemci koduna dayanmaz. Kendi
+sürümünü yayımlayacaksan **kendi Firebase projeni kur** ve şunları
+kendin dağıt; aksi halde uygulama çalışır görünür ama korumasız olur:
+
+* `firestore.rules` ve `storage.rules` — **dağıtılmadan** veri herkese
+  açıktır (bu projede bir kez yaşandı, bkz. `GUVENLIK_DUZELTMELERI.md`)
+* `firestore.indexes.json` — eksikse sorgular sessizce boş döner
+* `functions/` — E2EE oturumu `claimPreKey` olmadan kurulamaz
+
+### Depoda OLMAYAN ve senin üretmen gerekenler
+
+Bunlar bilerek dışarıda bırakıldı (`.gitignore`):
+
+| Dosya | Ne işe yarar |
+|---|---|
+| `android/key.properties` | imzalama parolaları — şablonu `key.properties.ORNEK` |
+| `*.jks` / `*.keystore` | imzalama anahtarı |
+| `functions/.env` | `TURN_SECRET`, `TURN_URLS` (bkz. `TURN_KURULUMU.md`) |
+| `--dart-define=GIPHY_API_KEY` | GIF sekmesi; verilmezse özellik kapalı gelir |
+
+`android/app/google-services.json` ve `lib/firebase_options.dart`
+**depoda vardır**; içlerindeki Firebase API anahtarı tasarım gereği
+herkese açıktır (her APK'nın içinde gider) ve güvenlik ondan değil
+Firestore kurallarından gelir. Yine de kendi projeni kurarken anahtarı
+Google Cloud Console'dan **Android uygulaması + SHA-1** ile kısıtla.
+
 ## 🔒 Gizlilik Notları
 
 - Firebase **anonim auth** kullanır — telefon/e-posta kaydı yok

@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-20 | 📖 Açık kaynak hazırlığı: AGPL-3.0 lisansı, sır taraması temiz, iddia kapıya bağlandı | §4cj |
 | 09-20 | 🔎 v23 saha kontrolü: yayında, 0 çökme — ama testçi sayısı **tam sınırda 12** | §4ci |
 | 09-20 | 📞 Grup aramasından da IP açıklaması kaldırıldı — kapı artık hiçbir ekranı ölçmüyor | §4ch |
 | 09-16 | 🚀 **v23 kapalı teste (Alpha) incelemeye gönderildi** | §4cg |
@@ -195,7 +196,14 @@ Geliyorsa asıl şikâyet kapanmış demektir.
 ekranındaki açıklama da kullanıcı kararıyla kaldırıldı. Artık iki
 arama ekranında da rozet yalnızca etiket.
 
-**4b. 🔴 "AÇIK KAYNAK" İDDİASI — HENÜZ DOĞRU DEĞİL, KARAR GEREKİYOR.**
+**4b. 🟡 AÇIK KAYNAK — HAZIRLIK BİTTİ, YAYIMLAMA SENDE (§4cj).**
+Lisans seçildi (AGPL-3.0), `LICENSE` yazıldı, sır taraması temiz çıktı,
+arayüz satırı hazır ama **depo adresi boş olduğu için görünmüyor**.
+Kalan tek adım: depoyu yayımlayıp `lib/core/proje_kimligi.dart`
+içindeki `depoAdresi`ni doldurmak. Aşağıdaki eski durum kaydı
+tarihsel: ⤵
+
+**4b-eski. "AÇIK KAYNAK" İDDİASI — 2026-09-20'de HENÜZ DOĞRU DEĞİLDİ.**
 Kullanıcının gerekçesi: *"İnsanlar uygulamanın açık kaynak olduklarını
 bilmesini istiyorum."* Ama 2026-09-20 itibarıyla proje açık kaynak
 DEĞİL ve bu üç eksikle ölçülebilir:
@@ -1218,6 +1226,87 @@ dinleyicileri `to == ben` kısıtıyla geçer, kısıtsız döküm reddedilir.
 indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
+
+---
+
+## 📖 AÇIK KAYNAK HAZIRLIĞI (2026-09-20) — §4cj
+
+### §4cj — İDDİAYI KANITA BAĞLAMAK
+
+Kullanıcı: *"İnsanların uygulamanın açık kaynak olduğunu bilmesini
+istiyorum."* İstek meşru ama o gün proje açık kaynak **değildi**:
+`LICENSE` yok, uzak depo yok, uygulamada ibare yok.
+
+> ⚠️ Sıra önemli: **önce yayımla, sonra söyle.** Gizlilik iddiası
+> taşıyan bir uygulamada kodu açmadan "açık kaynak" yazmak, güven
+> kazandırmaz — biri kontrol etmek isteyip hiçbir şey bulamayınca en
+> çok o iddia zarar görür.
+
+#### ✅ Sır taraması — TEMİZ
+
+Yayımlamadan önceki en kritik iş (bir kez yayımlanırsa geçmişten silmek
+işe yaramaz). 14 kayıtlık geçmişin tamamı tarandı:
+
+| Aranan | Sonuç |
+|---|---|
+| Giphy anahtarı | **hiç git'e girmemiş** (`git log -S` boş) |
+| `.jks` / `key.properties` | yok — yalnızca `key.properties.ORNEK` |
+| Hizmet hesabı JSON, `.env`, TURN parolası | yok |
+| `BEGIN * PRIVATE KEY`, `ghp_`, `xoxb-`, `AKIA`, `sk_live` | yok |
+| `node_modules`, `firestore-debug.log` | izlenmiyor |
+
+⚠️ Tek "bulgu" `lib/firebase_options.dart` + `google-services.json`
+içindeki Firebase API anahtarı — **tasarım gereği açık**, her APK'nın
+içinde gidiyor ve güvenlik ondan değil Firestore kurallarından geliyor.
+Yine de Google Cloud Console'dan **Android uygulaması + SHA-1** ile
+kısıtlanmalı (kota kötüye kullanımına karşı).
+
+#### 🔒 İDDİA KODA BAĞLANDI — unutkanlığa değil
+
+`lib/core/proje_kimligi.dart`:
+
+```dart
+const String depoAdresi = '';          // yayımlanana kadar BOŞ
+bool get acikKaynakGosterilebilir => depoAdresi.trim().isNotEmpty;
+```
+
+Ayarlar → Hakkında altındaki "Açık kaynak" satırı **yalnızca adres
+doluysa çiziliyor.** Yani yanlış beyan kazara yayına çıkamaz; iddia
+ancak gidip bakılabilecek bir adres varsa ortaya çıkar.
+
+Aynı bağ ters yönde de çalışır: depo bir gün özel yapılırsa satır
+kendiliğinden kaybolur.
+
+#### Lisans: AGPL-3.0 (kullanıcı kararı)
+
+Kanonik metin `gnu.org`'dan indirildi (661 satır, 34.523 bayt) —
+ezberden yazmak hata riski taşırdı. Gerekçe: değiştirilmiş bir sürümü
+dağıtan kaynağını açmak zorunda; kodun kapatılıp yeniden paketlenememesi
+gizlilik iddiasının kalıcı olmasını sağlıyor.
+
+#### Kapı
+
+`proje_kimligi_test.dart` üç şeyi birden ölçüyor:
+1. adres yoksa iddia gösterilmez (gösterim kararı başka bir şeye
+   bağlanmışsa düşer),
+2. `LICENSE` var ve koddaki `lisansAdi` ile **aynı lisansı** söylüyor
+   (ayrışması sessiz bir yanlış beyan olurdu),
+3. lisans adı 16 dilin metnine **gömülü değil**, `{lisans}` yer
+   tutucusuyla geliyor — lisans değişirse tek yerden değişsin ve bir
+   dil unutulup yanlış lisans göstermesin.
+
+#### 🔴 KALAN ADIM — YALNIZCA SENDE
+
+1. Depoyu yayımla (GitHub vb.) — **ben yapmadım**, geri alınamaz ve
+   senin kararın.
+2. `depoAdresi`ni doldur → satır kendiliğinden görünür.
+3. Giphy anahtarını **önce** döndür (`SIR_DONDURME.md`): depoda değil
+   ama sahadaki pakette var; yayımlamadan önce döndürmek en temizi.
+4. Firebase API anahtarını Cloud Console'dan kısıtla.
+
+### Kapılar
+
+`flutter analyze` temiz · Dart **629** (623 → 629) · `dart format` temiz
 
 ---
 
