@@ -30,6 +30,7 @@ import '../../../../core/i18n/app_localizations.dart';
 import '../../../../services/direct_chat_service.dart';
 import '../../../../services/self_note_service.dart';
 import '../../../../services/rehandshake_service.dart';
+import '../../../../services/resend_request_service.dart';
 import '../../../../core/observability/handled_error.dart';
 import '../../../security/presentation/app_lock_wrapper.dart';
 import '../../../../services/privacy_service.dart';
@@ -76,6 +77,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
   // yapiydi; sadelestirildi.
   StreamSubscription<int>? _missedSub;
   StreamSubscription? _handshakeSub;
+  StreamSubscription? _resendSub;
   int _missedCount = 0;
 
   /// Play'e göre yeni sürüm var mı (§4bl).
@@ -130,6 +132,13 @@ class _HomeShellState extends ConsumerState<HomeShell>
     // bütün sohbetleri kapsar.
     _handshakeSub = RehandshakeService.dinle(widget.myUid);
 
+    // ♻️ YENİDEN GÖNDERİM DİNLEYİCİSİ (§4cl) — aynı gerekçe.
+    //
+    // Karşı taraf bir mesajımı çözemediğinde buradan haberdar oluruz ve
+    // o mesajı yeni oturumla yeniden şifreleyip yerinde düzeltiriz.
+    // Sohbeti açmamız GEREKMEZ; kurtarmanın değeri tam olarak bu.
+    _resendSub = ResendRequestService.dinle(widget.myUid);
+
     WidgetsBinding.instance.addObserver(this);
     PresenceService.setOnline(true);
   }
@@ -157,6 +166,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
   void dispose() {
     _missedSub?.cancel();
     _handshakeSub?.cancel();
+    _resendSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     PresenceService.setOnline(false);
     _pageController.dispose();

@@ -4,6 +4,7 @@ import '../../../../services/auth_service.dart';
 import '../../../../services/e2ee_session_service.dart';
 import '../../../../services/group_key_service.dart';
 import '../../../../services/rehandshake_service.dart';
+import '../../../../services/resend_request_service.dart';
 import '../../../../services/self_note_service.dart';
 import '../../../../services/x3dh_service.dart';
 import 'encryption_datasource.dart';
@@ -36,6 +37,7 @@ class EncryptionDataSourceImpl implements EncryptionDataSource {
 
   /// Şifrelenemeyen mesaj için kullanıcıya gösterilen işaret.
   static const String lostMarker = EncryptionDataSource.lostMarker;
+  static const String lostRetryMarker = EncryptionDataSource.lostRetryMarker;
 
   @override
   Future<EncryptionResult> encrypt({
@@ -387,7 +389,32 @@ class EncryptionDataSourceImpl implements EncryptionDataSource {
         }
       }
 
-      if (decrypted == null) return lostMarker;
+      // ── ♻️ YENİDEN GÖNDERİM İSTEĞİ (§4cl) ──
+      //
+      // Buraya düşen mesaj kalıcı olarak kayıptır: §4cc oturumu onarır
+      // ama İÇERİĞİ kurtarmaz. Sahada bunun bedeli ölçüldü (§4ck): iki
+      // mesaj kalıcı gitti ve gönderenin istemcisi bunu HİÇ öğrenmedi.
+      //
+      // ⚠️ El sıkışmadan FARKLI olarak bu istek MESAJ BAŞINA yazılır.
+      // Yukarıdaki `_sifirlanan` kapısı sohbet başına bir kez çalışır;
+      // aynı kapıya bağlansaydı yalnızca İLK kayıp mesaj istenirdi ve
+      // testçi B'nin ikinci mesajı yine kaybolurdu.
+      if (decrypted == null) {
+        final ben = AuthService.currentUid;
+        final karsi = _birebirKarsiTaraf(chatId, ben);
+        if (!isGroup && ben != null && karsi != null) {
+          final istendi = await ResendRequestService.iste(
+            chatId: chatId,
+            messageId: messageId,
+            otherUserId: karsi,
+            myUid: ben,
+          );
+          // İstek yazılamadıysa "tekrarı istendi" DEMEYİZ; kullanıcıyı
+          // gelmeyecek bir şey için beklet­mek, hiç söylememekten kötü.
+          if (istendi) return lostRetryMarker;
+        }
+        return lostMarker;
+      }
 
       final plain = MessagePadding.unpad(decrypted);
       // Bir daha ratchet'i ilerletmemek için sakla.

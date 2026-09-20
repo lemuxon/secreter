@@ -1809,6 +1809,143 @@ describe("sessiz yeniden el sıkışma (§4cc)", () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────
+// §4cl — YENİDEN GÖNDERİM İSTEĞİ
+//
+// §4cc oturumu onarıyordu ama İÇERİĞİ kurtarmıyordu: çözülemeyen mesaj
+// kalıcı olarak gidiyordu ve gönderen bunu hiç öğrenmiyordu (§4ck sahada
+// ölçüldü). Artık alıcı, gönderenden o mesajı yeni oturumla tekrar
+// göndermesini istiyor.
+//
+// Buradaki kritik sınır: kim isteyebilir. Yabancı biri isteyebilseydi,
+// istediği kişiye istediği mesajı sürekli yeniden şifreletebilirdi —
+// hem hizmet reddi hem de ratchet'i boşuna ilerleten bir taciz yolu.
+// ─────────────────────────────────────────────────────────────
+describe("yeniden gönderim isteği (§4cl)", () => {
+  const MSG = "msg_abc123";
+
+  const istek = (from, to, messageId = MSG) => ({
+    from,
+    to,
+    messageId,
+    ts: new Date().toISOString(),
+  });
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), `resendRequests/${DM}/req/${MSG}`),
+        istek(BOB, ALICE)
+      );
+    });
+  });
+
+  it("sohbetin üyesi KENDİ adına yeniden gönderim isteyebilir", async () => {
+    await assertSucceeds(
+      setDoc(
+        doc(as(ALICE), `resendRequests/${DM}/req/msg_yeni`),
+        istek(ALICE, BOB, "msg_yeni")
+      )
+    );
+  });
+
+  it("🔴 BAŞKASININ adına istek yazılamaz", async () => {
+    // Sahte "Alice şu mesajı tekrar istiyor" sinyali üretilemez.
+    await assertFails(
+      setDoc(
+        doc(as(BOB), `resendRequests/${DM}/req/msg_sahte`),
+        istek(ALICE, BOB, "msg_sahte")
+      )
+    );
+  });
+
+  it("🔴 YABANCI bu sohbete istek yazamaz", async () => {
+    // ⚠️ ASIL KORUMA: yabancı yazabilseydi istediği kişiyi sürekli
+    // yeniden şifrelemeye zorlayabilirdi.
+    await assertFails(
+      setDoc(
+        doc(as(MALLORY), `resendRequests/${DM}/req/msg_yabanci`),
+        istek(MALLORY, BOB, "msg_yabanci")
+      )
+    );
+  });
+
+  it("🔴 kendinden yeniden gönderim istenemez", async () => {
+    await assertFails(
+      setDoc(
+        doc(as(ALICE), `resendRequests/${DM}/req/msg_kendi`),
+        istek(ALICE, ALICE, "msg_kendi")
+      )
+    );
+  });
+
+  it("🔴 messageId, belge kimliğiyle UYUŞMAK zorunda", async () => {
+    // Uyuşmazsa gönderen yanlış mesajı yeniden şifreler; alıcının
+    // beklediği mesaj ise hiç gelmez ve sessizce kaybolur.
+    await assertFails(
+      setDoc(
+        doc(as(ALICE), `resendRequests/${DM}/req/msg_a`),
+        istek(ALICE, BOB, "msg_b")
+      )
+    );
+  });
+
+  it("gönderen kendine gelen isteği OKUYABİLİR", async () => {
+    await assertSucceeds(
+      getDoc(doc(as(ALICE), `resendRequests/${DM}/req/${MSG}`))
+    );
+  });
+
+  it("🔴 YABANCI isteği okuyamaz", async () => {
+    // "Kim kimden hangi mesajı isteyemedi" da üstveridir.
+    await assertFails(
+      getDoc(doc(as(MALLORY), `resendRequests/${DM}/req/${MSG}`))
+    );
+  });
+
+  it("karşılayan, işi bitince isteği SİLEBİLİR", async () => {
+    // Silemezse istek sonsuza kadar kalır ve her açılışta yeniden
+    // işlenir — ratchet boşuna ilerler.
+    await assertSucceeds(
+      deleteDoc(doc(as(ALICE), `resendRequests/${DM}/req/${MSG}`))
+    );
+  });
+
+  it("isteyen de vazgeçip SİLEBİLİR", async () => {
+    await assertSucceeds(
+      deleteDoc(doc(as(BOB), `resendRequests/${DM}/req/${MSG}`))
+    );
+  });
+
+  it("🔴 YABANCI isteği silemez", async () => {
+    await assertFails(
+      deleteDoc(doc(as(MALLORY), `resendRequests/${DM}/req/${MSG}`))
+    );
+  });
+
+  // ── KOLEKSİYON-GRUBU SORGUSU ──
+  // Gönderen TÜM sohbetleri tek akışla dinliyor. Bu sorgu çalışmazsa
+  // kurtarma hiç tetiklenmez ve özellik sessizce ölü kalır.
+  it("gönderen TÜM sohbetlerdeki istekleri tek sorguyla bulur", async () => {
+    const snap = await getDocs(
+      query(collectionGroup(as(ALICE), "req"), where("to", "==", ALICE))
+    );
+    expect(snap.docs.map((d) => d.id)).to.include(MSG);
+  });
+
+  it("🔴 `to` kısıtı OLMADAN koleksiyon-grubu sorgusu REDDEDİLİR", async () => {
+    // ⚠️ `list` kuralı belgeye değil SORGUYA bakar (§4bq).
+    await assertFails(getDocs(collectionGroup(as(ALICE), "req")));
+  });
+
+  it("🔴 BAŞKASININ istekleri sorguyla dökülemez", async () => {
+    const snap = await getDocs(
+      query(collectionGroup(as(MALLORY), "req"), where("to", "==", MALLORY))
+    );
+    expect(snap.empty).to.equal(true);
+  });
+});
+
 describe("grup araması — mesh sinyalleşmesi (§4bq)", () => {
   // ⚠️ GRUP ÇAĞRISINDA `calleeId` YOKTUR.
   //

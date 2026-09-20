@@ -24,6 +24,18 @@ abstract class EncryptionDataSource {
   /// ikili sayilir ve `grep` onu bulamaz.
   static const String lostMarker = '\u0000E2EE_LOST';
 
+  /// Çözülemedi AMA karşı taraftan tekrarı İSTENDİ (§4cl).
+  ///
+  /// ⚠️ [lostMarker]dan AYRI olmak zorunda: ikisi kullanıcıya aynı şeyi
+  /// söyleyemez. Biri "bu mesaj kalıcı olarak gitti", diğeri "yoldaki
+  /// kopyası isteniyor, bekle" demek. Tek metinle ikisini birden
+  /// anlatmak vakaların yarısında yalan olurdu.
+  ///
+  /// 🚩 Değer bilerek `E2EE_LOST_RETRY` DEĞİL: o, [lostMarker]ın
+  /// ÖNEKİ olurdu ve ileride `startsWith` ile karşılaştıran bir kod iki
+  /// durumu sessizce karıştırırdı. `resend_request_test` bunu ölçüyor.
+  static const String lostRetryMarker = '\u0000E2EE_RETRY';
+
   /// Verilen sohbet için metni şifrele.
   ///
   /// [otherUserId] doluysa BİREBİR (X3DH + Double Ratchet).

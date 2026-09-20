@@ -202,6 +202,53 @@ service cloud.firestore {
         && resource.data.get('to', '') == request.auth.uid;
     }
 
+    // ---------- ♻️ YENİDEN GÖNDERİM İSTEKLERİ (§4cl) ----------
+    //
+    // Alıcı bir mesajı kalıcı olarak çözemediğinde, GÖNDERENDEN o mesajı
+    // yeni oturumla tekrar göndermesini ister. §4cc oturumu onarıyordu
+    // ama içeriği kurtarmıyordu; sahada iki mesaj bu yüzden kalıcı
+    // kayboldu (§4ck).
+    //
+    // Belge kimliği = messageId. İçinde ŞİFRE ÇÖZÜLECEK HİÇBİR ŞEY YOK:
+    // yalnızca kimin kimden hangi mesajı istediği.
+    match /resendRequests/{chatId}/req/{messageId} {
+      allow get: if signedIn() && (
+        resource.data.get('to', '') == request.auth.uid ||
+        resource.data.get('from', '') == request.auth.uid
+      );
+
+      // Yalnızca KENDİ adına ve yalnızca sohbetin üyesi isteyebilir.
+      // ⚠️ Bu kısıt olmadan yabancı bir hesap, istediği kişiye istediği
+      // mesajı sürekli yeniden şifreletebilirdi: hem hizmet reddi hem de
+      // ratchet'i boşuna ilerleten bir taciz yolu.
+      allow create, update: if signedIn()
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to != request.auth.uid
+        && request.resource.data.messageId == messageId
+        && isChatMember(chatId);
+
+      // Silme İKİ TARAFA da açık: isteyen vazgeçebilmeli, karşılayan da
+      // işi bitince temizleyebilmeli. Karşılayan silemezse istek sonsuza
+      // kadar kalır ve her açılışta yeniden işlenir.
+      allow delete: if signedIn() && (
+        resource.data.get('to', '') == request.auth.uid ||
+        resource.data.get('from', '') == request.auth.uid
+      );
+    }
+
+    // ── KOLEKSİYON-GRUBU OKUMA ──
+    //
+    // Gönderen, TÜM sohbetlerdeki kendi isteklerini tek akışla dinler
+    // (`collectionGroup('req').where('to', ==, ben)`).
+    //
+    // ⚠️ `list` kuralı belgeye değil SORGUYA bakar (§4bq). `to == ben`
+    // kısıtı sorguda YOKSA tamamı reddedilir — istemcideki o kısıt
+    // süsleme değil, iznin kendisidir.
+    match /{yol=**}/req/{messageId} {
+      allow list: if signedIn()
+        && resource.data.get('to', '') == request.auth.uid;
+    }
+
     // ---------- KANAL DİZİNİ (kamuya açık keşif) ----------
     // Yalnızca arama için gereken alanlar: ad, açıklama, üye sayısı.
     // Üye listesi, üye adları, son mesaj ve ayarlar BURADA YOK — bu

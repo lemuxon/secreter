@@ -17,6 +17,7 @@ import 'services/group_key_service.dart';
 import 'services/key_management_service.dart';
 import 'services/self_note_service.dart';
 import 'services/rehandshake_service.dart';
+import 'services/resend_request_service.dart';
 import 'services/privacy_service.dart';
 import 'utils/app_theme.dart';
 import 'services/deep_link_service.dart';
@@ -45,6 +46,7 @@ void _hesapKapsaminiKur(String? uid) {
   KeyManagementService.setActiveAccount(uid);
   SelfNoteService.setActiveAccount(uid);
   RehandshakeService.setActiveAccount(uid);
+  ResendRequestService.setActiveAccount(uid);
 }
 
 void main() {

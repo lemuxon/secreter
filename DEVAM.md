@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-20 | ♻️ Yeniden gönderim isteği + onarımı görünür kılan metin **dağıtıldı** | §4cl |
 | 09-20 | 🔍 Saha teshisi: §4cc ÇALIŞIYOR — ama kaybolan mesaj kurtarılmıyor, onarım görünmüyor | §4ck |
 | 09-20 | 📖 Açık kaynak hazırlığı: AGPL-3.0 lisansı, sır taraması temiz, iddia kapıya bağlandı | §4cj |
 | 09-20 | 🔎 v23 saha kontrolü: yayında, 0 çökme — ama testçi sayısı **tam sınırda 12** | §4ci |
@@ -1227,6 +1228,90 @@ dinleyicileri `to == ben` kısıtıyla geçer, kısıtsız döküm reddedilir.
 indeksi artık üretimde. Dağıtılmadan grup araması çalışmazdı.
 
 ---
+
+---
+
+## ♻️ KAYBI KURTARMA (2026-09-20) — §4cl
+
+### §4cl — YENİDEN GÖNDERİM İSTEĞİ + GÖRÜNÜR ONARIM
+
+§4ck iki eksik saptamıştı; ikisi de kapatıldı.
+
+#### 1. Yeniden gönderim isteği (protokol)
+
+```
+resendRequests/{chatId}/req/{messageId} = { from, to, messageId, ts }
+```
+
+Alıcı bir mesajı kalıcı olarak çözemeyince istek yazar. Gönderen bunu
+**uygulama genelinde tek koleksiyon-grubu akışıyla** dinler, kendi düz
+metnini yerel kasadan okur (`E2EESessionService.getPlaintext` — gönderim
+anında zaten saklanıyordu), GÜNCEL oturumla yeniden şifreler ve isteği
+siler.
+
+#### 🎯 YENİ MESAJ DEĞİL, ÖZGÜN BELGE GÜNCELLENİYOR
+
+Yeni mesaj göndermek kaybolan metni sohbetin SONUNA atardı; "çözülemedi"
+balonu olduğu yerde kalır, kullanıcı iki kopya görürdü. Özgün belgeyi
+güncellemek balonu **yerinde** gerçek metne çevirir.
+
+✅ Bunun için mesaj kuralında **değişiklik gerekmedi**: `messages`
+güncellemesi zaten gönderene açıktı
+(`resource.data.senderId == request.auth.uid`).
+
+⚠️ `isEdited` İŞARETLENMEZ — bu bir düzenleme değil, aynı içeriğin
+yeniden şifrelenmesi. "Düzenlendi" etiketi yanlış bilgi olurdu.
+
+#### 🪤 İSTEK MESAJ BAŞINA, EL SIKIŞMA SOHBET BAŞINA
+
+Kolay kaçırılacak yer: §4cc'nin `_sifirlanan` kapısı **sohbet başına bir
+kez** çalışır. Yeniden gönderim isteği o kapıya bağlansaydı yalnızca
+İLK kayıp mesaj istenirdi — testçi B'nin ikinci mesajı yine kaybolurdu,
+yani düzeltme şikâyetin yarısını çözerdi. İstek ayrı bir küme
+(`_istenen`) ile mesaj başına yazılıyor.
+
+#### 2. Onarım artık GÖRÜNÜYOR
+
+İki ayrı işaret, iki ayrı metin:
+
+| İşaret | Ne demek |
+|---|---|
+| `\u0000E2EE_LOST` | kalıcı gitti (grup, kendine not, yeniden kurulum) |
+| `\u0000E2EE_RETRY` | tekrarı istendi, yolda |
+
+⚠️ Tek metinle geçiştirmek vakaların yarısında yalan olurdu. §4ck'nın
+kendisi bunun kanıtı: çalışan bir mekanizma, görünmediği için "bozuk"
+diye raporlandı.
+
+⚠️ İstek YAZILAMAZSA "tekrarı istendi" DENMEZ (`iste` bool döner).
+Gelmeyecek bir şey için kullanıcıyı beklet­mek, hiç söylememekten kötü.
+
+#### 🪤 İŞARET DEĞERİ: `E2EE_LOST_RETRY` DEĞİL, `E2EE_RETRY`
+
+İlk yazılan değer `E2EE_LOST_RETRY`ydi ve **kendi testim yakaladı**:
+o değer `E2EE_LOST`un ÖNEKİ. Bugün eşitlikle karşılaştırılıyor ama
+ileride biri `startsWith` kullanırsa iki durum sessizce karışırdı.
+
+#### 🪤 HAM NUL YAZILDI, DÜZELTİLDİ
+
+Sabit eklenirken kaynağa **düz NUL baytı** yazıldı; dosya ikili sayılır
+ve `grep` onu bulamaz hale gelirdi. `encryption_datasource.dart`
+bunu zaten uyarıyordu. Kaçış dizisine çevrildi.
+
+#### Sınırı
+
+Gönderen düz metni kaybettiyse (uygulamayı silip kurmuşsa) kurtarma
+YOKTUR; istek sessizce silinir ve alıcı kalıcı kayıp metnini görür.
+
+#### Kapılar ve dağıtım
+
+Kural testleri **153 → 166** (13 yeni), Dart **629 → 635**.
+✅ **DAĞITILDI** (2026-09-20, `gizlichat-f2a99`): `resendRequests`
+kuralları + `req.to` alan geçersiz kılma üretimde. Çıktıda §4cc'nin
+öğrettiği **"released rules"** satırı doğrulandı.
+
+⚠️ Kural ek; sahadaki v23 bu istemci koduna sahip DEĞİL. Özellik
+**v24 ile** çalışmaya başlar.
 
 ---
 

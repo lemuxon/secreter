@@ -387,6 +387,8 @@ class AppLocalizations {
       'sec_about': 'HAKKINDA',
       'open_source': 'Açık kaynak',
       'open_source_sub': 'Kaynak kodu herkese açık — {lisans}',
+      'e2ee_lost_retry':
+          'Bu mesaj çözülemedi. Güvenli oturum yenilendi ve karşı taraftan bu mesajı tekrar göndermesi istendi. Uygulamayı açtığında kendiliğinden gelecek.',
       'presence_typing': 'yazıyor',
       'online_now': 'çevrimiçi',
       'offline_now': 'Çevrimdışı',
@@ -1129,6 +1131,8 @@ class AppLocalizations {
       'sec_about': 'ABOUT',
       'open_source': 'Open source',
       'open_source_sub': 'The source code is public — {lisans}',
+      'e2ee_lost_retry':
+          'This message could not be decrypted. The secure session was renewed and the sender has been asked to send it again. It will arrive on its own once they open the app.',
       'presence_typing': 'typing',
       'online_now': 'online',
       'offline_now': 'Offline',
@@ -1874,6 +1878,8 @@ class AppLocalizations {
       'sec_about': 'О ПРИЛОЖЕНИИ',
       'open_source': 'Открытый исходный код',
       'open_source_sub': 'Исходный код открыт — {lisans}',
+      'e2ee_lost_retry':
+          'Это сообщение не удалось расшифровать. Защищённый сеанс обновлён, и у отправителя запрошена повторная отправка. Оно придёт само, когда он откроет приложение.',
       'presence_typing': 'печатает',
       'online_now': 'в сети',
       'offline_now': 'Не в сети',
@@ -2587,6 +2593,8 @@ class AppLocalizations {
       'sec_about': 'حول التطبيق',
       'open_source': 'مفتوح المصدر',
       'open_source_sub': 'الشفرة المصدرية متاحة للجميع — {lisans}',
+      'e2ee_lost_retry':
+          'تعذّر فك تشفير هذه الرسالة. تم تجديد الجلسة الآمنة وطُلب من المُرسِل إعادة إرسالها. ستصل تلقائيًا عند فتحه للتطبيق.',
       'presence_typing': 'يكتب',
       'online_now': 'متصل',
       'offline_now': 'غير متصل',
@@ -3282,6 +3290,7 @@ class AppLocalizations {
       'sec_about': '关于',
       'open_source': '开放源代码',
       'open_source_sub': '源代码公开可查 — {lisans}',
+      'e2ee_lost_retry': '此消息无法解密。安全会话已更新，并已请求发送者重新发送。对方打开应用后会自动送达。',
       'presence_typing': '正在输入',
       'online_now': '在线',
       'offline_now': '离线',
@@ -3952,6 +3961,8 @@ class AppLocalizations {
       'sec_about': 'À PROPOS',
       'open_source': 'Open source',
       'open_source_sub': 'Le code source est public — {lisans}',
+      'e2ee_lost_retry':
+          'Ce message n\'a pas pu être déchiffré. La session sécurisée a été renouvelée et l\'expéditeur a été invité à le renvoyer. Il arrivera tout seul dès qu\'il ouvrira l\'application.',
       'presence_typing': 'écrit',
       'online_now': 'en ligne',
       'offline_now': 'Hors ligne',
@@ -4670,6 +4681,8 @@ class AppLocalizations {
       'sec_about': 'SOBRE',
       'open_source': 'Código aberto',
       'open_source_sub': 'O código-fonte é público — {lisans}',
+      'e2ee_lost_retry':
+          'Esta mensagem não pôde ser descriptografada. A sessão segura foi renovada e foi solicitado ao remetente que a envie novamente. Ela chegará sozinha quando ele abrir o app.',
       'presence_typing': 'digitando',
       'online_now': 'online',
       'offline_now': 'Offline',
@@ -5385,6 +5398,8 @@ class AppLocalizations {
       'sec_about': 'ПРО ДОДАТОК',
       'open_source': 'Відкритий код',
       'open_source_sub': 'Вихідний код відкритий — {lisans}',
+      'e2ee_lost_retry':
+          'Це повідомлення не вдалося розшифрувати. Захищений сеанс оновлено, і відправника попросили надіслати його знову. Воно надійде само, щойно він відкриє застосунок.',
       'presence_typing': 'пише',
       'online_now': 'у мережі',
       'offline_now': 'Не в мережі',
@@ -6095,6 +6110,8 @@ class AppLocalizations {
       'sec_about': 'INFORMAZIONI',
       'open_source': 'Open source',
       'open_source_sub': 'Il codice sorgente è pubblico — {lisans}',
+      'e2ee_lost_retry':
+          'Impossibile decifrare questo messaggio. La sessione sicura è stata rinnovata ed è stato chiesto al mittente di inviarlo di nuovo. Arriverà da solo quando aprirà l\'app.',
       'presence_typing': 'sta scrivendo',
       'online_now': 'online',
       'offline_now': 'Offline',
@@ -6815,6 +6832,8 @@ class AppLocalizations {
       'sec_about': 'ΣΧΕΤΙΚΑ',
       'open_source': 'Ανοιχτός κώδικας',
       'open_source_sub': 'Ο πηγαίος κώδικας είναι δημόσιος — {lisans}',
+      'e2ee_lost_retry':
+          'Αυτό το μήνυμα δεν μπόρεσε να αποκρυπτογραφηθεί. Η ασφαλής σύνδεση ανανεώθηκε και ζητήθηκε από τον αποστολέα να το ξαναστείλει. Θα φτάσει μόνο του μόλις ανοίξει την εφαρμογή.',
       'presence_typing': 'πληκτρολογεί',
       'online_now': 'σε σύνδεση',
       'offline_now': 'Εκτός σύνδεσης',
@@ -7529,6 +7548,8 @@ class AppLocalizations {
       'sec_about': 'アプリについて',
       'open_source': 'オープンソース',
       'open_source_sub': 'ソースコードは公開されています — {lisans}',
+      'e2ee_lost_retry':
+          'このメッセージは復号できませんでした。安全なセッションを再確立し、送信者に再送を依頼しました。相手がアプリを開くと自動的に届きます。',
       'presence_typing': '入力中',
       'online_now': 'オンライン',
       'offline_now': 'オフライン',
@@ -8209,6 +8230,8 @@ class AppLocalizations {
       'sec_about': '앱 정보',
       'open_source': '오픈 소스',
       'open_source_sub': '소스 코드가 공개되어 있습니다 — {lisans}',
+      'e2ee_lost_retry':
+          '이 메시지를 복호화할 수 없습니다. 보안 세션이 갱신되었고 보낸 사람에게 다시 보내도록 요청했습니다. 상대방이 앱을 열면 자동으로 도착합니다.',
       'presence_typing': '입력 중',
       'online_now': '온라인',
       'offline_now': '오프라인',
@@ -8895,6 +8918,8 @@ class AppLocalizations {
       'sec_about': 'O APLIKACJI',
       'open_source': 'Otwarte źródło',
       'open_source_sub': 'Kod źródłowy jest publiczny — {lisans}',
+      'e2ee_lost_retry':
+          'Nie udało się odszyfrować tej wiadomości. Bezpieczna sesja została odnowiona, a nadawca został poproszony o ponowne wysłanie. Dotrze sama, gdy otworzy aplikację.',
       'presence_typing': 'pisze',
       'online_now': 'online',
       'offline_now': 'Offline',
@@ -9605,6 +9630,8 @@ class AppLocalizations {
       'sec_about': 'OM APPEN',
       'open_source': 'Öppen källkod',
       'open_source_sub': 'Källkoden är offentlig — {lisans}',
+      'e2ee_lost_retry':
+          'Det här meddelandet kunde inte dekrypteras. Den säkra sessionen förnyades och avsändaren har ombetts skicka det igen. Det kommer av sig självt när hen öppnar appen.',
       'presence_typing': 'skriver',
       'online_now': 'online',
       'offline_now': 'Offline',
@@ -10319,6 +10346,8 @@ class AppLocalizations {
       'sec_about': 'TIETOJA',
       'open_source': 'Avoin lähdekoodi',
       'open_source_sub': 'Lähdekoodi on julkinen — {lisans}',
+      'e2ee_lost_retry':
+          'Tätä viestiä ei voitu purkaa. Suojattu istunto uusittiin ja lähettäjää pyydettiin lähettämään se uudelleen. Se saapuu itsestään, kun hän avaa sovelluksen.',
       'presence_typing': 'kirjoittaa',
       'online_now': 'paikalla',
       'offline_now': 'Poissa',
@@ -11030,6 +11059,8 @@ class AppLocalizations {
       'sec_about': 'ÜBER DIE APP',
       'open_source': 'Open Source',
       'open_source_sub': 'Der Quellcode ist öffentlich — {lisans}',
+      'e2ee_lost_retry':
+          'Diese Nachricht konnte nicht entschlüsselt werden. Die sichere Sitzung wurde erneuert und der Absender wurde gebeten, sie erneut zu senden. Sie trifft von selbst ein, sobald er die App öffnet.',
       'presence_typing': 'schreibt',
       'online_now': 'online',
       'offline_now': 'Offline',

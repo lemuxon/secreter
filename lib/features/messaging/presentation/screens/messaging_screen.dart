@@ -3295,7 +3295,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
         // 📞 CEVAPSIZ ÇAĞRI: normal mesaj balonu yerine ORTALI sistem
         // bildirimi olarak çizilir (tik/durum göstergesi yok, taraf yok).
         // 🔒 ÇÖZÜLEMEYEN MESAJ: açıklayıcı bilgi balonu
-        if (msg.content == '\u0000E2EE_LOST') {
+        // 🔒 ÇÖZÜLEMEYEN MESAJ — İKİ AYRI DURUM, İKİ AYRI METİN.
+        //
+        // ⚠️ Tek metinle geçiştirmek yalan olurdu: "kalıcı olarak gitti"
+        // ile "tekrarı istendi, yolda" kullanıcı için tamamen farklı iki
+        // şey. Sahada tam bu eksiklik yüzünden onarım GÖRÜNMEDİ ve
+        // çalışan bir mekanizma "bozuk" diye raporlandı (§4ck).
+        final tekrarIsteniyorMu = msg.content == '\u0000E2EE_RETRY';
+        if (msg.content == '\u0000E2EE_LOST' || tekrarIsteniyorMu) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Center(
@@ -3312,12 +3319,18 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.lock_outline,
-                        size: 15, color: AppTheme.textSecondary),
+                    Icon(
+                        tekrarIsteniyorMu
+                            ? Icons.sync_rounded
+                            : Icons.lock_outline,
+                        size: 15,
+                        color: AppTheme.textSecondary),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        context.tr('e2ee_lost'),
+                        context.tr(tekrarIsteniyorMu
+                            ? 'e2ee_lost_retry'
+                            : 'e2ee_lost'),
                         style: const TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 12.5,
