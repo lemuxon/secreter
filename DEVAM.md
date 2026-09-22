@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-22 | 🚀 **v24 kapalı teste (Alpha) incelemeye gönderildi** | §4cl |
 | 09-20 | 📦 **v24 (1.0.13+24) derlendi ve içeriği doğrulandı** — henüz yüklenmedi | §4cl |
 | 09-20 | ♻️ Yeniden gönderim isteği + onarımı görünür kılan metin **dağıtıldı** | §4cl |
 | 09-20 | 🔍 Saha teshisi: §4cc ÇALIŞIYOR — ama kaybolan mesaj kurtarılmıyor, onarım görünmüyor | §4ck |
@@ -96,11 +97,27 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 
 #### Durum
 
-* 🔴 **v24 (1.0.13+24) DERLENDİ, HENÜZ YÜKLENMEDİ.**
-  Paket `build/app/outputs/bundle/release/app-release.aab`
-  (88,6 MB, **20 Eyl 18:05**), SHA-256 `c6f0754f…`, GIF anahtarıyla.
-  Sürüm notu `scripts/surum_notlari.json` (en-US, 360/500).
-  **Sıradaki iş bu:** Play Console → Kapalı test → yükle.
+* 🚀 **v24 (1.0.13+24) İNCELEMEDE** (2026-09-22).
+  Kanal özeti: *Etkin · 24 (1.0.13) sürümü incelemede · 177 ülke/bölge*.
+  Yönetilen yayınlama KAPALI → inceleme biter bitmez testçilere
+  kendiliğinden sunulur. Geri çekmek: Yayın özeti → **"Değişiklikleri
+  kaldır"**.
+  Paket 88,6 MB, SHA-256 `c6f0754f…`, GIF anahtarıyla derlendi.
+  Sürüm adı elle `24 (1.0.13)` yazıldı; sürüm notu 360/500.
+  ✅ Önizlemede **"artık desteklenmeyen cihaz: 0"** — v24 hiçbir cihazı
+  kaybetmiyor (12.327 telefon + 6.717 tablet aynen).
+
+  ❓ **AÇIK SORU — YAYIN AKIŞI İKİ ADIM MI, TEK ADIM MI?**
+  Bu dosyadaki "Yayın akışı" bölümü, `Kaydet`ten sonra Yayın
+  özetinde **"N değişikliği incelemeye gönder"** düğmesine basmak
+  gerektiğini yazıyor. v23'te o düğme GÖRÜLDÜ. v24'te `Kaydet`ten
+  ~15 sn sonra Yayın özeti açıldığında değişiklik **zaten
+  "incelemede"** idi ve düğme YOKTU.
+  İki açıklama mümkün: (a) kullanıcı kendi penceresinden bastı,
+  (b) yönetilen yayınlama kapalıyken Play kaydedileni kendiliğinden
+  gönderiyor. **Hangisi olduğu doğrulanmadı** — bir sonraki sürümde
+  `Kaydet`ten hemen sonra Yayın özetine bakıp düğmenin olup
+  olmadığına dikkat et.
 
   ✅ **İçerik doğrulandı** (tarih damgasına güvenilmedi, §4cg dersi):
   manifest `1.0.13` diyor ve `1.0.12`/`1.0.11` hiç geçmiyor;
