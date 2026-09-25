@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 09-25 | 🏁 **Üretİm erİşİmİ başvurusu GÖNDERİLDİ** (21:30) — 14 gün şartı doldu | §3 F |
 | 09-22 | 🚀 **v24 kapalı teste (Alpha) incelemeye gönderildi** | §4cl |
 | 09-20 | 📦 **v24 (1.0.13+24) derlendi ve içeriği doğrulandı** — henüz yüklenmedi | §4cl |
 | 09-20 | ♻️ Yeniden gönderim isteği + onarımı görünür kılan metin **dağıtıldı** | §4cl |
@@ -601,10 +602,55 @@ kurabilir**:
 Kurulunca yükleme tek komut olur; tarayıcıdan yüklemek **mümkün değil**
 (araç sınırı 10 MB, paket 88 MB).
 
-### 🔴 F. ÜRETİME BAŞVURU — 25 Eylül 2026'dan sonra
+### 🏁 F. ÜRETİME BAŞVURU — GÖNDERİLDİ (2026-09-25)
+
+#### ✅ 2026-09-25: BAŞVURU GÖNDERİLDİ
+
+Üç şartın da üstü çizildi ve "Üretime başvur" **aktifleşti**. Form
+dolduruldu ve gönderildi (21:30). Play'in yanıtı:
+
+> *"Üretim erişimi başvurunuzu aldık. Başvuru formunuz
+> incelenmektedir. Hesap sahibine e-postayla bilgi verilecektir. Bu
+> işlem genellikle 7 gün veya daha kısa sürer ancak bazen daha uzun
+> sürebilir."*
+
+**Form 3 adım, 7 metin alanı + 2 çoktan seçmeli** (eskiden 2. ve 3.
+adımın içeriği bilinmiyordu — artık kayıtlı):
+
+| Adım | Sorular |
+|---|---|
+| 1 — Kapalı testiniz | testçileri nereden buldunuz · bulmak ne kadar kolaydı (seçmeli) · nasıl etkileşim aldınız · geri bildirim özeti |
+| 2 — Uygulamanız | hedef kitle · kullanıcıya nasıl değer sağlıyor · ilk yıl indirme beklentisi (seçmeli) |
+| 3 — Üretime hazırlık | testten öğrenip ne değiştirdiniz · hazır olduğuna nasıl karar verdiniz |
+
+Verilen cevaplar (özet): testçiler arkadaş/aile çevresinden, ücretli
+sağlayıcı yok · bulmak **"Zor"** · mesajlaşma/medya/grup/kanal düzenli
+kullanıldı, **aramalar hakkında hiç rapor gelmedi** · 7 somut hata
+sayıldı · hedef kitle mahremiyetine önem veren yetişkinler, çocuklara
+yönelik değil · ilk yıl **0–10 bin** · değişiklikler: sessiz onarım +
+yeniden gönderim + 7 düzeltme · hazırlık kararı: 635 Dart testi, 166
+kural testi, Play'de 28 günde 0 çökme.
+
+⚠️ **Eski taslaktaki çıkarım DÜZELTİLDİ.** §3 F'nin eski hâli "arama
+ve hikaye beklediğimden az denendi" diyordu ve bunun **tahmin** olduğu
+not edilmişti. Gerçek: hikayeler kullanıldı (dokunma şikâyeti geldi),
+**aramalar hakkında hiç geri bildirim gelmedi.** Forma bu yazıldı.
+
+⚠️ **Formun sormadığı ama açık olan iki şey** — üretim, kapalı testten
+farklı olarak herkese açık demek:
+* **TURN yok** → her arama doğrudan, IP karşı tarafa açık (§3 A) ve
+  açıklama iki arama ekranından da kaldırıldı (§4cf, §4ch).
+* **Hesap kurtarma boşluğu** (§3 D) hâlâ karar bekliyor.
+
+Kullanıcı bunları bilerek gönderdi: *"zamanla güncellemelerle
+düzelteceğiz."*
+
+---
+
+#### 📜 Başvuru öncesi durum (arşiv)
 
 **Durum (20 Eyl — Play'in kendi sayacından okundu):** "Üretime
-başvur" düğmesi hâlâ **pasif**. Kontrol paneli birebir şunu yazıyor:
+başvur" düğmesi o gün hâlâ **pasifti**. Kontrol paneli şunu yazıyordu:
 
 > *"An itibarıyla **12** test kullanıcısı kesintisiz olarak **9 gündür**
 > kayıtlı"*
