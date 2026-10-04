@@ -26,6 +26,9 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | 🚨 **CLOUD FUNCTIONS DURMUŞ** — proje Blaze→Spark düşmüş, 14 fonksiyon 0 istek | §4cn |
+| 10-05 | 🔒 Kullanıcı adı hırsızlığı kapatıldı + kurallar **dağıtıldı** | §4cm |
+| 10-05 | 🧹 Kişisel veri temizliği — git geçmişi YENİDEN YAZILDI | §4cm |
 | 10-04 | ✅ **Üretİm erİşİmİ AÇILDI** (konsol durumu) · v24 22 Eyl'de yayına çıkmış · 28 günde 0 çökme | §3 F |
 | 09-25 | 🏁 **Üretİm erİşİmİ başvurusu GÖNDERİLDİ** (21:30) — 14 gün şartı doldu | §3 F |
 | 09-22 | 🚀 **v24 kapalı teste (Alpha) incelemeye gönderildi** | §4cl |
@@ -1502,6 +1505,150 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🚨 CLOUD FUNCTIONS DURMUŞ (2026-10-05) — §4cn
+
+### §4cn — PROJE BLAZE'DEN SPARK'A DÜŞMÜŞ
+
+Kullanıcı adı düzeltmesini dağıtırken ortaya çıktı:
+
+```
+Error: Extensions require the Blaze plan, but project gizlichat-f2a99
+is not on the Blaze plan.
+```
+
+Firebase konsolu doğruluyor: kenar çubuğu **"Spark — No-cost ($0/month)"**
+diyor. 2026-09-20'de aynı yerde **"Blaze | Free Trial — 10 Days"**
+yazıyordu; deneme süresi dolmuş ve proje ücretsiz plana düşmüş.
+
+#### 🔬 KANIT: zamanlanmış fonksiyonlar da çalışmıyor
+
+Functions panosunda **14 fonksiyonun tamamı 24 saatte 0 istek.**
+
+⚠️ "0 istek" tek başına kanıt sayılmazdı — 21 testçiyle trafik zaten
+düşük olabilir. Ama bunların **beşi zamanlanmış** ve kullanıcı
+trafiğinden BAĞIMSIZ çalışır:
+
+`cleanupExpiredStories` · `cleanupReleasedUsernames` ·
+`sendScheduledMessages` · `cleanupStaleCalls` · `cleanupExpiredMessages`
+
+Beşi de 24 saatte hiç tetiklenmemiş. Yani fonksiyonlar dağıtılmış
+görünüyor ama **ÇALIŞMIYOR.**
+
+#### 🔴 NE BOZULDU (sahada, v23/v24 kullanıcılarında)
+
+| Fonksiyon | Bozulan söz |
+|---|---|
+| `claimPreKey` | **E2EE oturumu kurulamaz** — §4n'de birebir aynısı yaşanmıştı |
+| `cleanupExpiredMessages` | Kaybolan mesaj sunucuda SİLİNMİYOR (§4al'in vaadi) |
+| `deleteAccountData` | Hesap silme sunucuda çalışmıyor → KVKK/GDPR sözü |
+| `sendMessageNotification` / `sendCallNotification` | Push bildirimi yok |
+| `syncChannelDirectory` | Kanal dizini güncellenmiyor |
+
+⚠️ §4n'in dersi birebir tekrarlıyor: *"Çoğu üretimde HİÇ YOKTU —
+`claimPreKey` dahil, yani E2EE oturumu kurulamıyordu."* O zaman sebep
+"hiç dağıtılmamış olması"ydı; şimdi "plan düştüğü için durmuş olması".
+**Belirti aynı, kullanıcı için sonuç aynı.**
+
+#### 📌 BUNU NEDEN HİÇBİR KAPI YAKALAMADI
+
+Doğrulama kapılarının tamamı YEREL: analyzer, Dart testleri, emülatörde
+kural testleri, `node --check`. Hiçbiri *"üretimdeki fonksiyonlar
+gerçekten çalışıyor mu"* sorusunu sormuyor. Android vitals da göremez —
+fonksiyon çalışmayınca uygulama çökmez, sadece sessizce az iş yapar.
+
+> 🔁 Tekrar eden kök sebebin yeni bir yüzü: **ölçmediğin şeyin
+> sessizliğini "iyi haber" sanmak.** §4am, §4bw, §4ci ile aynı aile.
+
+#### Yapılması gereken (KULLANICI KARARI)
+
+Fonksiyonların geri gelmesi için proje **Blaze'e alınmalı** (kullandıkça
+öde; bu ölçekte fatura tipik olarak sıfıra yakın ama kart gerekiyor).
+Alternatif: fonksiyonlara bağlı özellikleri kapatmak — ama bu E2EE
+oturum kurulumunu ve hesap silmeyi de kapatmak demek, yani gerçek bir
+seçenek değil.
+
+---
+
+## 🔒 KULLANICI ADI HIRSIZLIĞI (2026-10-05) — §4cm
+
+### §4cm — KENDİ ADINDAN BAŞKASINI REZERVE EDEBİLİYORDUN
+
+Yayın-öncesi denetimde çıktı, komutla doğrulandı.
+
+Kural eskiden şuydu:
+
+```
+match /releasedUsernames/{username} {
+  allow create: if signedIn();     // kim, hangi adı? DENETLENMİYOR
+}
+```
+
+#### Saldırı
+
+Rezervasyonun amacı **taklidi önlemek**: hesap silinince ad 14 gün
+rezerve kalır. Ama denetimsiz hâli tam tersini, taklit için bir ARAÇ
+üretiyordu:
+
+```
+1. Saldırgan (anonim giriş açık → herkes) şunu yazar:
+   releasedUsernames/<kurbanın_adı> = { releaseAt: GEÇMİŞ TARİH }
+2. cleanupReleasedUsernames bunu "süresi dolmuş" sayar
+3. usernames/<kurbanın_adı> SİLİNİR   ← fonksiyon belge kimliğine
+                                         körü körüne bakıyordu
+4. Ad serbest kalır, saldırgan alır — kurban hesabını kullanmaya
+   devam ederken adını kaybeder
+```
+
+#### Düzeltme: İKİ katman
+
+**1. Kural** üç şeyi birden zorunlu kılıyor: belge kimliği = `username`
+alanı, `uid` = çağıran, ve adın dizin kaydı GERÇEKTEN çağırana ait.
+Üçüncüsü tek başına saldırıyı bitirir.
+
+**2. Fonksiyon** silmeden önce sahipliği YENİDEN doğruluyor: rezervasyon
+`uid`'i ile dizin kaydının `uid`'i tutmuyorsa dizine DOKUNMUYOR.
+
+⚠️ Tek katman yetmezdi: kural ileride gevşetilirse açık sessizce geri
+gelirdi. İki yerde kontrol, kuralın değişmesine karşı bağışıklık.
+
+⚠️ **FAIL-SAFE:** rezervasyonda `uid` yoksa (bu düzeltmeden ÖNCE
+yazılmış eski kayıtlar) dizin kaydına dokunulmuyor. En kötü ihtimalle
+bir ad gereğinden uzun rezerve kalır; yanlış kişinin adını silmek ise
+geri alınamaz.
+
+#### Kapı ve dağıtım
+
+Kural testleri **166 → 175** (9 yeni): meşru akış geçiyor, dört saldırı
+varyantı da reddediliyor (başkasının adı, kendi uid'iyle, uid taklidi,
+belge kimliği–alan ayrışması), ayrıca dizinde olmayan ad rezerve
+edilemiyor (namespace DoS).
+
+✅ **KURALLAR DAĞITILDI** (`released rules` satırı doğrulandı).
+🔴 **FONKSİYON DAĞITILAMADI** — §4cn (plan Spark). Kural tek başına
+saldırıyı kapatıyor; fonksiyon katmanı Blaze'e dönülünce dağıtılmalı.
+
+---
+
+## 🧹 KİŞİSEL VERİ TEMİZLİĞİ (2026-10-05) — §4cm ekі
+
+Depo herkese açılacağı için yayın-öncesi denetim yapıldı. Temizlenenler:
+bir testçinin gerçek adı (3 kaynak/test dosyası + DEVAM.md'de 10 yer,
+yanında kiminle konuştuğu ve tarih-saat bilgisiyle), hesap sahibinin
+e-postası, gerçek sohbet kimliği, Windows kullanıcı adını sızdıran
+makine yolları. `.claude/settings.local.json` ve `.firebase/` depodan
+çıkarıldı.
+
+⚠️ **GİT GEÇMİŞİ YENİDEN YAZILDI** (`filter-branch`, 22 commit). Ad iki
+commit MESAJINDA da geçiyordu; dosyayı düzeltmek yetmezdi. Yedek
+referanslar düşürülüp `gc` çalıştırıldı: `.git` 8 MB → 2 MB, yani eski
+nesneler gerçekten silindi. Depodaki TÜM nesnelerde doğrulandı: 0
+eşleşme.
+
+📌 Depo hiç push edilmediği için bu bedava oldu. Yayımlandıktan sonra
+aynı temizlik **imkânsız** olurdu.
 
 ---
 

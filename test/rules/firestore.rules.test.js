@@ -1821,6 +1821,147 @@ describe("sessiz yeniden el sıkışma (§4cc)", () => {
 // istediği kişiye istediği mesajı sürekli yeniden şifreletebilirdi —
 // hem hizmet reddi hem de ratchet'i boşuna ilerleten bir taciz yolu.
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// §4cm — KULLANICI ADI HIRSIZLIĞI
+//
+// Kural eskiden `allow create: if signedIn()` idi: kimin hangi adı
+// rezerve ettiği HİÇ denetlenmiyordu.
+//
+// Saldırı: giriş yapmış herhangi biri (anonim giriş açık, yani herkes)
+// `releasedUsernames/<kurbanın_adı>` belgesini geçmiş tarihli
+// `releaseAt` ile oluşturur → zamanlanmış temizlik fonksiyonu bunu
+// "süresi dolmuş" sayıp KURBANIN `usernames/` dizin kaydını siler →
+// ad serbest kalır ve saldırgan alır.
+//
+// ⚠️ Rezervasyonun amacı TAKLİDİ ÖNLEMEKTİ; denetimsiz hâli tam
+// tersini, taklit için bir ARAÇ üretiyordu.
+// ─────────────────────────────────────────────
+describe("kullanıcı adı rezervasyonu (§4cm)", () => {
+  const GECMIS = "2020-01-01T00:00:00.000Z";
+  const GELECEK = "2099-01-01T00:00:00.000Z";
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      // Dizin: "alice_ad" Alice'e, "bob_ad" Bob'a ait.
+      await setDoc(doc(ctx.firestore(), "usernames/alice_ad"), { uid: ALICE });
+      await setDoc(doc(ctx.firestore(), "usernames/bob_ad"), { uid: BOB });
+    });
+  });
+
+  it("sahibi KENDİ adını rezerve edebilir (meşru akış)", async () => {
+    // Hesap silinirken istemcinin yaptığı şey budur — kırılmamalı.
+    await assertSucceeds(
+      setDoc(doc(as(ALICE), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        uid: ALICE,
+        releaseAt: GELECEK,
+      })
+    );
+  });
+
+  it("🔴 BAŞKASININ adını rezerve edemez (asıl saldırı)", async () => {
+    // Bob, Alice'in adını geçmiş tarihle rezerve etmeye çalışıyor.
+    // Geçerse temizlik fonksiyonu Alice'in dizin kaydını siler.
+    await assertFails(
+      setDoc(doc(as(BOB), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        uid: BOB,
+        releaseAt: GECMIS,
+      })
+    );
+  });
+
+  it("🔴 başkasının adını KENDİ uid'iyle de rezerve edemez", async () => {
+    await assertFails(
+      setDoc(doc(as(BOB), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        uid: BOB,
+        releaseAt: GELECEK,
+      })
+    );
+  });
+
+  it("🔴 başkasının uid'ini TAKLİT ederek yazamaz", async () => {
+    await assertFails(
+      setDoc(doc(as(BOB), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        uid: ALICE,
+        releaseAt: GELECEK,
+      })
+    );
+  });
+
+  it("🔴 belge kimliği ile `username` alanı AYRIŞAMAZ", async () => {
+    // Bob kendi adıyla belge açıp içine Alice'in adını yazarsa, fonksiyon
+    // belge KİMLİĞİNE baktığı için yanlış kaydı silebilirdi.
+    await assertFails(
+      setDoc(doc(as(BOB), "releasedUsernames/bob_ad"), {
+        username: "alice_ad",
+        uid: BOB,
+        releaseAt: GELECEK,
+      })
+    );
+  });
+
+  it("🔴 `uid` alanı EKSİKSE yazılamaz", async () => {
+    // Fonksiyon uid olmadan dizin kaydına dokunmuyor; kural da
+    // baştan reddediyor.
+    await assertFails(
+      setDoc(doc(as(ALICE), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        releaseAt: GELECEK,
+      })
+    );
+  });
+
+  it("🔴 dizinde OLMAYAN bir ad rezerve edilemez", async () => {
+    // Aksi hâlde saldırgan henüz alınmamış adları toplu rezerve edip
+    // namespace'i kilitleyebilirdi (geri alınamaz DoS).
+    await assertFails(
+      setDoc(doc(as(ALICE), "releasedUsernames/hic_olmayan_ad"), {
+        username: "hic_olmayan_ad",
+        uid: ALICE,
+        releaseAt: GELECEK,
+      })
+    );
+  });
+
+  it("rezervasyon GÜNCELLENEMEZ ve SİLİNEMEZ (temizlik sunucuda)", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        uid: ALICE,
+        releaseAt: GELECEK,
+      });
+    });
+    // Süreyi kısaltarak adı erken serbest bıraktıramaz.
+    await assertFails(
+      setDoc(doc(as(ALICE), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        uid: ALICE,
+        releaseAt: GECMIS,
+      })
+    );
+    await assertFails(
+      deleteDoc(doc(as(ALICE), "releasedUsernames/alice_ad"))
+    );
+  });
+
+  it("giriş yapmış kullanıcı rezervasyonu OKUYABİLİR", async () => {
+    // Kayıt akışı "bu ad hâlâ rezerve mi" diye bakar — kırılmamalı.
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "releasedUsernames/alice_ad"), {
+        username: "alice_ad",
+        uid: ALICE,
+        releaseAt: GELECEK,
+      });
+    });
+    await assertSucceeds(
+      getDoc(doc(as(BOB), "releasedUsernames/alice_ad"))
+    );
+  });
+});
+
 describe("yeniden gönderim isteği (§4cl)", () => {
   const MSG = "msg_abc123";
 

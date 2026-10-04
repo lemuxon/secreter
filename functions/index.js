@@ -720,14 +720,52 @@ exports.cleanupReleasedUsernames = onSchedule(
       .get();
     if (expired.empty) return;
 
+    // ── 🔴 SİLMEDEN ÖNCE SAHİPLİĞİ DOĞRULA (§4cm) ──
+    //
+    // Eskiden burada `usernames/<belgeKimliği>` KÖRÜ KÖRÜNE siliniyordu.
+    // Bu, güvenlik kuralındaki boşlukla birleşince kullanıcı adı
+    // hırsızlığına yol açıyordu: saldırgan kurbanın adıyla geçmiş
+    // tarihli bir rezervasyon yazıyor, bu fonksiyon da kurbanın dizin
+    // kaydını siliyordu.
+    //
+    // Kural artık sahipliği zorunlu kılıyor ama BURADA DA doğruluyoruz:
+    // tek katmana güvenmek, o katman bir gün gevşetilirse sessizce
+    // açığı geri getirir. İki yerde birden kontrol etmek, kuralın
+    // ileride değişmesine karşı bağışıklık sağlar.
+    //
+    // ⚠️ FAIL-SAFE: rezervasyonda `uid` yoksa (bu düzeltmeden ÖNCE
+    // yazılmış eski kayıtlar) dizin kaydına DOKUNULMAZ. En kötü ihtimalle
+    // bir ad gereğinden uzun rezerve kalır — yanlış kişinin adını silmek
+    // ise geri alınamaz.
     const batch = db.batch();
-    expired.docs.forEach((d) => {
-      batch.delete(d.ref);
-      // Ad dizinini de serbest bırak
-      batch.delete(db.collection("usernames").doc(d.id));
-    });
+    let dizinSilinen = 0;
+    let atlanan = 0;
+
+    for (const d of expired.docs) {
+      batch.delete(d.ref); // rezervasyon her hâlükârda kalkar
+
+      const rezervUid = d.data() && d.data().uid;
+      if (!rezervUid) {
+        atlanan++;
+        continue;
+      }
+
+      const dizinRef = db.collection("usernames").doc(d.id);
+      const dizin = await dizinRef.get();
+      if (dizin.exists && dizin.data().uid === rezervUid) {
+        batch.delete(dizinRef);
+        dizinSilinen++;
+      } else {
+        // Dizin kaydı başkasına ait ya da hiç yok: DOKUNMA.
+        atlanan++;
+      }
+    }
+
     await batch.commit();
-    console.log(`Kullanıcı adı rezervasyonu temizliği: ${expired.size}`);
+    console.log(
+      `Kullanıcı adı rezervasyonu temizliği: ${expired.size} rezervasyon, ` +
+        `${dizinSilinen} dizin kaydı silindi, ${atlanan} atlandı`
+    );
   }
 );
 

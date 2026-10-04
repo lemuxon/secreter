@@ -682,9 +682,39 @@ service cloud.firestore {
     // 14 gün rezerve. Süresi dolanların temizliği SUNUCUDA yapılır
     // (cleanupReleasedUsernames); istemci silemez — eskiden istemci
     // silmeye çalışıyor ve kural reddettiği için KAYIT PATLIYORDU.
+    //
+    // 🔴 KULLANICI ADI HIRSIZLIĞI (§4cm) — kural eskiden `if signedIn()`
+    // idi ve kimin hangi adı rezerve ettiğini HİÇ denetlemiyordu.
+    //
+    // Saldırı: giriş yapmış herhangi biri (anonim giriş açık, yani
+    // herkes) `releasedUsernames/<kurbanın_adı>` belgesini geçmiş
+    // tarihli `releaseAt` ile oluşturur. Zamanlanmış temizlik fonksiyonu
+    // bunu "süresi dolmuş" sayıp KURBANIN `usernames/` dizin kaydını
+    // siler. Ad serbest kalır, saldırgan alır — kurban hesabını
+    // kullanmaya devam ederken adını kaybeder.
+    //
+    // ⚠️ Rezervasyonun amacı TAKLİDİ ÖNLEMEK; denetimsiz hâli tam
+    // tersini, taklit için bir ARAÇ üretiyordu.
+    //
+    // Kural artık üç şeyi birden zorunlu kılıyor:
+    //   1. belge kimliği ile `username` alanı AYNI olmalı
+    //      (yoksa X adına rezervasyon yazıp Y'yi sildirebilirsin),
+    //   2. `uid` çağıranın kendisi olmalı — fonksiyon bunu silmeden
+    //      önce yeniden doğrular (derinlemesine savunma),
+    //   3. adın dizin kaydı GERÇEKTEN çağırana ait olmalı.
+    // Üçüncüsü tek başına saldırıyı bitirir: kendi adından başkasını
+    // rezerve edemezsin.
     match /releasedUsernames/{username} {
       allow read: if signedIn();
-      allow create: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.username == username
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.releaseAt is string
+        && exists(/databases/$(database)/documents/usernames/$(username))
+        && get(/databases/$(database)/documents/usernames/$(username))
+             .data.uid == request.auth.uid;
+
       allow update, delete: if false;
     }
 

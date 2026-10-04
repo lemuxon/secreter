@@ -338,6 +338,11 @@ class AuthService {
         try {
           await _db.collection('releasedUsernames').doc(username).set({
             'username': username,
+            // 🔒 §4cm: kural artık bu alanı ZORUNLU kılıyor ve temizlik
+            // fonksiyonu dizin kaydını silmeden önce yeniden doğruluyor.
+            // Eksikse rezervasyon yazılamaz (ve yazılsa bile dizin kaydı
+            // güvenle atlanır).
+            'uid': uid,
             'releaseAt': DateTime.now()
                 .toUtc()
                 .add(const Duration(days: 14))
