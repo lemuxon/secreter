@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-04 | ✅ **Üretİm erİşİmİ AÇILDI** (konsol durumu) · v24 22 Eyl'de yayına çıkmış · 28 günde 0 çökme | §3 F |
 | 09-25 | 🏁 **Üretİm erİşİmİ başvurusu GÖNDERİLDİ** (21:30) — 14 gün şartı doldu | §3 F |
 | 09-22 | 🚀 **v24 kapalı teste (Alpha) incelemeye gönderildi** | §4cl |
 | 09-20 | 📦 **v24 (1.0.13+24) derlendi ve içeriği doğrulandı** — henüz yüklenmedi | §4cl |
@@ -603,6 +604,44 @@ Kurulunca yükleme tek komut olur; tarayıcıdan yüklemek **mümkün değil**
 (araç sınırı 10 MB, paket 88 MB).
 
 ### 🏁 F. ÜRETİME BAŞVURU — GÖNDERİLDİ (2026-09-25)
+
+#### 🎉 2026-10-04: ÜRETİM ERİŞİMİ AÇILDI
+
+Konsol durumu değişti — başvuru olumlu sonuçlanmış görünüyor:
+
+| Kanıt | Önce | Şimdi |
+|---|---|---|
+| Kontrol paneli | "Üretime erişim için başvuruda bulunma" kartı | kart **YOK**, yerine "Uygulamanızı yayınlayın" kurulum adımları |
+| Üretim sayfası | **kilitli** ("Kontrol Paneli'ne git") | tam kanal arayüzü açık |
+| Üretim kanalı | erişilemez | *Etkin değil · Taslak sürüm · 178 ülke/bölge · 21 yükleme* |
+
+⚠️ **Konsolda açık bir "onaylandı" bildirimi YOK** (bildirim merkezinde
+3 kayıt var, hiçbiri bu değil). Play bunu **e-postayla** gönderiyor →
+**hesap sahibinin e-postası**. Resmî kayıt o e-postadır; buradaki sonuç
+konsolun davranışından çıkarıldı (ama kilit açılması kesin bir sinyal).
+
+📌 Üretim kanalında **boş bir taslak sürüm** duruyor; "Yeni sürüm
+oluştur" bu yüzden soluk. Üretime çıkmadan önce ya o taslak
+doldurulmalı ya da silinmeli.
+
+#### 📊 10-04 saha durumu
+
+* **v24 (1.0.13) kapalı testte yayında** — 22 Eyl 16:08'de sunulmuş,
+  12 gündür sahada. Kanal 178 ülke.
+* **28 günde 0 kilitlenme / 0 ANR** (7 Eyl – 3 Eki, "Sonuç yok").
+* **Play üzerinden yeni geri bildirim YOK** — toplam 2 kayıt, en
+  yenisi 11 Eyl. ⚠️ Bu "sorun yok" demek değil: kullanıcı geri
+  bildirimi doğrudan yazışarak topluyor (başvuruda da böyle yazıldı).
+* **Android geliştirici doğrulaması: ✓ Kayıtlı** (`com.secreter.app`,
+  4 anahtar, 11 Eyl). 8 Eyl tarihli kırmızı "30 Eylül'e kadar" uyarısı
+  okunmamış ESKİ bir hatırlatma; şart karşılanmış.
+
+#### ⏳ §4cl HÂLÂ DOĞRULANMADI
+
+v24 12 gündür sahada ama yeniden gönderim isteğinin çalıştığına dair
+**hiçbir kanıt yok** — ve olamaz da: başarısız olursa uygulama çökmez,
+mesaj sessizce okunamaz kalır. Android vitals bunu göremez.
+Tek kanıt testçi gözlemi; sorulacak soru "AÇIK UÇLAR"da.
 
 #### ✅ 2026-09-25: BAŞVURU GÖNDERİLDİ
 
