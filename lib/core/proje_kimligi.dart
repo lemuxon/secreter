@@ -21,7 +21,7 @@ library;
 ///
 /// Doldurunca: Ayarlar → Hakkında altında "Açık kaynak" satırı belirir
 /// ve dokunulduğunda buraya gider.
-const String depoAdresi = '';
+const String depoAdresi = 'https://github.com/lemuxon/secreter';
 
 /// Kodun dağıtıldığı lisans. Depo yayımlanınca kök dizindeki `LICENSE`
 /// dosyasıyla aynı olmalı.
