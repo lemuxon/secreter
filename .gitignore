@@ -81,3 +81,10 @@ play-sa.json
 # Anahtar deposu yedekleri (imza parolası döndürme betiği üretir)
 *.jks.yedek-*
 android/key.properties.yedek-*
+
+# ── Makineye ÖZEL, depoya girmemeli ──
+# settings.local.json: yerel yolları (Windows kullanıcı adı dahil) ve
+# ön-onaylı komut listesini taşır — başka makinede anlamsız, kişisel.
+.claude/settings.local.json
+# Firebase dağıtım önbelleği (yalnızca functions/ altı kapsanıyordu).
+.firebase/
