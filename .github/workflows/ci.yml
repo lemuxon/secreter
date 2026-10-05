@@ -101,8 +101,32 @@ jobs:
       - name: Material fontlarını indir (gerçek metrikli testler için)
         run: flutter precache --universal
 
+      # Test çıktısı iş loglarında kalır ve logları görmek GitHub oturumu
+      # ister. Düşen testin GERÇEK sebebini annotation olarak da yayıyoruz:
+      # böylece "1 failed" özetiyle yetinmek yerine neden düştüğü
+      # dışarıdan da görünür olur.
       - name: Testleri çalıştır (coverage ile)
-        run: flutter test --coverage
+        run: |
+          set -o pipefail
+          if flutter test --coverage --reporter expanded 2>&1 | tee test-output.log; then
+            exit 0
+          fi
+          echo "::group::Son 80 satır"
+          tail -n 80 test-output.log
+          echo "::endgroup::"
+          grep -nE "Expected:|Actual:|Exception|Error:|reason:|FAILED|bulunamad" test-output.log | head -20 > hata.txt || true
+          while IFS= read -r satir; do
+            echo "::error::$satir"
+          done < hata.txt
+          exit 1
+
+      - name: Test çıktısını sakla (düştüyse)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: test-output.log
+          retention-days: 7
 
       - name: Coverage raporu yükle
         uses: codecov/codecov-action@v4
