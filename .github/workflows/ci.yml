@@ -221,11 +221,23 @@ jobs:
       - name: Bağımlılıkları yükle
         run: flutter pub get
 
-      - name: Firebase config oluştur
+      # 🪤 BOŞ SIR, DEPODAKİ GERÇEK DOSYAYI EZİYORDU.
+      #
+      # Eskiden koşulsuzdu: sır tanımlı değilse `echo "" | base64 -d`
+      # **0 baytlık** bir dosya üretir ve depoda bulunan gerçek
+      # `google-services.json` silinirdi. `continue-on-error: true`
+      # yalnızca adımın düşmesini tolere eder; dosyayı geri getirmez.
+      # Android derlemesi sonra boş dosyayı ayrıştıramayıp düşüyordu.
+      #
+      # CI bu depoda hiç çalışmadığı için kusur ilk kez #5'te göründü.
+      - name: Firebase config yaz (yalnızca sır varsa)
         run: |
-          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d \
-            > android/app/google-services.json
-        continue-on-error: true
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
+            echo "Sırdan yazıldı."
+          else
+            echo "Sır yok — depodaki google-services.json korunuyor."
+          fi
 
       # ⚠️ İMZA: keystore CI'da yoksa `release` imzasız kalır ve derleme
       # başarısız olur — bu İSTENEN davranıştır. Eskiden imza yokken
@@ -258,9 +270,19 @@ jobs:
             --dart-define=SECRETER_TURN_USER=${{ secrets.TURN_USER }} \
             --dart-define=SECRETER_TURN_PASS=${{ secrets.TURN_PASS }}
 
+      # Düşerse sebebi annotation'a taşınır: iş logları oturum ister.
       - name: Debug APK derle (imza yoksa)
         if: steps.keystore.outputs.present != 'true'
-        run: flutter build apk --debug
+        run: |
+          set -o pipefail
+          if flutter build apk --debug 2>&1 | tee build-output.log; then
+            exit 0
+          fi
+          grep -nE "FAILURE|error:|Error:|Exception|What went wrong|Caused by" build-output.log | head -20 > hata.txt || true
+          while IFS= read -r satir; do
+            echo "::error::$satir"
+          done < hata.txt
+          exit 1
 
       - name: APK'yı artifact olarak yükle
         uses: actions/upload-artifact@v4

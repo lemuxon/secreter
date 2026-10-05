@@ -1671,6 +1671,33 @@ Flutter sürümünde aynı çalışır.
 Testın hata mesajı da eyleme dönüştürüldü: artık doğrudan
 `flutter precache --universal` çalıştır diyor.
 
+### 📦 CI #5: FONT ÇÖZÜLDÜ, SIRADAKİ KUSUR GÖRÜNDÜ
+
+Font depoya konunca **Testler geçti** ve zincir ilerledi — böylece
+`APK Derle` işi deponun tarihinde **ilk kez** çalıştı (yalnızca
+`master`'a push'ta koşuyor). Ve düştü.
+
+Sebep, CI hiç çalışmadığı için üç aydır görülmemiş bir kusur:
+
+```yaml
+run: |
+  echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d     > android/app/google-services.json
+continue-on-error: true
+```
+
+`GOOGLE_SERVICES_JSON` sırrı tanımlı değil. `echo "" | base64 -d`
+**0 baytlık** bir dosya üretiyor ve **depoda bulunan gerçek
+`google-services.json`u eziyor.** Android derlemesi sonra boş dosyayı
+ayrıştıramayıp düşüyor.
+
+> 🪤 `continue-on-error: true` burada **koruma sanrisi**ydı: adımın
+> DÜŞMESİNİ tolere eder ama yaptığı ZARARI geri almaz. Dosya çoktan
+> silinmiştir. "Hata olursa devam et" ile "hata olursa bir şey bozulmaz"
+> aynı şey değil.
+
+Adım artık sır varsa yazıyor, yoksa depodakini koruyor. Derleme adımına
+da aynı annotation görünürlüğü eklendi.
+
 ### ISSUE ŞABLONLARI
 
 `SECURITY.md` *"açığı herkese açık Issue olarak AÇMA"* diyordu ama Issue
