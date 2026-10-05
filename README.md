@@ -74,7 +74,7 @@ kural testi** · 4 functions testi.
 
 | Araç | Sürüm | Ne için |
 |---|---|---|
-| Flutter SDK | 3.x | uygulama |
+| Flutter SDK | **3.44.4** (Dart 3.12.2) | uygulama — CI bu sürüme sabitli |
 | JDK | **17** | Android derlemesi |
 | JDK | **21** | Firestore kural testleri (`firebase-tools` şartı) |
 | Node.js | 20+ | Cloud Functions ve kural testleri |

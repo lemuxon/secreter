@@ -32,12 +32,17 @@ Etiketler:
 
 | Araç | Sürüm | Ne için |
 |---|---|---|
-| Flutter SDK | 3.x | uygulama |
+| Flutter SDK | **3.44.4** (Dart 3.12.2) | uygulama — CI bu sürüme sabitli |
 | JDK | **17** | Android derlemesi |
 | JDK | **21** | Firestore kural testleri (`firebase-tools` şartı) |
 | Node.js | 20+ | Cloud Functions ve kural testleri |
 
 > ⚠️ İki ayrı JDK gerekiyor. Kural testleri 21'in altında çalışmaz.
+>
+> 🪤 **Flutter sürümü önemli.** Dart biçimlendiricisi sürümler
+> arasında çıktı değiştirir; farklı bir sürümle `dart format`
+> çalıştırırsan kapı düşer ve değiştirmediğin dosyalar diff'e girer.
+> CI `3.44.4`'e sabitli (`.github/workflows/ci.yml`).
 
 #### 🧪 En hızlı yol — hesap ve kredi kartı gerekmez
 
@@ -164,7 +169,7 @@ Labels: `security`, `known-limitation`, `good-first-issue`, `infra`.
 
 | Tool | Version | For |
 |---|---|---|
-| Flutter SDK | 3.x | the app |
+| Flutter SDK | **3.44.4** (Dart 3.12.2) | the app — CI is pinned to this |
 | JDK | **17** | Android build |
 | JDK | **21** | Firestore rules tests (`firebase-tools` requirement) |
 | Node.js | 20+ | Cloud Functions and rules tests |

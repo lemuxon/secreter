@@ -25,9 +25,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 🪤 SÜRÜM SABITLENDİ — `3.x` DEĞİL.
+      #
+      # `3.x` her zaman en son stable'ı çeker. Dart biçimlendiricisi
+      # sürümler arasında çıktı değiştirir; bu yüzden CI'nin ilk
+      # çalıştırması (#1) `dart format --set-exit-if-changed` adımında
+      # düştü — kodda hiçbir sorun yokken, yalnızca CI yerelden daha yeni
+      # bir SDK kullandığı için.
+      #
+      # Sabit sürüm olmadan bir katkıcının PR'ı, Flutter dün yeni bir
+      # stable yayınladığı için kırmızıya düşerdi. Kapıların doğruladığı
+      # sürüm burada yazılı olmalı.
+      #
+      # Yükseltirken: yerelde aynı sürüme geç, `dart format` çalıştır,
+      # `flutter analyze` 0 bulgu versin, sonra burayı güncelle.
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
+          flutter-version: '3.44.4'   # Dart 3.12.2 — kapılar bununla doğrulandı
           channel: 'stable'
           cache: true
 
@@ -61,7 +75,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
+          flutter-version: '3.44.4'   # analyze işiyle AYNI sürüm olmalı
           channel: 'stable'
           cache: true
 
@@ -173,7 +187,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
+          flutter-version: '3.44.4'   # analyze işiyle AYNI sürüm olmalı
           channel: 'stable'
           cache: true
 

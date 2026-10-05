@@ -78,7 +78,7 @@ rules tests** · 4 functions tests.
 
 | Tool | Version | For |
 |---|---|---|
-| Flutter SDK | 3.x | the app |
+| Flutter SDK | **3.44.4** (Dart 3.12.2) | the app — CI is pinned to this |
 | JDK | **17** | Android build |
 | JDK | **21** | Firestore rules tests (`firebase-tools` requirement) |
 | Node.js | 20+ | Cloud Functions and rules tests |
