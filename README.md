@@ -1,197 +1,163 @@
-# GizliChat — Kurulum & APK Derleme Kılavuzu
+# SECRETER
 
-> 🏗️ **v9 Mimari Güncellemesi:** Messaging modülü Clean Architecture +
-> Riverpod + Dependency Injection ile yeniden yapılandırıldı. Detaylar ve
-> bu deseni diğer modüllere uygulama rehberi için **ARCHITECTURE.md**'ye bakın.
-> Yeni kod `lib/core/` ve `lib/features/` altında; eski `lib/services/` ve
-> `lib/screens/` kademeli geçiş için korundu.
+**Telefon numarası istemeyen, uçtan uca şifreli Android mesajlaşma uygulaması.**
+Flutter + Firebase ile yazıldı. Kayıt için e-posta da istemez; hesap
+cihazda üretilen bir anahtarla açılır.
 
-> 📴 **v10 Offline Desteği:** Hive ile lokal cache + pending kuyruğu eklendi.
-> Mesajlar açılışta cache'ten anında gelir; offline gönderilenler bağlanınca
-> otomatik gönderilir. **Not:** `connectivity_plus` 5.x kullanılıyor — 6.x'e
-> yükseltirsen `onConnectivityChanged` artık `List<ConnectivityResult>`
-> döndürür, `network_info.dart`'ı ona göre güncelle.
-
-> 🛡️ **v11 Güvenlik Sertleştirme:** Root/jailbreak, emulator, geliştirici
-> modu, Frida ve debugger tespiti + `FLAG_SECURE` eklendi. Kritik tehditte
-> uygulama açılmaz; uyarıda kullanıcı devam edebilir. Detaylar aşağıda.
-
-> 🧪 **v12 Test Altyapısı:** 26 unit + 4 widget testi (mocktail), integration
-> test iskeleti, sıkı lint kuralları (`analysis_options.yaml`) ve GitHub Actions
-> CI eklendi. `flutter test` ile çalıştırılır. Detaylar ARCHITECTURE.md'de.
-
-> 🏛️ **v13 Modül Geçişi Tamamlandı:** messaging, story, group ve call
-> modüllerinin **dördü de** Clean Architecture'a taşındı (domain/data/
-> presentation). İş mantığı `services/`'ten katmanlara dağıtıldı. Eski kod
-> kademeli geçiş için korundu — detaylar ve emekliye ayırma planı ARCHITECTURE.md'de.
-
-> 🎨 **v14 UI Yenileme:** Material 3 tema sistemi + "Buzlu Obsidyen" tasarım
-> dili (buzlu cam yüzeyler, iki-tonlu anlam taşıyan palet, Hero/giriş
-> animasyonları, E2EE "güvenli malzeme" dokunuşu). Tasarım kararları ve
-> dürüst sınırlamalar **DESIGN.md**'de. Tema tüm ekranlara otomatik yansır.
-
-> 🔭 **v15 Gözlemlenebilirlik + Metadata Gizliliği:** Onay-bazlı (opt-in)
-> Crashlytics raporlama (PII temizlemeli, soyutlama arkasında — Sentry'ye
-> tek dosyada geçilir) + mesaj dolgusu (uzunluk gizleme), metadata
-> kontrolleri (okundu/yazıyor/çevrimiçi kapatılabilir), kaba zaman damgası.
-> Dürüst tehdit modeli ve Firebase'in sınırları **METADATA_PRIVACY.md**'de.
-
-## 📋 Gereksinimler
-- Flutter SDK 3.x (https://flutter.dev/docs/get-started/install)
-- Android Studio veya VS Code
-- Firebase hesabı (ücretsiz)
-- Java 17+
+📦 `com.secreter.app` · 🧩 Flutter (Dart) + Cloud Firestore + Cloud Functions
+· 📄 [AGPL-3.0](LICENSE) · 🌍 Arayüz 16 dilde
 
 ---
 
-## 🔥 ADIM 1 — Firebase Kurulumu
+## ⚠️ Projenin durumu — önce bunu oku
 
-### 1.1 Firebase Projesi Oluştur
-1. https://console.firebase.google.com adresine git
-2. "Proje oluştur" → İsim: `gizlichat`
-3. Google Analytics: kapalı bırak (anonimlik için)
+**Bu proje aktif olarak geliştirilmiyor ve çalışan bir hizmeti yok.**
 
-### 1.2 Android Uygulaması Ekle
-1. Firebase Console → Android simgesi
-2. Package name: `com.gizlichat.app`
-3. `google-services.json` dosyasını indir
-4. Dosyayı `android/app/` klasörüne koy
+* Google Play'de **üretime çıkmadı.** Kapalı testte (≈12 testçi) 24 sürüm
+  yayınlandı, üretim erişimi alındı ama kullanılmadı.
+* Projeye ait **Firebase arka ucu kapatılıyor.** Depodaki
+  `firebase_options.dart` ve `google-services.json` artık çalışmayan bir
+  projeye işaret ediyor — fork'larsan **kendi Firebase projeni kurmalısın**
+  (aşağıya bak).
+* Kod, çalıştığı hâliyle ve olduğu gibi yayımlanıyor: biri faydalanabilsin
+  diye. Destek, yol haritası veya güvenlik güncellemesi sözü **yok**.
 
-### 1.3 Firebase Servislerini Aç
-Firebase Console'da şunları aktifleştir:
-- **Authentication** → Oturum açma yöntemi → **Anonim** → Etkinleştir
-- **Firestore Database** → Veritabanı oluştur → **Test modunda başlat**
-- **Storage** → Başlat → Test modunda
-
-### 1.4 Güvenlik Kurallarını Yükle
-Firebase Console → Firestore → Kurallar sekmesi:
-- `firestore.rules` dosyasının içeriğini yapıştır → Yayınla
-
-Firebase Console → Storage → Kurallar sekmesi:
-- `storage.rules` dosyasının içeriğini yapıştır → Yayınla
+> 🔐 **Gerçek gizlilik ihtiyacın varsa bu uygulamayı kullanma.** E2EE
+> katmanı bağımsız denetimden geçmedi ve bilinen sınırları var (aşağıda
+> dürüstçe yazılı). Gazeteci, aktivist veya risk altındaki biriysen
+> **Signal** kullan.
 
 ---
 
-## 📦 ADIM 2 — Proje Bağımlılıkları
+## Ne yapıyor
+
+| | |
+|---|---|
+| 🔑 **Numarasız kayıt** | Telefon numarası ve e-posta istemez; kimlik cihazda üretilir |
+| 🔒 **E2EE (1-1)** | X25519 + AES-256-GCM + HKDF; X3DH el sıkışma, ratchet |
+| 👥 **Grup & kanal** | Sender-key ile grup şifrelemesi, kanal yayını |
+| 📞 **Sesli/görüntülü arama** | WebRTC; TURN kurulursa IP gizlenir |
+| 🕑 **Kaybolan mesaj** | Süresi dolunca cihazdan **ve sunucudan** silinir |
+| 🧹 **Metadata kontrolleri** | Okundu/yazıyor/çevrimiçi kapatılabilir, mesaj dolgusu, kaba zaman damgası |
+| 🎭 **Kılık modu** | Uygulama başlatıcıda "Hesap Makinesi" olarak görünebilir |
+| 🛡️ **Cihaz sertleştirme** | Root/Frida/debugger tespiti, `FLAG_SECURE` |
+| 📤 **Veri taşınabilirliği** | Sohbet dışa aktarma, hesap silme |
+
+Kod: **185 Dart dosyası**, **60 test dosyası**.
+Doğrulama kapıları: analyzer 0 bulgu · **635 Dart testi** · **175 Firestore
+kural testi** · 4 functions testi.
+
+---
+
+## Mimari
+
+| Belge | İçerik |
+|---|---|
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Clean Architecture katmanları, Riverpod, DI |
+| [`METADATA_PRIVACY.md`](METADATA_PRIVACY.md) | Dürüst tehdit modeli, Firebase'in sınırları |
+| [`DESIGN.md`](DESIGN.md) | Tasarım dili ve kararları |
+| [`TURN_KURULUMU.md`](TURN_KURULUMU.md) | coturn kurulumu (IP gizleme için şart) |
+| [`GUVENLIK_DUZELTMELERI.md`](GUVENLIK_DUZELTMELERI.md) | Her güvenlik düzeltmesinin GEREKÇESİ |
+| [`DEVAM.md`](DEVAM.md) | Geliştirme günlüğü — ne zaman, ne, neden |
+
+> `DEVAM.md` ve `GUVENLIK_DUZELTMELERI.md` geliştirme sırasında tutulmuş
+> çalışma notlarıdır; cilalı belge değil, gerçek kayıt. Bir kararın
+> *neden* öyle verildiğini merak edersen cevap büyük ihtimalle oradadır.
+
+---
+
+## Kurulum
+
+### Gereksinimler
+
+| Araç | Sürüm | Ne için |
+|---|---|---|
+| Flutter SDK | 3.x | uygulama |
+| JDK | **17** | Android derlemesi |
+| JDK | **21** | Firestore kural testleri (`firebase-tools` şartı) |
+| Node.js | 20+ | Cloud Functions ve kural testleri |
+| Firebase CLI | güncel | dağıtım |
+
+> ⚠️ İki ayrı JDK gerekiyor. Kural testleri 21'in altında **çalışmaz**;
+> Android derlemesi 17 ile yapılır.
+
+### 1. Kendi Firebase projeni kur
+
+Depodaki yapılandırma kapatılan bir projeye ait. Kendi projeni oluştur ve
+şunları **kendi** projene bağla:
 
 ```bash
-# Proje klasörüne gir
-cd gizlichat
+flutterfire configure            # firebase_options.dart + google-services.json üretir
+```
 
-# Bağımlılıkları yükle
+### 2. 🔴 Sunucu tarafını DAĞIT — atlanırsa uygulama korumasız çalışır
+
+Bu adım isteğe bağlı değil. Güvenlik istemcide değil **kurallarda**:
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes,storage,functions
+```
+
+* `firestore.rules` / `storage.rules` dağıtılmazsa **veri herkese açıktır**
+* `firestore.indexes.json` eksikse sorgular **sessizce boş döner**
+* `functions/` olmadan **E2EE oturumu kurulamaz** (`claimPreKey`)
+
+> 💸 **Cloud Functions için Blaze planı gerekiyor** (kullandıkça öde).
+> Spark planında v2 fonksiyonlar çalışmaz — dağıtılmış görünüp sessizce
+> durur. Bu projede tam olarak bu yaşandı; bkz. `DEVAM.md` §4cn.
+
+### 3. Derle
+
+```bash
 flutter pub get
+flutter build apk --release --split-per-abi
+# veya Play paketi:
+flutter build appbundle --release
 ```
 
 ---
 
-## 🔧 ADIM 3 — android/app/build.gradle Düzenle
+## Depoda OLMAYAN, senin üretmen gerekenler
 
-`android/app/build.gradle` dosyasına ekle:
+`.gitignore` bunları bilerek dışarıda tutar:
 
-```gradle
-android {
-    compileSdkVersion 34
-    defaultConfig {
-        applicationId "com.gizlichat.app"
-        minSdkVersion 21
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0.0"
-        multiDexEnabled true
-    }
-    buildTypes {
-        release {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-}
+| Dosya / değer | Ne işe yarar |
+|---|---|
+| `android/key.properties` | imzalama parolaları — şablon: `key.properties.ORNEK` |
+| `*.jks` / `*.keystore` | imzalama anahtarı (`keytool` ile üretilir) |
+| `functions/.env` | `TURN_SECRET`, `TURN_URLS` — bkz. `TURN_KURULUMU.md` |
+| `--dart-define=GIPHY_API_KEY=...` | GIF sekmesi; verilmezse özellik kapalı gelir |
 
-dependencies {
-    implementation platform('com.google.firebase:firebase-bom:32.7.0')
-    implementation 'com.google.firebase:firebase-analytics'
-}
-
-apply plugin: 'com.google.gms.google-services'
-```
+`google-services.json` ve `lib/firebase_options.dart` **depoda vardır**.
+İçlerindeki Firebase API anahtarı tasarım gereği herkese açıktır (her
+APK'nın içinde gider) ve güvenlik ondan değil Firestore kurallarından
+gelir. Yine de kendi anahtarını Google Cloud Console'dan **Android
+uygulaması + SHA-1** ile kısıtla.
 
 ---
 
-## ⚠️ ÖNEMLİ — Biyometrik için MainActivity
+## Doğrulama kapıları
 
-Faz 3'te eklenen parmak izi/yüz tanıma özelliği `FlutterFragmentActivity` gerektirir.
-Proje içinde `MainActivity.kt` zaten bu şekilde ayarlı:
+Bu projede her değişiklik beş kapıdan geçer:
 
-```kotlin
-class MainActivity : FlutterFragmentActivity()
-```
-
-Ayrıca `android/app/build.gradle` içinde `minSdkVersion` **en az 23** olmalı (biyometrik için):
-
-```gradle
-minSdkVersion 23
-```
-
----
-
-## 🔔 ÖNEMLİ — Push Bildirim (FCM) Sunucu Kurulumu
-
-Faz 4'teki push bildirimleri **iki parçadan** oluşur:
-
-**1. Cihaz tarafı (zaten hazır):** Uygulama FCM token'ı alıp Firestore'a kaydeder, izin ister, gelen bildirimi gösterir.
-
-**2. Sunucu tarafı (senin kurman gerek):** Birine mesaj gelince ona push gönderecek kod. Bunun için Firebase Cloud Functions kullan:
-
-```javascript
-// functions/index.js
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-admin.initializeApp();
-
-exports.sendMessageNotification = functions.firestore
-  .document('chats/{chatId}/messages/{messageId}')
-  .onCreate(async (snap, context) => {
-    const message = snap.data();
-    const chatId = context.params.chatId;
-
-    // Chat üyelerini al
-    const chatDoc = await admin.firestore()
-      .collection('chats').doc(chatId).get();
-    const memberIds = chatDoc.data().memberIds;
-
-    // Gönderen hariç herkese bildirim gönder
-    for (const uid of memberIds) {
-      if (uid === message.senderId) continue;
-      const userDoc = await admin.firestore()
-        .collection('users').doc(uid).get();
-      const token = userDoc.data()?.fcmToken;
-      if (!token) continue;
-
-      await admin.messaging().send({
-        token: token,
-        notification: {
-          title: '@' + message.senderUsername,
-          body: 'Yeni mesaj',  // İçerik şifreli olduğu için sadece bildirim
-        },
-        data: { chatId: chatId },
-      });
-    }
-  });
-```
-
-Kurulum:
 ```bash
-npm install -g firebase-tools
-firebase login
-firebase init functions
-# Yukarıdaki kodu functions/index.js'e yapıştır
-firebase deploy --only functions
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze                       # 0 bulgu olmalı
+flutter test                          # 635 test
+node --check functions/index.js
+cd functions && node --test           # 4 test
+
+# Firestore kuralları (175 test) — JDK 21 ŞART, emülatör gerekir:
+cd test/rules && npm install
+firebase emulators:exec --only firestore --project secreter-rules-test "npm test"
 ```
 
-> Not: Cloud Functions ücretsiz katmanı (Spark planı) ayda 2M çağrı içerir — küçük/orta kullanım için yeterli.
+> ⚠️ `.github/workflows/ci.yml` tetikleyicisi `main`/`develop` dallarına
+> bakıyor ama bu deponun dalı `master` — CI olduğu gibi çalışmaz.
+> Fork'larsan tetikleyiciyi kendi dalına göre düzelt.
 
 ---
+
 
 ## 📞 ÖNEMLİ — Sesli/Görüntülü Arama (WebRTC)
 
@@ -221,9 +187,10 @@ Kurulumun tamamı (VPS, coturn, TLS, 443/TCP, güvenlik duvarı, doğrulama): **
 
 ---
 
+
 ## 🔐 ÖNEMLİ — Uçtan Uca Şifreleme (E2EE) Mimarisi ve Sınırları
 
-Faz 7'de **direkt sohbetlere** (1-1) gerçek E2EE eklendi. Mimari:
+Birebir (1-1) sohbetlerde gerçek E2EE var. Mimari:
 
 **Kullanılan denetlenmiş primitifler** (`cryptography` paketi):
 - X25519 (Diffie-Hellman anahtar değişimi)
@@ -252,7 +219,8 @@ Faz 7'de **direkt sohbetlere** (1-1) gerçek E2EE eklendi. Mimari:
 
 ---
 
-## 🛡️ v11 — Güvenlik Sertleştirme
+
+## 🛡️ Cihaz güvenliği sertleştirmesi
 
 Uygulama açılışında (`splash_screen` → `SecurityService`) cihaz taranır:
 
@@ -298,68 +266,6 @@ ve geri kalan kod aynı kalır (mimarinin avantajı).
 
 ---
 
-## 📱 ADIM 4 — APK Derleme
-
-### Debug APK (Test için)
-```bash
-flutter build apk --debug
-# Çıktı: build/app/outputs/flutter-apk/app-debug.apk
-```
-
-### Release APK (Dağıtım için)
-```bash
-# Önce imzalama anahtarı oluştur
-keytool -genkey -v -keystore gizlichat.keystore \
-  -alias gizlichat -keyalg RSA -keysize 2048 -validity 10000
-
-# key.properties dosyası oluştur (android/ klasörüne)
-echo "storePassword=SIFREN
-keyPassword=SIFREN
-keyAlias=gizlichat
-storeFile=../gizlichat.keystore" > android/key.properties
-
-# Release APK derle
-flutter build apk --release --split-per-abi
-
-# En küçük APK (arm64 — çoğu modern telefon)
-# Çıktı: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-```
-
----
-
-## 🏗️ Proje Yapısı
-
-```
-gizlichat/
-├── lib/
-│   ├── main.dart                    # Uygulama giriş noktası
-│   ├── models/
-│   │   ├── user_model.dart          # Kullanıcı modeli
-│   │   ├── message_model.dart       # Mesaj modeli
-│   │   └── chat_model.dart          # Chat/Grup modeli
-│   ├── services/
-│   │   ├── auth_service.dart        # Anonim auth + kullanıcı adı
-│   │   ├── chat_service.dart        # Mesaj gönderme/silme/gruplama
-│   │   └── encryption_service.dart  # AES-256 şifreleme
-│   ├── screens/
-│   │   ├── splash_screen.dart       # Açılış ekranı
-│   │   ├── register_screen.dart     # Kullanıcı adı kaydı
-│   │   ├── home_screen.dart         # Chat listesi
-│   │   ├── chat_screen.dart         # Mesajlaşma ekranı
-│   │   ├── search_user_screen.dart  # Kullanıcı arama
-│   │   └── create_group_screen.dart # Grup oluşturma
-│   └── utils/
-│       └── app_theme.dart           # Telegram benzeri karanlık tema
-├── android/
-│   └── app/
-│       └── src/main/
-│           └── AndroidManifest.xml
-├── firestore.rules                  # Firestore güvenlik kuralları
-├── storage.rules                    # Storage güvenlik kuralları
-└── pubspec.yaml                     # Bağımlılıklar
-```
-
----
 
 ## ✅ Özellikler
 
@@ -419,6 +325,7 @@ gizlichat/
 
 ---
 
+
 ## 📖 Lisans — AGPL-3.0
 
 Bu proje **GNU Affero General Public License v3.0** ile dağıtılır. Tam
@@ -463,6 +370,7 @@ herkese açıktır (her APK'nın içinde gider) ve güvenlik ondan değil
 Firestore kurallarından gelir. Yine de kendi projeni kurarken anahtarı
 Google Cloud Console'dan **Android uygulaması + SHA-1** ile kısıtla.
 
+
 ## 🔒 Gizlilik Notları
 
 - Firebase **anonim auth** kullanır — telefon/e-posta kaydı yok
@@ -472,6 +380,7 @@ Google Cloud Console'dan **Android uygulaması + SHA-1** ile kısıtla.
 - Şifreleme anahtarı cihazda `flutter_secure_storage` ile saklanır
 
 ---
+
 
 ## 🚀 APK'yı Telefona Yükle
 
