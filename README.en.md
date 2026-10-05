@@ -100,6 +100,18 @@ flutter run --dart-define=USE_EMULATOR=true   # in a second terminal
 
 Emulator UI: <http://localhost:4000>
 
+🪤 **On the first run**, the Storage emulator downloads a `.jar`, and
+Functions discovery can exceed its 10-second window and report:
+*"User code failed to load. Cannot determine backend specification."*
+The code is fine — **run the command again**; the download is cached and
+the second run succeeds. A correct start prints:
+
+```
++  functions: Loaded functions definitions from source: … claimPreKey …
+```
+
+If `claimPreKey` is missing from that list, E2EE sessions cannot be set up.
+
 ⚠️ On a **real Android device** `10.0.2.2` will not work (that address
 only routes from the Android emulator to the host). If the device and
 your machine are on the same network, pass the machine's LAN address:

@@ -1,10 +1,14 @@
 name: CI
 
+# ⚠️ Bu deponun dalı `master`. Tetikleyici `main`/`develop`'a bakıyordu ve
+# CI bu yüzden HİÇ çalışmadı — depoda bir `ci.yml` göründüğü için
+# "testler otomatik koşuyor" sanılıyordu. Dal adı değişirse burası da
+# değişmeli; aşağıdaki `build` işinin `if:` koşulu da aynı dalı yazar.
 on:
   push:
-    branches: [main, develop]
+    branches: [master]
   pull_request:
-    branches: [main, develop]
+    branches: [master]
 
 # Aynı dal için üst üste gelen çalıştırmaları iptal et (runner tasarrufu)
 concurrency:
@@ -130,6 +134,11 @@ jobs:
       - name: Sözdizimi kontrolü
         run: node --check functions/index.js
 
+      # Yerel kapı `cd functions && node --test` çalıştırıyordu ama CI
+      # çalıştırmıyordu: iki kapı aynı sıkılıkta olmalı.
+      - name: Birim testleri
+        run: npm --prefix functions test
+
       # ⚠️ SÖZDİZİMİ GEÇMESİ DAĞITILABİLİR OLMAK DEĞİLDİR (§4n).
       #
       # Dağıtım aylarca şu hatayla düşüyordu:
@@ -153,7 +162,7 @@ jobs:
     name: APK Derle
     runs-on: ubuntu-latest
     needs: [test, rules, functions]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 

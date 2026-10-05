@@ -96,6 +96,18 @@ flutter run --dart-define=USE_EMULATOR=true   # ayrı bir terminalde
 
 Emülatör paneli: <http://localhost:4000>
 
+🪤 **İlk çalıştırmada** Storage emülatörü bir `.jar` indirir ve bu sırada
+Functions keşfi 10 saniyelik penceresini aşıp şu hatayı verebilir:
+*"User code failed to load. Cannot determine backend specification."*
+Kod bozuk değildir — **komutu bir daha çalıştır**, indirme önbelleğe
+alındığı için ikincisi geçer. Doğru açılışta şunu görmelisin:
+
+```
++  functions: Loaded functions definitions from source: … claimPreKey …
+```
+
+`claimPreKey` listede yoksa E2EE oturumu kurulamaz.
+
 ⚠️ **Gerçek bir Android cihazda** `10.0.2.2` çalışmaz (o adres yalnızca
 Android emülatöründen ana makineye gider). Cihaz ile bilgisayar aynı
 ağdaysa makinenin LAN adresini ver:

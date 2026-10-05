@@ -26,6 +26,9 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | ✅ Emülatör yolu **ÇALIŞTIRILARAK** doğrulandı — 15 fonksiyon yüklendi | §4cs |
+| 10-05 | 🔧 **CI AÇILDI** — tetikleyici master; 3 ay sonra ilk kez çalışacak | §4cs |
+| 10-05 | ⚠️ Issue #11'de **kendi hatam**: kural testleri CI'da VAR, yok demiştim | §4cs |
 | 10-05 | 🧪 **EMÜLATÖR MODU** — kredi kartısız çalıştırma; giriş engeli kalktı | §4cr |
 | 10-05 | 📖 README çelişkisi düzeltildi — grup E2EE **var**, yok yazıyordu | §4cr |
 | 10-05 | 🐛 **12 ISSUE AÇILDI** — bilinen sorunların hepsi herkese görünür | §4cq |
@@ -1558,6 +1561,84 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🔧 CI AÇILDI + EMÜLATÖR SAHA DOĞRULAMASI (2026-10-05) — §4cs
+
+### §4cs — ÖNCE ÇALIŞTIR, SONRA SÖYLE
+
+§4cr'de emülatör yolu yazılmış ama **çalıştırılmamıştı** — bu açıklık
+o zaman da yazılmıştı. Bu turda çalıştırıldı (JDK 21 = Android Studio
+JBR) ve iki gerçek bulgu çıktı.
+
+#### 🪤 BULGU 1 — İLK ÇALIŞTIRMA SAHTE HATA VERİYOR
+
+İlk denemede:
+
+```
+!! functions: Failed to load function definition from source:
+   User code failed to load. Cannot determine backend specification.
+   Timeout after 10000.
+```
+
+Bu, `ci.yml` yorumunda kayıtlı §4n hatasının **aynı metni** — yani ilk
+bakışta "modül seviyesinde iş yapılıyor" sanılır. Ölçüldü:
+
+```bash
+GCLOUD_PROJECT=x node -e "require('./index.js')"   # 335 ms
+```
+
+Modül 335 ms'de yükleniyor. Sebep başkaydı: **Storage emülatörü aynı
+anda bir `.jar` indiriyordu** ve Functions keşfi 10 saniyelik penceresini
+aşıyordu. İkinci çalıştırmada (indirme önbellekte) **15 fonksiyonun hepsi
+yüklendi**, `claimPreKey` dahil.
+
+> 📌 Aynı hata metni iki farklı sebepten geliyor. Kanıt olmadan
+> teşhis edilseydi var olmayan bir hata "düzeltilirdi". README'ye bu
+> tuzak ve "doğru açılışta `claimPreKey` listede görünmeli" ölçütü
+> yazıldı.
+
+#### BULGU 2 — ZAMANLANMIŞ FONKSİYONLAR SESSİZCE ATLANIYORDU
+
+Beş zamanlanmış fonksiyon *"pubsub emulator does not exist"* diye
+yoksayılıyordu. `firebase.json`'a `pubsub: 8085` eklendi.
+
+### CI: 3 AYDIR ÖLÜYDÜ, AÇILDI
+
+Issue #11'de yazılan tetikleyici hatası düzeltildi: `main`/`develop` →
+`master`. `build` işinin `if: refs/heads/main` koşulu da aynı tuzağın
+ikinci yarısıydı — o da `master` yapıldı. `functions` işine
+`npm --prefix functions test` eklendi (yerel kapı çalıştırıyordu, CI
+çalıştırmıyordu).
+
+⚠️ **CI açılmadan ÖNCE beş kapı da yerelde çalıştırıldı**, çünkü herkese
+açık bir depoda CI'yi açıp anında kırmızıya düşürmek, hiç çalışmamasından
+daha kötü görünürdü:
+
+| Kapı | Sonuç |
+|---|---|
+| `dart format` (CI'nin yaptığı gibi **tüm depo**) | 250 dosya, 0 değişiklik |
+| `flutter analyze` | 0 bulgu |
+| `flutter test` | 640 geçti |
+| `node --check` + `node --test` | 4 geçti |
+| Firestore kuralları (emülatör, JDK 21) | **175 geçti** |
+
+### ⚠️ ISSUE #11'DE KENDİ HATAM
+
+Açtığım Issue'da *"Kural testleri de yok. 175 Firestore kural testi
+CI'da çalışmıyor"* yazmışım. **Yanlış.** `ci.yml`'de `rules` adlı, JDK 21
+kuran ve `emulators:exec` ile tam olarak o 175 testi koşturan bir iş
+zaten vardı. Doğru olan kısım: `node --test` (4 test) gerçekten yoktu.
+
+Hata, `ci.yml`'i **okumadan** Issue yazmaktan çıktı; tetikleyici
+satırını `grep`leyip gerisini varsaydım.
+
+> 📌 Bu projenin herkese açık anlatısı "dürüst ve doğrulanmış
+> kayıt" üzerine kurulu. Yanlış bir iddia o anlatıyı eksik bir
+> iddiadan daha fazla zedeler — §4co'da README için yazılan
+> "asıl kusuru eksik değil **yanlış** olmasıydı" cümlesinin aynısı,
+> bu sefer benim yazdığım metinde.
 
 ---
 
