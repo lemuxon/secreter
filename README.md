@@ -45,7 +45,8 @@ cihazda üretilen bir anahtarla açılır.
 
 > ℹ️ Bunlar Play mağaza sayfası için hazırlanmış görsellerdir
 > (Ağustos 2026, sürüm 1.0.x). Sohbetlerdeki isim ve mesajlar **demo**
-> veridir. O tarihten sonra sohbet başlığı biraz değişti: arama simgesi
+> veridir; profil fotoğrafları **yapay zekâ üretimidir**, gerçek kişi
+> değildir. O tarihten sonra sohbet başlığı biraz değişti: arama simgesi
 > taşma menüsüne alındı, böylece "son görülme" metni dar ekranlarda
 > kırpılmıyor.
 

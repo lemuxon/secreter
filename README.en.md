@@ -46,7 +46,8 @@ account is created from a key generated on the device.
 </p>
 
 > ℹ️ These are the Play store listing images (August 2026, version
-> 1.0.x). The names and messages in the chats are **demo data**. The chat
+> 1.0.x). The names and messages in the chats are **demo data**, and the
+> profile pictures are **AI-generated** — they are not real people. The chat
 > header has changed slightly since: the search icon moved into the
 > overflow menu so the "last seen" text is no longer truncated on narrow
 > screens.

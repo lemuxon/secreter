@@ -1603,16 +1603,19 @@ yazıldı** — görseli sessizce güncel göstermek, §4co'da README için
 düzeltilen "yanlış olmak eksik olmaktan kötüdür" hatasının aynısı
 olurdu.
 
-#### 🟡 AÇIK UÇ: AVATAR FOTOĞRAFLARI
+#### ✅ AVATAR FOTOĞRAFLARI — SORULDU, KAPANDI
 
 Sohbet listesindeki profil fotoğrafları gerçek kişi fotoğraflarına
-benziyor. Nereden geldikleri **bilinmiyor**; stok veya internetten
-alınmışlarsa AGPL bir depoda yeniden dağıtımı lisans sorunu olabilir.
+benziyordu; stok veya internetten alınmış olsalardı AGPL bir depoda
+yeniden dağıtımı lisans sorunu olabilirdi.
 
-Engelleyici sayılmadı çünkü aynı görseller aylardır Play mağaza
-sayfasında yayında. Ama kullanıcıya sorulmalı: fotoğraflar kendisine mi
-ait, lisanslı mı, yoksa demo için rastgele mi alındı? Üçüncüyse
-avatarlar bulanıklaştırılmalı veya değiştirilmeli.
+Kullanıcı yanıtı: **hepsi yapay zekâ üretimi.** Yani ortada gerçek bir
+kişi yok — ne kişilik hakkı ne de üçüncü taraf telifi söz konusu.
+Değişiklik gerekmedi; README'ye tek cümleyle yazıldı.
+
+> 📌 Gizlilik iddiası taşıyan bir depoda "bu yüzler kimin?" sorusu
+> okuyucunun aklına gelir. Cevabı görselin yanında yazmak, sorulmasını
+> beklemekten iyi.
 
 ---
 
