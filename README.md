@@ -7,6 +7,8 @@ cihazda üretilen bir anahtarla açılır.
 📦 `com.secreter.app` · 🧩 Flutter (Dart) + Cloud Firestore + Cloud Functions
 · 📄 [AGPL-3.0](LICENSE) · 🌍 Arayüz 16 dilde
 
+🇬🇧 **[English README](README.en.md)** · 🐛 **[Bilinen sorunlar → Issues](https://github.com/lemuxon/secreter/issues)** · 🤝 [Katkı rehberi](CONTRIBUTING.md) · 🔒 [Güvenlik](SECURITY.md)
+
 ---
 
 ## ⚠️ Projenin durumu — önce bunu oku
