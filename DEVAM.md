@@ -26,6 +26,9 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | 🚦 CI #1 düştü → Flutter sürümü 3.44.4'e sabitlendi | §4ct |
+| 10-05 | 🔤 CI #2 düştü → `flutter precache` eksikti, Roboto yoktu | §4ct |
+| 10-05 | 📝 Issue şablonları — açık bildirimi özel yola yönlendiriliyor | §4ct |
 | 10-05 | ✅ Emülatör yolu **ÇALIŞTIRILARAK** doğrulandı — 15 fonksiyon yüklendi | §4cs |
 | 10-05 | 🔧 **CI AÇILDI** — tetikleyici master; 3 ay sonra ilk kez çalışacak | §4cs |
 | 10-05 | ⚠️ Issue #11'de **kendi hatam**: kural testleri CI'da VAR, yok demiştim | §4cs |
@@ -1561,6 +1564,95 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🚦 CI İLK ÇALIŞTIRMA: DÜŞTÜ, SEBEBİ KOD DEĞİLDİ (2026-10-05) — §4ct
+
+### §4ct — SÜRÜM FARKI VE İKİ TEŞHİS HATASI
+
+CI açıldıktan sonraki ilk çalıştırma (#1) **kırmızı** döndü. Beş kapı
+yerelde geçmişti; yani sorun kodda değildi.
+
+| İş | #1 | #2 (sürüm sabit) |
+|---|---|---|
+| Güvenlik Kuralları (175 test) | ✅ 1m 6s | ✅ |
+| Cloud Functions | ✅ 12s | ✅ |
+| Analiz & Format | ❌ **düştü** | ✅ |
+| Testler | atlandı | \u274c **d\u00fc\u015ft\u00fc** (ayr\u0131 sebep) |
+
+#### KÖK SEBEP
+
+`flutter-version: '3.x'` **her zaman en son stable'ı çeker.** Yerel ortam
+Flutter 3.44.4 / Dart 3.12.2; CI daha yenisini kurdu. Yeni SDK = yeni lint
+kuralları, ve bu projenin kapısı **sıfır bulgu (info dahil)** istiyor.
+
+Sabit sürüm olmadan bir katkıcının PR'ı, Flutter dün yeni bir stable
+yayınladığı için kırmızıya düşerdi — kendi değişikliğiyle hiç ilgisi
+olmadan. Üç işte de `3.44.4` sabitlendi ve doğrulanan sürüm
+README/CONTRIBUTING'e yazıldı.
+
+#### ⚠️ TEŞHİS HATASI — "FORMAT" DEDİM, "ANALİZ"Dİ
+
+Düşen adımın `dart format` olduğunu **varsaydım** ve commit mesajına da
+öyle yazdım. GitHub API'den adım adım bakıldığında:
+
+```
+== Analiz & Format -> failure
+   ADIM: Statik analiz -> failure      ← format DEĞİL
+```
+
+Kayıtsız teşhis etmenin bedeli: kalan loglar oturum istiyordu ve
+"biçimlendirici sürüm farkı" hikayesi o kadar makul geliyordu ki
+doğrulamadan yazıldı. Çözüm aynı kaldığı için zarar sınırlı, ama
+**commit mesajı yanlış olarak geride kaldı** (herkese açık bir depoda
+push edilmiş geçmiş yeniden yazılmadı). `ci.yml` yorumu düzeltildi.
+
+> 📌 İkinci teşhis hatası aynı günün Issue #11'indeydi: "175 kural
+> testi CI'da çalışmıyor" denmişti, oysa `ci.yml`'de JDK 21 kuran bir
+> `rules` işi vardı — ve #1'de **geçen üç işten biri tam da oydu.**
+> İki hatanın ortak kökü: dosyayı **baştan sona okumadan**, bir satırı
+> `grep`leyip gerisini varsaymak.
+
+### 🔤 CI #2: İKİNCİ SEBEP — CI'DA ROBOTO YOK
+
+Sürüm sabitlenince analiz geçti, bu sefer **Testler** düştü. Bu kez
+varsayılmadı; GitHub'ın herkese açık API'sinden **annotation** okundu:
+
+```
+576 tests passed, 1 failed.
+```
+
+Yerelde **640** test geçiyor. Fark: **640 − 577 = 63.**
+`security_banners_test.dart` içindeki `kırpılma` grubunda tam o kadar
+test var — yani düşen tek şey grubun `setUpAll`'ı, ve grubun 63 testi
+hiç koşmadı. Sayı eşleşmesi teşhisi tahmin olmaktan çıkardı.
+
+Sebep: o grup kırpılmayı **gerçek Roboto metrikleriyle** ölçüyor ve
+fontı `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts/` altından
+okuyor. **`flutter pub get` material fontlarını indirmez**; temiz bir
+SDK önbelleğinde o dizin boştur. CI'da `flutter precache --universal`
+adımı eklendi.
+
+> 🪤 **Testın font yoksa ATLAMASI çözüm DEĞİLDİR.** O zaman kapı
+> yeşil görünür ama hiçbir şey ölçmez — ve bu kapının var olma sebebi
+> zaten yedek fontın yanlış alarm vermesiydi (altı bandın altısı da
+> "kırpılıyor" demişti). §4am'in dersi: yeşil görünen şeyin ne
+> kanıtladığını abartma.
+
+Testın hata mesajı da eyleme dönüştürüldü: artık doğrudan
+`flutter precache --universal` çalıştır diyor.
+
+### ISSUE ŞABLONLARI
+
+`SECURITY.md` *"açığı herkese açık Issue olarak AÇMA"* diyordu ama Issue
+açma sayfasında bunu söyleyen hiçbir şey yoktu — yani kural yalnızca
+onu okuyan için vardı. `.github/ISSUE_TEMPLATE/config.yml` artık Security
+Advisories bağlantısını en üste koyuyor.
+
+`blank_issues_enabled` **açık bırakıldı**: bakımı durmuş bir depoda
+şablona sığmayan birinin hiç yazmaması, kötü biçimli bir Issue'dan
+daha kötü.
 
 ---
 

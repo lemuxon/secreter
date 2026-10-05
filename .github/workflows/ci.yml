@@ -27,11 +27,14 @@ jobs:
 
       # 🪤 SÜRÜM SABITLENDİ — `3.x` DEĞİL.
       #
-      # `3.x` her zaman en son stable'ı çeker. Dart biçimlendiricisi
-      # sürümler arasında çıktı değiştirir; bu yüzden CI'nin ilk
-      # çalıştırması (#1) `dart format --set-exit-if-changed` adımında
-      # düştü — kodda hiçbir sorun yokken, yalnızca CI yerelden daha yeni
-      # bir SDK kullandığı için.
+      # `3.x` her zaman en son stable'ı çeker. CI'nin ilk çalıştırması (#1)
+      # tam olarak bu yüzden `Statik analiz` adımında düştü: kodda hiçbir
+      # değişiklik yokken, yalnızca CI yerelden daha yeni bir SDK
+      # kullandığı için. Yeni SDK = yeni lint kuralları, ve bu projenin
+      # kapısı SIFIR bulgu (info dahil) istiyor.
+      #
+      # `dart format` da aynı riski taşır — biçimlendirici sürümler
+      # arasında çıktı değiştirir — ama #1'de düşen o değildi.
       #
       # Sabit sürüm olmadan bir katkıcının PR'ı, Flutter dün yeni bir
       # stable yayınladığı için kırmızıya düşerdi. Kapıların doğruladığı
@@ -81,6 +84,22 @@ jobs:
 
       - name: Bağımlılıkları yükle
         run: flutter pub get
+
+      # 🪤 `flutter pub get` MATERIAL FONTLARINI İNDİRMEZ.
+      #
+      # `security_banners_test.dart` kırpılmayı GERÇEK Roboto metrikleriyle
+      # ölçer; yedek font her glifi 1em çizdiği için onunla ölçmek yanlış
+      # alarm verir. Fontı
+      # `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts/` altından
+      # okur — ve o dizin precache çalışmadan BOŞTUR.
+      #
+      # CI #2 tam bu yüzden düştü: 576 geçti, 1 düştü (grubun
+      # `setUpAll`'ı), ve o grubun 63 testi hiç koşmadı — 640 yerine 577.
+      #
+      # Testın font yoksa ATLAMASI düzeltme DEĞİLDİR: o zaman kapı
+      # yeşil görünür ama hiçbir şey ölçmez.
+      - name: Material fontlarını indir (gerçek metrikli testler için)
+        run: flutter precache --universal
 
       - name: Testleri çalıştır (coverage ile)
         run: flutter test --coverage

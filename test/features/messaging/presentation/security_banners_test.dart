@@ -196,7 +196,11 @@ void main() {
               'olmadan ölçemez ve sessizce yanlış sonuç verir');
       final dosya =
           File('$kok/bin/cache/artifacts/material_fonts/roboto-regular.ttf');
-      expect(dosya.existsSync(), isTrue, reason: 'Roboto bulunamadı: $dosya');
+      expect(dosya.existsSync(), isTrue,
+          reason: 'Roboto bulunamadı: $dosya — '
+              'çözüm: `flutter precache --universal` çalıştır. '
+              '`flutter pub get` material fontlarını İNDİRMEZ; temiz bir '
+              'SDK önbelleğinde (CI dahil) bu dizin boştur.');
 
       final loader = FontLoader('Roboto')
         ..addFont(dosya.readAsBytes().then(ByteData.sublistView));
