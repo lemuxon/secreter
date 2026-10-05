@@ -190,17 +190,21 @@ void main() {
     // alarm verir (ölçüldü: altı bandın altısı da düşüyordu). Roboto,
     // Flutter SDK'sının önbelleğinden yükleniyor.
     setUpAll(() async {
-      final kok = Platform.environment['FLUTTER_ROOT'];
-      expect(kok, isNotNull,
-          reason: 'FLUTTER_ROOT yok — bu kapı gerçek font metrikleri '
-              'olmadan ölçemez ve sessizce yanlış sonuç verir');
-      final dosya =
-          File('$kok/bin/cache/artifacts/material_fonts/roboto-regular.ttf');
+      // 🪤 FONT DEPODAN OKUNUR, SDK ÖNBELLEĞİNDEN DEĞİL.
+      //
+      // Önceden
+      // `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts/` altından
+      // okunuyordu. O dizin temiz bir kurulumda BOŞTUR — `flutter pub
+      // get` material fontlarını indirmez — ve `flutter precache
+      // --universal` de doldurmadı. CI üç çalıştırma boyunca tam bu
+      // yüzden düştü. Ayrıca SDK'nın iç önbellek düzeni sürümler
+      // arasında değişebilir; teste temel yapılacak bir sözleşme değil.
+      //
+      // Bkz. `test/fixtures/fonts/README.md` (Roboto, Apache-2.0).
+      final dosya = File('test/fixtures/fonts/roboto-regular.ttf');
       expect(dosya.existsSync(), isTrue,
-          reason: 'Roboto bulunamadı: $dosya — '
-              'çözüm: `flutter precache --universal` çalıştır. '
-              '`flutter pub get` material fontlarını İNDİRMEZ; temiz bir '
-              'SDK önbelleğinde (CI dahil) bu dizin boştur.');
+          reason: 'Roboto bulunamadı: ${dosya.absolute.path} — '
+              'testler depo kökünden çalıştırılmalı (`flutter test`).');
 
       final loader = FontLoader('Roboto')
         ..addFont(dosya.readAsBytes().then(ByteData.sublistView));

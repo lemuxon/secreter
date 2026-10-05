@@ -85,22 +85,6 @@ jobs:
       - name: Bağımlılıkları yükle
         run: flutter pub get
 
-      # 🪤 `flutter pub get` MATERIAL FONTLARINI İNDİRMEZ.
-      #
-      # `security_banners_test.dart` kırpılmayı GERÇEK Roboto metrikleriyle
-      # ölçer; yedek font her glifi 1em çizdiği için onunla ölçmek yanlış
-      # alarm verir. Fontı
-      # `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts/` altından
-      # okur — ve o dizin precache çalışmadan BOŞTUR.
-      #
-      # CI #2 tam bu yüzden düştü: 576 geçti, 1 düştü (grubun
-      # `setUpAll`'ı), ve o grubun 63 testi hiç koşmadı — 640 yerine 577.
-      #
-      # Testın font yoksa ATLAMASI düzeltme DEĞİLDİR: o zaman kapı
-      # yeşil görünür ama hiçbir şey ölçmez.
-      - name: Material fontlarını indir (gerçek metrikli testler için)
-        run: flutter precache --universal
-
       # Test çıktısı iş loglarında kalır ve logları görmek GitHub oturumu
       # ister. Düşen testin GERÇEK sebebini annotation olarak da yayıyoruz:
       # böylece "1 failed" özetiyle yetinmek yerine neden düştüğü

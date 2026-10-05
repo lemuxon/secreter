@@ -27,7 +27,7 @@
 | Tarih | İş | § |
 |---|---|---|
 | 10-05 | 🚦 CI #1 düştü → Flutter sürümü 3.44.4'e sabitlendi | §4ct |
-| 10-05 | 🔤 CI #2 düştü → `flutter precache` eksikti, Roboto yoktu | §4ct |
+| 10-05 | 🔤 CI #2–#4 düştü → Roboto **depoya kondu**, test hermetik | §4ct |
 | 10-05 | 📝 Issue şablonları — açık bildirimi özel yola yönlendiriliyor | §4ct |
 | 10-05 | ✅ Emülatör yolu **ÇALIŞTIRILARAK** doğrulandı — 15 fonksiyon yüklendi | §4cs |
 | 10-05 | 🔧 **CI AÇILDI** — tetikleyici master; 3 ay sonra ilk kez çalışacak | §4cs |
@@ -1631,8 +1631,36 @@ hiç koşmadı. Sayı eşleşmesi teşhisi tahmin olmaktan çıkardı.
 Sebep: o grup kırpılmayı **gerçek Roboto metrikleriyle** ölçüyor ve
 fontı `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts/` altından
 okuyor. **`flutter pub get` material fontlarını indirmez**; temiz bir
-SDK önbelleğinde o dizin boştur. CI'da `flutter precache --universal`
-adımı eklendi.
+SDK önbelleğinde o dizin boştur.
+
+#### ⚠️ İLK ÇÖZÜM İŞE YARAMADI — VE BUNU ÖLÇMEK GEREKTİ
+
+CI'ya `flutter precache --universal` eklendi. **#3 aynı şekilde düştü**:
+`576 passed, 1 failed` — birebir aynı sayılar.
+
+Dördüncü kez tahmin yürütmek yerine **ölçüm altyapısı kuruldu**: CI
+artık düşen testin satırlarını `::error::` annotation olarak yayıyor
+(iş logları GitHub oturumu ister, annotation istemez) ve tam çıktıyı
+artifact olarak saklıyor. #4'te gerçek metin geldi:
+
+```
+Roboto bulunamadı: /opt/hostedtoolcache/flutter/stable-3.44.4-x64/
+  flutter/bin/cache/artifacts/material_fonts/roboto-regular.ttf
+```
+
+Teşhis doğruydu ama **çözüm yanlıştı**: `precache` o dizini doldurmuyor.
+
+#### ÇÖZÜM: FONT DEPOYA KONDU
+
+`test/fixtures/fonts/roboto-regular.ttf` (172 KB, Apache-2.0, lisans
+metni yanında). Test artık **hermetik**: her makinede, her CI'da, her
+Flutter sürümünde aynı çalışır.
+
+> 📌 Asıl ders `precache` değil: **test SDK'nın İÇ ÖNBELLEK DÜZENİNE
+> bağlıydı.** O yol Flutter'ın sözleşmesi değil, bir uygulama
+> detayı; herhangi bir sürümde değişebilir. Depodaki bir dosyaya
+> bağlamak hem CI'yı düzeltti hem de kırılganlığı kaldırdı.
+> `precache` adımı artık gereksiz olduğu için kaldırıldı.
 
 > 🪤 **Testın font yoksa ATLAMASI çözüm DEĞİLDİR.** O zaman kapı
 > yeşil görünür ama hiçbir şey ölçmez — ve bu kapının var olma sebebi
