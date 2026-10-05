@@ -26,6 +26,8 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | 🐛 **12 ISSUE AÇILDI** — bilinen sorunların hepsi herkese görünür | §4cq |
+| 10-05 | 🤝 CONTRIBUTING.md + SECURITY.md + README.en.md | §4cq |
 | 10-05 | ✉️ Kapanış mesajı testçilere GÖNDERİLDİ — kronometre başladı, son tarih **12 Eki** | §4co |
 | 10-05 | ✅ **SAHA ONAYI: "çözülemedi" sorunu düzelmiş** (testçi beyanı) | §4cp |
 | 10-05 | 📚 README yabancı için kullanılabilir hale getirildi (481→390 satir) | §4co |
@@ -116,6 +118,8 @@ yayımlanıp rafa kaldırılıyor.
 | ✅ Üretim erişimi | Alındı (4 Eki) ama **kullanılmayacak** |
 | 🔴 Cloud Functions | **DURMUŞ** — proje Spark'a düştü, Blaze'e dönülmeyecek (§4cn) |
 | ⏳ Kapalı test | Hâlâ **Etkin** — kapatılacak, aşağıdaki sıraya göre |
+| 🐛 **Issue'lar** | **12 açık** — bilinen her sorun dosya:satır kanıtıyla yazıldı (§4cq) |
+| 🤝 Katkı belgeleri | `CONTRIBUTING.md` · `SECURITY.md` · `README.en.md` (§4cq) |
 
 #### 📋 B PLANI — kalan adımlar (SIRA ÖNEMLİ)
 
@@ -1552,6 +1556,68 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🐛 KATKI ALTYAPISI: SORUNLAR GÖRÜNÜR YAPILDI (2026-10-05) — §4cq
+
+### §4cq — 12 ISSUE + CONTRIBUTING + SECURITY + İNGİLİZCE README
+
+Kullanıcı amacı: *"Uygulamanın sorunlarını insanlar görsün github'da ve
+geliştirsin."*
+
+Depo yayımlanmıştı (§4co) ama bilinen sorunlar yalnızca `DEVAM.md` ve
+`GUVENLIK_DUZELTMELERI.md` içinde — **4000+ satırlık Türkçe geliştirme
+günlüğünde** gömülüydü. Yabancı biri için erişilemez.
+
+#### Açılan 12 Issue
+
+| # | Konu | Etiket |
+|---|---|---|
+| 1 | `keyBundles` listelenebiliyor → kullanıcı numaralandırma | `security` |
+| 2 | App Check yok + anonim giriş → `signedIn()` bedava | `security` |
+| 3 | Storage: herkes yükleyebiliyor, kimse silemiyor | `security` |
+| 4 | `stories` okuma kuralı listelemeyi de kapsıyor | `security` |
+| 5 | Mesaj güncellemesi gönderici olmayana `mediaUrl` yazdırıyor | `security` |
+| 6 | `claimPreKey` oran sınırsız → hedefli oturum bozma | `security` |
+| 7 | TURN yok → aramada IP açılıyor | `known-limitation` |
+| 8 | Hesap kurtarma boşluğu | `known-limitation` |
+| 9 | E2EE: DH-ratchet yok | `known-limitation` |
+| 10 | E2EE: signed prekey imza doğrulaması tam değil | `known-limitation` |
+| 11 | CI hiç çalışmıyor — tetikleyici `main`/`develop`, dal `master` | `infra`, `good-first-issue` |
+| 12 | `issueEntitlement`: Play doğrulaması yok | `security` |
+
+Her Issue aynı kalıpta: **Sorun** (dosya:satır kanıtıyla) · **Neden önemli**
+(somut saldırı/sonuç) · **Düzeltme fikri** (kod taslak) · **Test**.
+
+#### 📌 NEİN YAZILMADIĞI DA ÖNEMLİ
+
+Issue #12'ye **"Doğru yapılmış olanlar — bozmayın"** bölümü eklendi:
+kullanıcı adı görünmesin diye `onCall` yerine `onRequest` seçilmesi,
+kör değerin değil yalnızca özetinin saklanması, `entitlementRedemptions`
+okumasının kapalı olması.
+
+Sebep: bu üçü de "fazladan sıkılık" gibi görünüp **iyi niyetle geri
+alınabilir** — ve her biri geri alınırsa kör imzanın tüm anlamı kaybolur.
+Bir Issue sadece "ne bozuk" değil, "neye dokunursan başka bir şeyi
+bozarsın" da söylemeli.
+
+#### Eklenen belgeler
+
+| Dosya | Ne için |
+|---|---|
+| `CONTRIBUTING.md` | Beş kapının gerçek komutları, iki JDK, etiket sözlüğü, **projenin alışkanlıkları** |
+| `SECURITY.md` | Açığı **özel** bildir (fork'layanların yama şansı olsun), zaten bilinenler listesi |
+| `README.en.md` | Türkçe bilmeyen için giriş kapısı |
+
+`CONTRIBUTING.md`'deki "alışkanlıklar" keyfi kural değil, bu projede
+yaşanmış hatalardan çıktı: kural testi "sorgu izinli mi" ölçüp "doğru
+sonuç dönüyor mu" ölçmemişti (§4am); `catch` içinde `const []` dönmek
+şifreleme katmanına mesajı **düz metin** göndertmişti (§3f).
+
+> 📌 Issue'lar depo yayımlandıktan **sonra** açıldı ama bu sıra
+> tersine çevrilemezdi: hepsinin gövdesi `dosya:satır` kanıtına dayanıyor
+> ve o satırların herkese açık bir URL'si olması gerekiyordu.
 
 ---
 
