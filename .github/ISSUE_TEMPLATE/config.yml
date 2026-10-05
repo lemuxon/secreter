@@ -1,0 +1,26 @@
+# Issue açma sayfasının üstünde görünen bağlantılar.
+#
+# ⚠️ blank_issues_enabled KAPATILMIYOR: bu depoda bakım durmuş ve bir
+# soruyu şablona sığdıramayan birinin hiç yazmaması, kötü biçimli bir
+# Issue'dan daha kötü.
+blank_issues_enabled: true
+
+contact_links:
+  - name: 🔒 Güvenlik açığı bildir (ÖZEL) · Report a vulnerability (PRIVATE)
+    url: https://github.com/lemuxon/secreter/security/advisories/new
+    about: >-
+      Açığı herkese açık Issue olarak AÇMA — kodu fork'layıp kendi
+      sunucusunda çalıştıran biri olabilir, önce onların yama şansı olsun.
+      Please do not open a public issue for a vulnerability.
+
+  - name: 📋 Bilinen sorunlar · Already known
+    url: https://github.com/lemuxon/secreter/blob/master/SECURITY.md#zaten-bilinen-ve-a%C3%A7%C4%B1k-olan-konular
+    about: >-
+      TURN yok, keyBundles listelenebiliyor, App Check yok, DH-ratchet yok…
+      Bunlar zaten kayıtlı, yeniden bildirmene gerek yok.
+
+  - name: 🤝 Katkı rehberi · Contributing
+    url: https://github.com/lemuxon/secreter/blob/master/CONTRIBUTING.md
+    about: >-
+      Beş doğrulama kapısı, iki ayrı JDK ve emülatörle (hesapsız,
+      kredi kartsız) çalıştırma.

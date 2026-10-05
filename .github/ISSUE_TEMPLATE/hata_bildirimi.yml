@@ -1,0 +1,74 @@
+name: 🐛 Hata bildirimi · Bug report
+description: Beklenmeyen bir davranış. Güvenlik AÇIĞI için bunu kullanma — SECURITY.md'ye bak.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        🔒 **Güvenlik açığıysa buraya yazma.** Özel bildirim:
+        [Security Advisories](https://github.com/lemuxon/secreter/security/advisories/new)
+
+        ℹ️ Bu proje aktif geliştirilmiyor; yanıt süresi garantisi yok.
+        Yine de okunacak.
+
+        🇬🇧 Write in English if you prefer — that's fine.
+
+  - type: textarea
+    id: ne-oluyor
+    attributes:
+      label: Ne oluyor
+      description: Gördüğün davranış. Hata mesajı varsa olduğu gibi yapıştır.
+    validations:
+      required: true
+
+  - type: textarea
+    id: ne-bekliyordun
+    attributes:
+      label: Ne bekliyordun
+    validations:
+      required: true
+
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Nasıl üretilir
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: nasil-calistirdin
+    attributes:
+      label: Nasıl çalıştırdın
+      options:
+        - Emülatör modu (USE_EMULATOR=true)
+        - Kendi Firebase projem
+        - Hazır APK
+        - Yalnızca testleri çalıştırdım
+    validations:
+      required: true
+
+  - type: textarea
+    id: ortam
+    attributes:
+      label: Ortam
+      description: >-
+        `flutter doctor -v` çıktısının ilk satırları yeter. Cihaz ve Android
+        sürümünü de yaz — bu projede minSdk 24 ve eski cihazlarda yeni
+        platform API'leri çöktüğü için sürüm kritik.
+      render: shell
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: kapilar
+    attributes:
+      label: Kontrol
+      options:
+        - label: "`SECURITY.md`'deki 'zaten bilinen' listesine baktım, orada yok"
+          required: true
+        - label: Sunucu tarafını kendim dağıttım (kendi Firebase projemi kullanıyorsam)
+          required: false
