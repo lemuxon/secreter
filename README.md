@@ -31,6 +31,24 @@ cihazda üretilen bir anahtarla açılır.
 
 ---
 
+![SECRETER](docs/screenshots/00-feature-graphic.png)
+
+## Ekran görüntüleri
+
+<p align="center">
+  <img src="docs/screenshots/01-e2ee-sohbet.png" width="19%" alt="Uçtan uca şifreli sohbet">
+  <img src="docs/screenshots/02-numarasiz-kayit.png" width="19%" alt="Telefon numarası istemeyen kayıt">
+  <img src="docs/screenshots/03-gizlilik-kontrolleri.png" width="19%" alt="Gizlilik kontrolleri">
+  <img src="docs/screenshots/04-bulusma-kodu.png" width="19%" alt="Tek kullanımlık buluşma kodu">
+  <img src="docs/screenshots/05-16-dil.png" width="19%" alt="16 dil">
+</p>
+
+> ℹ️ Bunlar Play mağaza sayfası için hazırlanmış görsellerdir
+> (Ağustos 2026, sürüm 1.0.x). Sohbetlerdeki isim ve mesajlar **demo**
+> veridir. O tarihten sonra sohbet başlığı biraz değişti: arama simgesi
+> taşma menüsüne alındı, böylece "son görülme" metni dar ekranlarda
+> kırpılmıyor.
+
 ## Ne yapıyor
 
 | | |

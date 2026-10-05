@@ -33,6 +33,24 @@ account is created from a key generated on the device.
 
 ---
 
+![SECRETER](docs/screenshots/00-feature-graphic.png)
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/01-e2ee-sohbet.png" width="19%" alt="End-to-end encrypted chat">
+  <img src="docs/screenshots/02-numarasiz-kayit.png" width="19%" alt="Signup without a phone number">
+  <img src="docs/screenshots/03-gizlilik-kontrolleri.png" width="19%" alt="Privacy controls">
+  <img src="docs/screenshots/04-bulusma-kodu.png" width="19%" alt="Single-use meeting code">
+  <img src="docs/screenshots/05-16-dil.png" width="19%" alt="16 languages">
+</p>
+
+> ℹ️ These are the Play store listing images (August 2026, version
+> 1.0.x). The names and messages in the chats are **demo data**. The chat
+> header has changed slightly since: the search icon moved into the
+> overflow menu so the "last seen" text is no longer truncated on narrow
+> screens.
+
 ## What it does
 
 | | |

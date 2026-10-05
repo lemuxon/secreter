@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
 | 10-05 | 🚦 CI #1 düştü → Flutter sürümü 3.44.4'e sabitlendi | §4ct |
 | 10-05 | 🔤 CI #2–#4 düştü → Roboto **depoya kondu**, test hermetik | §4ct |
@@ -1565,6 +1566,53 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🖼️ EKRAN GÖRÜNTÜLERİ (2026-10-06) — §4cu
+
+### §4cu — PLAY MAĞAZA GÖRSELLERİ README'YE KONDU
+
+README'de **sıfır görsel** vardı; mesajlaşma uygulaması görsel bir ürün ve
+kimse neye benzediğini göremiyordu. Yeni çekim gerekmedi: Ağustos
+2026'da Play mağaza sayfası için hazırlanmış beş ekran görüntüsü +
+feature graphic `Downloads` altında duruyordu.
+
+`docs/screenshots/` altına kondu (2,5 MB). **`assets/` DEĞİL** — orası
+pubspec ile paketlenir ve APK'yı boşuna büyütürdü.
+
+#### Yayımlamadan önce yapılan kontroller
+
+| Kontrol | Sonuç |
+|---|---|
+| İçerikte gerçek kişi/mesaj var mı | Yok — demo veri (Tom, Carmen, Mark…), İngilizce |
+| PNG metin/EXIF parçaları | Altısı da **temiz** |
+| Daha önce herkese açık mıydı | Evet — Play mağaza sayfasında yayındaydı |
+
+> 📌 Metadata kontrolü atlanabilirdi çünkü görseller zaten yayındaydı.
+> Yine de yapıldı: PNG `tEXt`/`iTXt`/`eXIf` parçaları düzenleyici adı,
+> dosya yolu ve cihaz bilgisi taşıyabilir ve bunlar ekranda GÖRÜNMEZ.
+> §4cm'deki kişisel veri temizliğinin aynı mantığı.
+
+#### ⚠️ GÖRSELLER BİR SATIRDA ESKİ
+
+Ekran görüntüsü 1'deki sohbet başlığında arama simgesi hâlâ çubukta
+duruyor. Bu oturumda o simge taşma menüsüne alındı (§4ca: "son
+görülme" metni 360dp'de kırpılıyordu). README'ye bu fark **açıkça
+yazıldı** — görseli sessizce güncel göstermek, §4co'da README için
+düzeltilen "yanlış olmak eksik olmaktan kötüdür" hatasının aynısı
+olurdu.
+
+#### 🟡 AÇIK UÇ: AVATAR FOTOĞRAFLARI
+
+Sohbet listesindeki profil fotoğrafları gerçek kişi fotoğraflarına
+benziyor. Nereden geldikleri **bilinmiyor**; stok veya internetten
+alınmışlarsa AGPL bir depoda yeniden dağıtımı lisans sorunu olabilir.
+
+Engelleyici sayılmadı çünkü aynı görseller aylardır Play mağaza
+sayfasında yayında. Ama kullanıcıya sorulmalı: fotoğraflar kendisine mi
+ait, lisanslı mı, yoksa demo için rastgele mi alındı? Üçüncüyse
+avatarlar bulanıklaştırılmalı veya değiştirilmeli.
 
 ---
 
