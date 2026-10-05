@@ -200,9 +200,15 @@ cd test/rules && npm install
 firebase emulators:exec --only firestore --project secreter-rules-test "npm test"
 ```
 
-> ⚠️ `.github/workflows/ci.yml` triggers on `main`/`develop`, but this
-> repo's branch is `master` — CI does not run as-is. Fix the trigger for
-> your branch if you fork.
+These five gates also run in CI (`.github/workflows/ci.yml`) on every
+push and pull request: analysis, Dart tests, Firestore rules tests,
+Cloud Functions checks and an APK build.
+
+> 🪤 **The Flutter version is PINNED to `3.44.4`.** With `3.x`, CI
+> would always pull the latest stable and a contributor's PR could go
+> red simply because Flutter shipped a release yesterday. Use the same
+> version locally — running `dart format` with a different one pulls
+> files you never touched into the diff.
 
 ---
 

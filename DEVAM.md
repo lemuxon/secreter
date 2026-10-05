@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
 | 10-05 | 🚦 CI #1 düştü → Flutter sürümü 3.44.4'e sabitlendi | §4ct |
 | 10-05 | 🔤 CI #2–#4 düştü → Roboto **depoya kondu**, test hermetik | §4ct |
 | 10-05 | 📝 Issue şablonları — açık bildirimi özel yola yönlendiriliyor | §4ct |
@@ -1697,6 +1698,34 @@ ayrıştıramayıp düşüyor.
 
 Adım artık sır varsa yazıyor, yoksa depodakini koruyor. Derleme adımına
 da aynı annotation görünürlüğü eklendi.
+
+### ✅ SONUÇ: CI #6, BEŞ İŞİN BEŞİ YEŞİL
+
+| Çalıştırma | Düşen iş | Gerçek sebep |
+|---|---|---|
+| #1 | Analiz | `flutter-version: '3.x'` → CI'da daha yeni SDK, yeni lint |
+| #2–#4 | Testler | Test SDK'nın iç önbellek düzenine bağlıydı (Roboto) |
+| #5 | APK Derle | Boş sır, depodaki `google-services.json`u 0 baytla eziyordu |
+| **#6** | — | **hepsi geçti** |
+
+> 📌 **Dört ayrı kusur çıktı ve hiçbiri uygulama kodunda değildi** —
+> hepsi doğrulama altyapısındaydı. Depo üç aydır "testler otomatik
+> koşuyor" görüntüsü veriyordu ve hiçbiri koşmuyordu. Bir katkıcı için
+> bu, PR'ının hiçbir kontrolden geçmemesi demekti.
+
+#### ⚠️ KENDİ YÖNTEM HATAM — ÜÇ TUR KAYBETTİRDİ
+
+#1, #2 ve #3'te kanıt yerine **makul görünen açıklamaya** atladım:
+"format düşmüştür" (değildi), "precache çözer" (çözmedi). Her biri bir
+CI turu — yaklaşık 10 dakika — kaybettirdi.
+
+#4'te önce **ölçümü kurdum**: düşen testin satırları artık `::error::`
+annotation olarak yayılıyor (iş logları GitHub oturumu ister,
+annotation istemez) ve tam çıktı artifact olarak saklıyor. Sebep tek
+seferde çıktı.
+
+Bu görünürlük `ci.yml`'de kalıcı: bundan sonra düşen her test ve
+derleme sebebini oturum açmadan söylüyor.
 
 ### ISSUE ŞABLONLARI
 

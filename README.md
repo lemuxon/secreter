@@ -196,9 +196,15 @@ cd test/rules && npm install
 firebase emulators:exec --only firestore --project secreter-rules-test "npm test"
 ```
 
-> ⚠️ `.github/workflows/ci.yml` tetikleyicisi `main`/`develop` dallarına
-> bakıyor ama bu deponun dalı `master` — CI olduğu gibi çalışmaz.
-> Fork'larsan tetikleyiciyi kendi dalına göre düzelt.
+Bu beş kapı CI'da da koşuyor (`.github/workflows/ci.yml`): her
+push ve PR'da analiz, Dart testleri, Firestore kural testleri,
+Cloud Functions denetimi ve APK derlemesi.
+
+> 🪤 **Flutter sürümü `3.44.4`'e SABİTLİ.** `3.x` yazılsaydı CI her
+> zaman en son stable'ı çekerdi ve bir katkıcının PR'ı, Flutter dün
+> yeni bir sürüm yayınladığı için kırmızıya düşerdi. Yerelde aynı
+> sürümü kullan; farklı bir sürümle `dart format` çalıştırmak
+> dokunmadığın dosyaları diff'e sokar.
 
 ---
 
