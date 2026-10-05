@@ -26,6 +26,9 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | 📚 README yabancı için kullanılabilir hale getirildi (481→390 satir) | §4co |
+| 10-05 | 🌐 **DEPO YAYIMLANDI** — github.com/lemuxon/secreter (AGPL-3.0, herkese açık) | §4co |
+| 10-05 | 🛑 **Üretİme ÇIKMAMA kararı** — proje açık kaynak olarak rafına kaldırılıyor | §4co |
 | 10-05 | 🚨 **CLOUD FUNCTIONS DURMUŞ** — proje Blaze→Spark düşmüş, 14 fonksiyon 0 istek | §4cn |
 | 10-05 | 🔒 Kullanıcı adı hırsızlığı kapatıldı + kurallar **dağıtıldı** | §4cm |
 | 10-05 | 🧹 Kişisel veri temizliği — git geçmişi YENİDEN YAZILDI | §4cm |
@@ -95,10 +98,52 @@ Bu iki dosya tüm bağlamı taşır; sohbet geçmişine ihtiyaç yok.
 | `MIGRATION_STATUS.md`, `ARCHITECTURE.md` | Mimari arka plan |
 | `scripts/` | Tek komutluk işler: `turn_kur.sh` (coturn), `imza_parolasi_dondur.sh` (parola rotasyonu), `play_yukle.js` (Play'e yükleme) |
 
-### 🔴 EN SON NEREDE KALDIK (2026-09-16)
+### 🔴 EN SON NEREDE KALDIK (2026-10-05)
 
 > **Önce bunu oku.** Her maddenin tam gerekçesi bu dosyadaki tur
 > bölümlerinde (§4bf–§4cf) ve `GUVENLIK_DUZELTMELERI.md`de.
+
+#### 🛑 PROJENİN YÖNÜ DEĞİŞTİ (2026-10-05)
+
+**Üretime çıkılmayacak.** Kullanıcı kararı: proje açık kaynak olarak
+yayımlanıp rafa kaldırılıyor.
+
+| | |
+|---|---|
+| 🌐 **Depo** | **[github.com/lemuxon/secreter](https://github.com/lemuxon/secreter)** — herkese açık, AGPL-3.0, 24 commit |
+| ✅ Üretim erişimi | Alındı (4 Eki) ama **kullanılmayacak** |
+| 🔴 Cloud Functions | **DURMUŞ** — proje Spark'a düştü, Blaze'e dönülmeyecek (§4cn) |
+| ⏳ Kapalı test | Hâlâ **Etkin** — kapatılacak, aşağıdaki sıraya göre |
+
+#### 📋 B PLANI — kalan adımlar (SIRA ÖNEMLİ)
+
+Testi öylece bırakmak en kötü seçenekti: insanlar sessizce bozuk bir
+uygulamayla kalırdı (E2EE oturumu kurulamıyor, hesap silinemiyor).
+Düzgün kapatma sırası:
+
+1. ⏳ **Testçilere mesaj** — metin hazır, bir hafta süre verilecek.
+   **Kronometre bununla başlıyor; diğer her şey buna bağlı.**
+2. ⏳ **Bir hafta bekle** — insanlar sohbetlerini dışa aktarsın.
+3. ⏳ **Kanalı duraklat** (Play Console → Kapalı test → Kanalı duraklat).
+4. ⏳ **Firestore'u sil** — 17 kök koleksiyon:
+   `callLogs calls channels chats groupKeys handshakes inviteCodes
+   keyBundles meetCodes releasedUsernames reports resendRequests
+   scheduledMessages stories usernames users entitlementRedemptions`
+   ```bash
+   firebase firestore:delete --all-collections --project gizlichat-f2a99
+   ```
+
+> 🪤 **KANALI ERKEN DURAKLATMA.** Google'ın onay penceresi aynen şunu
+> diyor: *"Test kanalınızı duraklatırsanız **var olan test
+> kullanıcılarınız artık uygulamayı test edemez**."* Yani duraklatmak
+> yalnızca yeni kurulumu değil, MEVCUT testçilerin erişimini de kesiyor.
+> 2026-10-05'te tam bu yüzden iptal edildi: erken duraklatmak, insanların
+> verilerini dışa aktarma imkânını — korumaya çalıştığımız şeyi — yok
+> ederdi.
+
+⚠️ `deleteAccountData` çalışmadığı için kullanıcılar hesaplarını kendileri
+silemiyor. 4. adımdaki toplu silme, gizlilik politikasındaki silme vaadini
+fiilen yerine getiren tek yol.
 
 #### Durum
 
@@ -1505,6 +1550,59 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🌐 AÇIK KAYNAK YAYIMI (2026-10-05) — §4co
+
+### §4co — DEPO YAYIMLANDI, README YENİDEN YAZILDI
+
+Kullanıcı kararı: *"Bu projemi üretmeyeceğim. Şimdilik github'a koyacağım
+ki insanlar yararlanabilsin."*
+
+**[github.com/lemuxon/secreter](https://github.com/lemuxon/secreter)** —
+herkese açık, AGPL-3.0, 334 dosya, 24 commit.
+
+#### Yayımlamadan önce yapılanlar
+
+| Adım | Sonuç |
+|---|---|
+| Sır taraması (çalışma ağacı + TÜM geçmiş) | temiz — Giphy anahtarı hiç girmemiş, `.jks`/`.env`/hizmet hesabı yok |
+| Kişisel veri temizliği | testçi adı, e-posta, sohbet kimliği, makine yolları |
+| **Git geçmişi yeniden yazıldı** | `filter-branch`, 22 commit; ad iki commit MESAJINDA da geçiyordu |
+| `.claude/settings.local.json`, `.firebase/` | depodan ve geçmişten çıkarıldı |
+| `depoAdresi` dolduruldu | "Açık kaynak" satırı §4cj'nin kurduğu bağ sayesinde kendiliğinden açıldı |
+
+⚠️ **Geçmiş temizliği yalnızca push ÖNCESİ bedavaydı.** Yedek referanslar
+düşürülüp `gc` çalıştırıldı: `.git` 8 MB → 2 MB, yani eski nesneler
+gerçekten silindi. Yayımlandıktan sonra aynı temizlik imkânsız olurdu.
+
+#### README: yabancı için kullanılamaz durumdaydı
+
+Denetim yedi hata buldu, hepsi komutla doğrulandı:
+
+| Hata | Sonucu |
+|---|---|
+| Uygulamanın NE OLDUĞU hiç yazmıyordu | ilk satır "Kurulum & APK Derleme Kılavuzu" |
+| Paket adı `com.gizlichat.app` | gerçek `com.secreter.app` → derleme patlar |
+| "`android/app/build.gradle` düzenle" | o dosya yok, `build.gradle.kts` var |
+| `functions/index.js`'i sıfırdan yazdırıyordu | depoda 1140 satırlık hali VAR |
+| "Spark planı yeterli" | **yanlış** — ve proje tam bu yüzden kırıldı (§4cn) |
+| Proje yapısı ağacı | var olmayan dosyaları gösteriyordu |
+| CI `main`/`develop`'a bakıyor | dal `master`, fork'ta çalışmaz |
+
+Eklenenler: durum uyarısı (çalışan hizmet yok, gerçek gizlilik için
+Signal), fork uyarısı (**kuralları KENDİN dağıt**, yoksa veri herkese
+açık), depoda olmayan dosyalar tablosu, beş kapının gerçek komutları,
+iki ayrı JDK gereği (17 derleme / 21 kural testi).
+
+Korunan: E2EE mimarisi ve dürüst sınırları, TURN/WebRTC, cihaz
+sertleştirmesi ve sınırları, gizlilik notları. 481 → 390 satır.
+
+> 📌 README'nin asıl kusuru "eksik" değil **yanlış** olmasıydı. Yeni
+> metnin her sayısal iddiası (paket adı, 185 Dart dosyası, bahsedilen 8
+> belgenin varlığı) gerçeğe karşı tek tek doğrulandı — aynı hatayı
+> tekrarlamamak için.
 
 ---
 
