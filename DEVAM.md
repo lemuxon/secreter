@@ -26,6 +26,8 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | 🧪 **EMÜLATÖR MODU** — kredi kartısız çalıştırma; giriş engeli kalktı | §4cr |
+| 10-05 | 📖 README çelişkisi düzeltildi — grup E2EE **var**, yok yazıyordu | §4cr |
 | 10-05 | 🐛 **12 ISSUE AÇILDI** — bilinen sorunların hepsi herkese görünür | §4cq |
 | 10-05 | 🤝 CONTRIBUTING.md + SECURITY.md + README.en.md | §4cq |
 | 10-05 | ✉️ Kapanış mesajı testçilere GÖNDERİLDİ — kronometre başladı, son tarih **12 Eki** | §4co |
@@ -1556,6 +1558,81 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🧪 EMÜLATÖR MODU + README ÇELİŞKİSİ (2026-10-05) — §4cr
+
+### §4cr — ASıL KATKI ENGELİ: KİMSE UYGULAMAYI ÇALIŞTIRAMIYORDU
+
+Issue'lar açıldı (§4cq) ama bir şey atlanmıştı: depoyu klonlayan birinin
+uygulamayı **açabilmesi** için kendi Firebase projesi ve — Functions v2
+Spark'ta çalışmadığı için — **kredi kartı bağlı Blaze planı** gerekiyordu.
+Tek bir ekranı görmeden önce bir saat kurulum ve bir ödeme yöntemi.
+
+#### 📌 EKSİK OLAN TEK PARÇA
+
+`firebase.json` içinde **dört emülatör zaten tanımlıydı** (firestore 8080,
+auth 9099, functions 5001, storage 9199). Ama:
+
+```bash
+grep -rn "useFirestoreEmulator\|useAuthEmulator" lib/   # 0 sonuç
+```
+
+Uygulama onlara hiç bağlanmıyordu. Sunucu tarafı hazır, istemci tarafı
+yoktu. `lib/core/emulator_kurulumu.dart` (+ `main.dart`'ta tek çağrı)
+bunu kapattı:
+
+```bash
+firebase emulators:start
+flutter run --dart-define=USE_EMULATOR=true
+```
+
+Firebase hesabı, proje, ücret, Blaze **gerekmez**.
+
+#### 🪤 TUZAK 1 — BÖLGE
+
+Uygulama `FirebaseFunctions.instance` DEĞİL,
+`instanceFor(region: 'europe-west1')` kullanıyor (üç ayrı serviste).
+Emülatör varsayılan örneğe bağlansaydı **sessizce hiçbir şey yapmazdı** —
+çağrılar yine başka yere giderdi ve "emülatör çalışıyor" sanılırdı.
+
+#### 🪤 TUZAK 2 — SÜRÜM DERLEMESİNE SIZMA
+
+`--dart-define` sürüm derlemesinde de geçerlidir. `USE_EMULATOR=true`
+ile çıkılmış bir APK, herkesin telefonunda **var olmayan** bir yerel
+sunucuya bağlanır — uygulama tamamen ve sessizce çalışmaz. Bu yüzden
+bayrak sürüm derlemesinde yok sayılır; bilerek isteniyorsa
+`ALLOW_EMULATOR_IN_RELEASE=true` ayrıca verilmelidir.
+
+Bu, Giphy anahtarının APK'ya gömülmesiyle aynı aile: `--dart-define`
+"geliştirme ayarı" değildir, derlemeye sabitlenen bir değerdir.
+
+Test: `test/core/emulator_kurulumu_test.dart` (5 test) — varsayılanın
+KAPALI olduğunu ve Android'de `10.0.2.2`, diğerlerinde `localhost`
+çözüldüğünü ölçer. Dart **635 → 640**.
+
+### README KENDİ KENDİNİ YALANLIYORDU
+
+| Satır | İddia |
+|---|---|
+| 40 | "Sender-key ile grup şifrelemesi" |
+| 215 | "Grup/kanal E2EE bu fazda yok" |
+
+Koda bakıldı: `lib/services/group_key_service.dart` **var** ve gönderim
+yoluna bağlı (`encryption_datasource_impl.dart:92` şifreler, `:264`
+çözer, üyelik değişince `rotate`). Yani §3’te çözülmüş bir sorun,
+README'de **hâlâ açık** görünüyordu.
+
+> 📌 Gizlilik iddiası taşıyan bir projede README'nin kendi
+> güvenliğini OLDUĞUNDAN ZAYIF göstermesi de bir hatadır — ve 175 satır
+> arayla kendini yalanlaması güvenilirliğe doğrudan zarar verir.
+> §4co'da "README'nin asıl kusuru eksik değil **yanlış** olmasıydı"
+> yazılmıştı; bu madde o denetimden kaçmış.
+
+Yerine grup E2EE'nin gerçek sınırı yazıldı: **rotasyon her üyenin kendi
+cihazında olmak zorundadır**; yalnızca atan yöneticinin rotasyonuna
+güvenmek diğer üyelerin zincirlerini olduğu gibi bırakırdı.
 
 ---
 

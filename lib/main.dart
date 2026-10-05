@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/di/injection.dart';
+import 'core/emulator_kurulumu.dart';
 import 'core/observability/crash_reporter.dart';
 import 'core/privacy/privacy_settings.dart';
 import 'features/messaging/data/datasources/message_sync_service.dart';
@@ -67,6 +68,11 @@ void main() {
     } catch (e) {
       debugPrint('BOOT: Firebase init hatası (devam ediliyor): $e');
     }
+
+    // 🧪 Yerel emülatör modu (--dart-define=USE_EMULATOR=true).
+    // initializeApp SONRASI, Firestore/Auth'a ilk erişimden ÖNCE olmalı.
+    // Kapalıyken hiçbir şey yapmaz. Bkz. core/emulator_kurulumu.dart
+    await emulatoreBagla();
 
     // Hive lokal veritabanını başlat (offline cache + gizlilik ayarları)
     try {

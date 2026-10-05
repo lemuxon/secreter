@@ -46,7 +46,7 @@ cihazda üretilen bir anahtarla açılır.
 | 📤 **Veri taşınabilirliği** | Sohbet dışa aktarma, hesap silme |
 
 Kod: **185 Dart dosyası**, **60 test dosyası**.
-Doğrulama kapıları: analyzer 0 bulgu · **635 Dart testi** · **175 Firestore
+Doğrulama kapıları: analyzer 0 bulgu · **640 Dart testi** · **175 Firestore
 kural testi** · 4 functions testi.
 
 ---
@@ -82,6 +82,36 @@ kural testi** · 4 functions testi.
 
 > ⚠️ İki ayrı JDK gerekiyor. Kural testleri 21'in altında **çalışmaz**;
 > Android derlemesi 17 ile yapılır.
+
+### 0. 🧪 Hızlı yol — hiçbir hesap açmadan çalıştır
+
+Sadece denemek veya katkı vermek istiyorsan Firebase hesabı, proje ve
+kredi kartı **gerekmez**. Yerel emülatör yeter:
+
+```bash
+flutter pub get
+firebase emulators:start                      # firestore + auth + functions + storage
+flutter run --dart-define=USE_EMULATOR=true   # ayrı bir terminalde
+```
+
+Emülatör paneli: <http://localhost:4000>
+
+⚠️ **Gerçek bir Android cihazda** `10.0.2.2` çalışmaz (o adres yalnızca
+Android emülatöründen ana makineye gider). Cihaz ile bilgisayar aynı
+ağdaysa makinenin LAN adresini ver:
+
+```bash
+flutter run --dart-define=USE_EMULATOR=true --dart-define=EMULATOR_HOST=192.168.1.42
+```
+
+🪤 `--dart-define` **sürüm derlemesinde de geçerlidir.** `USE_EMULATOR=true`
+ile çıkılmış bir APK herkesin telefonunda var olmayan bir yerel sunucuya
+bağlanmaya çalışır ve uygulama sessizce tamamen çalışmaz. Bu yüzden bayrak
+sürüm derlemesinde yok sayılır; bilerek istiyorsan
+`--dart-define=ALLOW_EMULATOR_IN_RELEASE=true` eklemen gerekir.
+Gerekçe: `lib/core/emulator_kurulumu.dart`.
+
+Gerçek bir arka uç istiyorsan aşağıdan devam et.
 
 ### 1. Kendi Firebase projeni kur
 
@@ -145,7 +175,7 @@ Bu projede her değişiklik beş kapıdan geçer:
 ```bash
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze                       # 0 bulgu olmalı
-flutter test                          # 635 test
+flutter test                          # 640 test
 node --check functions/index.js
 cd functions && node --test           # 4 test
 
@@ -212,7 +242,7 @@ Birebir (1-1) sohbetlerde gerçek E2EE var. Mimari:
 
 **⚠️ Bu E2EE'nin bilinen sınırları (dürüst olmak gerekirse):**
 1. **Denetlenmemiş protokol katmanı:** Primitifler güvenli ama X3DH/Ratchet *uygulaması* profesyonel güvenlik denetiminden geçmedi. Gerçek anonimlik hayati önemdeyse (gazeteci, aktivist) bunun yerine **gerçek Signal uygulamasını** kullanın.
-2. **Sadece 1-1 sohbetler:** Grup/kanal E2EE bu fazda yok (Signal'de bile grup şifreleme ayrı, karmaşık bir mekanizmadır — Sender Keys).
+2. **Grup E2EE var ama ayrı bir mekanizma:** Grup/kanal mesajları "sender key" deseniyle şifrelenir (`lib/services/group_key_service.dart`) — her üye kendi gönderen zincirini üretir, mevcut ikili E2EE kanalından dağıtır, mesajı bir kez şifreler. Üyelik değiştiğinde zincir rotasyona girer; ayrılan kişi sonraki mesajları okuyamaz. ⚠️ Rotasyon **her üyenin kendi cihazında** gerçekleşmek zorundadır; yalnızca atan yöneticinin rotasyonuna güvenmek diğer üyelerin zincirlerini olduğu gibi bırakırdı. Bu yüzden üyelik farkı gönderim anında her cihazda ayrıca ölçülür.
 3. **Basitleştirilmiş Ratchet:** Tam Double Ratchet'teki DH-ratchet adımı yok (sadece symmetric ratchet). Sıra dışı gelen mesajlarda (out-of-order) çözme sorunları olabilir.
 4. **Signed prekey imza doğrulaması** tam uygulanmadı — MITM'e karşı tam koruma için eklenmelidir.
 5. **Anahtar yedekleme yok:** Cihaz kaybedilirse oturum geçmişi çözülemez (bu aslında güvenlik açısından iyi, ama kullanıcıyı uyarın).

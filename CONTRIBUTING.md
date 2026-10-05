@@ -39,6 +39,19 @@ Etiketler:
 
 > ⚠️ İki ayrı JDK gerekiyor. Kural testleri 21'in altında çalışmaz.
 
+#### 🧪 En hızlı yol — hesap ve kredi kartı gerekmez
+
+Katkı vermek için kendi Firebase projeni kurmana **gerek yok**:
+
+```bash
+flutter pub get
+firebase emulators:start
+flutter run --dart-define=USE_EMULATOR=true   # ayrı terminalde
+```
+
+Gerçek bir Android cihazda `EMULATOR_HOST` ile makinenin LAN adresini
+vermen gerekir. Ayrıntı ve tuzaklar: `lib/core/emulator_kurulumu.dart`.
+
 Kurulumun tamamı ve kendi Firebase projeni bağlama adımları:
 [`README.md`](README.md#kurulum).
 
@@ -68,7 +81,7 @@ cd test/rules && npm install
 firebase emulators:exec --only firestore --project secreter-rules-test "npm test"
 ```
 
-Şu anki durum: analyzer **0 bulgu** · **635 Dart testi** · **175 kural
+Şu anki durum: analyzer **0 bulgu** · **640 Dart testi** · **175 kural
 testi** · **4 functions testi**.
 
 ---
@@ -158,6 +171,19 @@ Labels: `security`, `known-limitation`, `good-first-issue`, `infra`.
 
 > ⚠️ Two different JDKs are needed. Rules tests will not run below 21.
 
+#### 🧪 Fastest path — no account, no credit card
+
+You do **not** need your own Firebase project to contribute:
+
+```bash
+flutter pub get
+firebase emulators:start
+flutter run --dart-define=USE_EMULATOR=true   # second terminal
+```
+
+On a real Android device, pass your machine's LAN address via
+`EMULATOR_HOST`. Details and traps: `lib/core/emulator_kurulumu.dart`.
+
 Full setup, including pointing the app at **your own** Firebase project:
 [`README.en.md`](README.en.md#setup).
 
@@ -166,7 +192,7 @@ Full setup, including pointing the app at **your own** Firebase project:
 ```bash
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze                       # must be 0 issues
-flutter test                          # 635 tests
+flutter test                          # 640 tests
 node --check functions/index.js
 cd functions && node --test           # 4 tests
 cd test/rules && npm install && \

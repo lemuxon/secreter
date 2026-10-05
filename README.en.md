@@ -48,7 +48,7 @@ account is created from a key generated on the device.
 | 📤 **Data portability** | Chat export, account deletion |
 
 **185 Dart files**, **60 test files**.
-Verification gates: analyzer clean · **635 Dart tests** · **175 Firestore
+Verification gates: analyzer clean · **640 Dart tests** · **175 Firestore
 rules tests** · 4 functions tests.
 
 ---
@@ -86,6 +86,36 @@ rules tests** · 4 functions tests.
 
 > ⚠️ Two different JDKs are needed. The rules tests **will not run**
 > below 21; the Android build uses 17.
+
+### 0. 🧪 Fast path — run it without any account
+
+To just try it, or to contribute, you need **no** Firebase account, no
+project and no credit card. The local emulator is enough:
+
+```bash
+flutter pub get
+firebase emulators:start                      # firestore + auth + functions + storage
+flutter run --dart-define=USE_EMULATOR=true   # in a second terminal
+```
+
+Emulator UI: <http://localhost:4000>
+
+⚠️ On a **real Android device** `10.0.2.2` will not work (that address
+only routes from the Android emulator to the host). If the device and
+your machine are on the same network, pass the machine's LAN address:
+
+```bash
+flutter run --dart-define=USE_EMULATOR=true --dart-define=EMULATOR_HOST=192.168.1.42
+```
+
+🪤 `--dart-define` **also applies to release builds.** An APK shipped with
+`USE_EMULATOR=true` would try to reach a local server that does not exist
+on anyone's phone, and the app would silently not work at all. The flag is
+therefore ignored in release builds; if you really mean it, add
+`--dart-define=ALLOW_EMULATOR_IN_RELEASE=true`.
+Rationale: `lib/core/emulator_kurulumu.dart`.
+
+For a real backend, continue below.
 
 ### 1. Set up your own Firebase project
 
@@ -149,7 +179,7 @@ Every change in this project passes five gates:
 ```bash
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze                       # must be 0 issues
-flutter test                          # 635 tests
+flutter test                          # 640 tests
 node --check functions/index.js
 cd functions && node --test           # 4 tests
 
