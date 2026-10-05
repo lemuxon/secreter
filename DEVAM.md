@@ -26,6 +26,8 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-05 | ✉️ Kapanış mesajı testçilere GÖNDERİLDİ — kronometre başladı, son tarih **12 Eki** | §4co |
+| 10-05 | ✅ **SAHA ONAYI: "çözülemedi" sorunu düzelmiş** (testçi beyanı) | §4cp |
 | 10-05 | 📚 README yabancı için kullanılabilir hale getirildi (481→390 satir) | §4co |
 | 10-05 | 🌐 **DEPO YAYIMLANDI** — github.com/lemuxon/secreter (AGPL-3.0, herkese açık) | §4co |
 | 10-05 | 🛑 **Üretİme ÇIKMAMA kararı** — proje açık kaynak olarak rafına kaldırılıyor | §4co |
@@ -121,9 +123,9 @@ Testi öylece bırakmak en kötü seçenekti: insanlar sessizce bozuk bir
 uygulamayla kalırdı (E2EE oturumu kurulamıyor, hesap silinemiyor).
 Düzgün kapatma sırası:
 
-1. ⏳ **Testçilere mesaj** — metin hazır, bir hafta süre verilecek.
-   **Kronometre bununla başlıyor; diğer her şey buna bağlı.**
+1. ✅ **Testçilere mesaj GÖNDERİLDİ** — 2026-10-05.
 2. ⏳ **Bir hafta bekle** — insanlar sohbetlerini dışa aktarsın.
+   **Son tarih: 2026-10-12.**
 3. ⏳ **Kanalı duraklat** (Play Console → Kapalı test → Kanalı duraklat).
 4. ⏳ **Firestore'u sil** — 17 kök koleksiyon:
    `callLogs calls channels chats groupKeys handshakes inviteCodes
@@ -1550,6 +1552,58 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## ✅ SAHA ONAYI: "ÇÖZÜLEMEDİ" DÜZELDİ (2026-10-05) — §4cp
+
+### §4cp — TESTÇİLER ONARIMIN ÇALIŞTIĞINI SÖYLÜYOR
+
+Kapanış mesajı gönderilirken testçilerle konuşuldu. Beyanları:
+**"çözülemedi sorunu düzelmiş."**
+
+Bu, §4cc (sessiz yeniden el sıkışma) ve §4cl (yeniden gönderim isteği)
+için **sahadan gelen ilk olumlu sinyal.**
+
+#### 📌 NEDEN BU KADAR ÖNEMLİ
+
+Bu iki mekanizmanın çalıştığı **başka hiçbir yoldan ölçülemiyordu:**
+
+* Android vitals göremez — başarısız olduklarında uygulama **çökmez**,
+  mesaj sessizce okunamaz kalır (§4ci'de bu açıkça yazılmıştı).
+* Crashlytics göremez — onay varsayılan kapalı (§4ci).
+* Otomatik kapılar göremez — hepsi yerel; sahadaki davranışı ölçmezler.
+
+Yani §4cc ve §4cl, yazıldıkları günden beri **doğrulanmamış** olarak
+duruyordu. Bu beyan o boşluğu kapatan tek kanıt.
+
+Hatırlatma: şikâyetin kendisi de sahadan gelmişti (§4ck — iki mesaj
+kalıcı kayboldu). Döngü kapandı: şikâyet → teşhis → düzeltme → saha
+onayı.
+
+#### ⚠️ KANITIN SINIRI — olduğundan güçlü sayma
+
+Beyan **"artık o hatayı görmüyorum"** demek. Bu şunları **ayırt etmiyor:**
+
+| Ne olabilir | Beyanla uyumlu mu |
+|---|---|
+| §4cc oturumu kendi kendine onardı | ✅ |
+| §4cl kayıp mesajı geri getirdi | ✅ |
+| Son dönemde oturum zaten hiç bozulmadı | ✅ |
+
+Yani **"düzeldi" ile "mekanizmanın şu mesajı geri getirdiğini gördüm"
+aynı şey değil.** Kesin kanıt, kaybolmuş bir mesajın balonunun yerinde
+gerçek metne dönüştüğünün görülmesi olurdu; bu görülmedi.
+
+> 📌 Bu ayrımı yazmak önemli: §4am'de öğrenilen ders tam da "yeşil görünen
+> şeyin ne kanıtladığını abartmamak"tı. Sinyal olumlu ve değerli — ama
+> mekanizmanın tek tek doğrulanması değil.
+
+#### Sonuç
+
+* §4cc / §4cl: **saha sinyali olumlu**, mekanizma düzeyinde doğrulama yok.
+* Kapanış kronometresi başladı: mesaj **2026-10-05**'te gönderildi,
+  son tarih **2026-10-12**.
 
 ---
 
