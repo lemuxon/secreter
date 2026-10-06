@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
 | 10-05 | 🚦 CI #1 düştü → Flutter sürümü 3.44.4'e sabitlendi | §4ct |
@@ -1860,6 +1861,11 @@ zaten vardı. Doğru olan kısım: `node --test` (4 test) gerçekten yoktu.
 
 Hata, `ci.yml`'i **okumadan** Issue yazmaktan çıktı; tetikleyici
 satırını `grep`leyip gerisini varsaydım.
+
+✅ **2026-10-06: Issue #11'e düzeltme yorumu yazıldı ve kapatıldı.**
+Yanlış iddia gövdede duruyor, düzeltme altında — bilerek: yayımlanmış
+bir metni sessizce değiştirmek yerine hatanın üstüne errata yazmak,
+deponun dayandığı "doğrulanmış kayıt" anlatısıyla tutarlı.
 
 > 📌 Bu projenin herkese açık anlatısı "dürüst ve doğrulanmış
 > kayıt" üzerine kurulu. Yanlış bir iddia o anlatıyı eksik bir
