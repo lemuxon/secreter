@@ -31,6 +31,7 @@
 | 10-13 | 🗑️ **FIRESTORE SİLİNDİ** — 12 koleksiyon, boş olduğu doğrulandı | §4cv |
 | 10-13 | ⚠️ Storage ve Auth silinemedi — engeller aşağıda | §4cv |
 | 10-13 | 🏷️ **ETİKETLER GERÇEKTE YOKMUŞ** — oluşturuldu ve 11 issue'ya uygulandı | §4cw |
+| 10-13 | ⚖️ **LİSANS KARARI: AGPL-3.0 KALIYOR** — yeniden tartışılmasın | §4cw |
 | 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
@@ -1631,6 +1632,22 @@ seçenek kalana kadar daraltmak, sonra o tek öğeyi tıklamak.
 > sorgusu 5 sonuç dönerken issue sayfalarında etiket zaten vardı.
 > İki kez "uygulanmamış" sanılıp boşuna tekrar denendi. Doğrulama
 > **issue sayfasından** yapılmalı, arama sonucundan değil.
+
+### ⚖️ LİSANS: AGPL-3.0 KALIYOR (karar, 2026-10-13)
+
+"İnsanlar rahatça kullansın ve büyütsün" hedefi gündeme gelince lisans
+açıkça soruldu: AGPL-3.0 en katı copyleft'tir, birçok şirket yasaklar,
+bazı geliştiriciler uzak durur. Alternatif Apache-2.0 / MIT olurdu.
+
+**Karar: AGPL kalıyor.**
+
+Gerekçe değişmedi: gizlilik iddiası taşıyan bir uygulamada kodun
+kapatılıp yeniden paketlenememesi, kullanıcının "bu gerçekten iddia
+ettiği şeyi mi yapıyor" sorusunu sorabilmesini kalıcı kılar.
+
+> 📌 **Zamanlama notu:** lisans değişikliği tüm katkıcıların onayını
+> ister. Şu an tek katkıcı depo sahibi, yani değiştirmek bugün bedava,
+> dışarıdan PR geldikten sonra zorlaşır. Karar bu bilinerek verildi.
 
 ---
 
