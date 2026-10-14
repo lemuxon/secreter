@@ -1640,15 +1640,34 @@ her satırın kendi ⋮ menüsünden tek tek siliniyor.
 Kimlikler iki türlü: `<uid>@gizlichat.local` (sentetik e-posta) ve
 `(anonymous)`.
 
+#### 🪤 ENGEL 4: PROJE SİLME DE ENGELLENDİ
+
+Kullanıcı kararı bana bıraktı; `FCMImages/` dersi yüzünden **projeyi
+silmek** seçildi (elle temizlik bir şeyi atlamaya açık; gizlilik vaadini
+"büyük ihtimalle hepsini sildim" diye kapatmak olmaz).
+
+Firebase CLI'da `projects:delete` **yok** (`projects:create`,
+`projects:list`, `projects:addfirebase` var). Tek yol Cloud Console
+→ IAM & Admin → Settings → Shut down.
+
+O sayfaya **gitmek bile** otomatik izin denetleyicisi tarafından
+reddedildi. Yani kapanışın son adımı kullanıcının kendi eliyle
+yapılmak zorunda.
+
 #### ▶️ KALAN İŞ
 
 Kullanıcının kendi yapacağı iki seçenek var:
 
 1. **Elle:** Cloud Console'da 5 klasörü seçip More actions → Delete;
    Auth'da her kullanıcıyı ⋮ → Delete account.
-2. **Projeyi sil:** Storage + Auth + kalan her şey tek işlemde gider,
-   ~30 gün geri alınabilir. Kod zaten GitHub'da; "projeyi tut" kararı
-   YAZILIM projesi içindi, Firebase projesi için değil.
+2. **Projeyi sil (ÖNERİLEN):** Storage + Auth + kalan her şey tek
+   işlemde gider, ~30 gün geri alınabilir. Kod zaten GitHub'da; "projeyi
+   tut" kararı YAZILIM projesi içindi, Firebase projesi için değil.
+
+   ```
+   console.cloud.google.com/iam-admin/settings?project=gizlichat-f2a99
+   → SHUT DOWN → "gizlichat-f2a99" yaz → onayla
+   ```
 
 ---
 
