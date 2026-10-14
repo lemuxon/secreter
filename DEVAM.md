@@ -26,6 +26,7 @@
 
 | Tarih | İş | § |
 |---|---|---|
+| 10-13 | 🗑️ **KARAR: veri silinecek, proje tutulacak** | §4cv |
 | 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
@@ -139,8 +140,7 @@ uygulamayla kalırdı (E2EE oturumu kurulamıyor, hesap silinemiyor).
 Düzgün kapatma sırası:
 
 1. ✅ **Testçilere mesaj GÖNDERİLDİ** — 2026-10-05.
-2. ⏳ **Bir hafta bekle** — insanlar sohbetlerini dışa aktarsın.
-   **Son tarih: 2026-10-12.**
+2. ✅ **Bir hafta beklendi** — son tarih 2026-10-12, doldu.
 3. ⏳ **Kanalı duraklat** (Play Console → Kapalı test → Kanalı duraklat).
 4. ⏳ **Firestore'u sil** — 17 kök koleksiyon:
    `callLogs calls channels chats groupKeys handshakes inviteCodes
@@ -149,6 +149,16 @@ Düzgün kapatma sırası:
    ```bash
    firebase firestore:delete --all-collections --project gizlichat-f2a99
    ```
+5. ⏳ **Storage'ı sil** — `firestore:delete` buraya DOKUNMAZ:
+   `chats/{chatId}/**` (fotoğraf, dosya, sesli mesaj) · `avatars/` ·
+   `group_avatars/` · `stories/`
+6. ⏳ **Auth hesaplarını sil** — anonim hesaplar da Firestore'da değil.
+
+> 🪤 **"FIRESTORE'U SİLDİM" ≠ "VERİYİ SİLDİM".** Orijinal plan
+> yalnızca 4. adımı içeriyordu. Medya dosyaları — muhtemelen en hassas
+> içerik — Cloud Storage'da ayrı durur ve komut onlara dokunmaz.
+> 2026-10-13'te fark edildi; eksik kalsaydı gizlilik politikasındaki
+> silme vaadi yarım yerine gelmiş olurdu.
 
 > 🪤 **KANALI ERKEN DURAKLATMA.** Google'ın onay penceresi aynen şunu
 > diyor: *"Test kanalınızı duraklatırsanız **var olan test
