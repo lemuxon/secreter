@@ -1,459 +1,316 @@
 # SECRETER
 
-**Telefon numarası istemeyen, uçtan uca şifreli Android mesajlaşma uygulaması.**
-Flutter + Firebase ile yazıldı. Kayıt için e-posta da istemez; hesap
-cihazda üretilen bir anahtarla açılır.
+**An end-to-end encrypted Android messenger that asks for no phone number.**
+Built with Flutter + Firebase. It doesn't ask for an email either — the
+account is created from a key generated on the device.
 
 📦 `com.secreter.app` · 🧩 Flutter (Dart) + Cloud Firestore + Cloud Functions
-· 📄 [AGPL-3.0](LICENSE) · 🌍 Arayüz 16 dilde
+· 📄 [AGPL-3.0](LICENSE) · 🌍 UI in 16 languages
 
-🇬🇧 **[English README](README.en.md)** · 🐛 **[Bilinen sorunlar → Issues](https://github.com/lemuxon/secreter/issues)** · 🤝 [Katkı rehberi](CONTRIBUTING.md) · 🔒 [Güvenlik](SECURITY.md)
+🇹🇷 **[Türkçe sürüm → `README.tr.md`](README.tr.md)** · 🐛 **[Known problems → Issues](https://github.com/lemuxon/secreter/issues)** · 🤝 [Contributing](CONTRIBUTING.md) · 🔒 [Security](SECURITY.md)
+
+> The Turkish README is the original and carries some extra detail
+> (full feature checklist, TURN/WebRTC notes). Code comments and the
+> development log are in Turkish too — see **Language** in
+> [`CONTRIBUTING.md`](CONTRIBUTING.md#english).
 
 ---
 
-## ⚠️ Projenin durumu — önce bunu oku
+## ⚠️ Project status — read this first
 
-**Bu proje aktif olarak geliştirilmiyor ve çalışan bir hizmeti yok.**
+**This project is not actively developed and runs no service.**
 
-* Google Play'de **üretime çıkmadı.** Kapalı testte (≈12 testçi) 24 sürüm
-  yayınlandı, üretim erişimi alındı ama kullanılmadı.
-* Projeye ait **Firebase arka ucu KAPATILDI** (13 Eki 2026): kapalı test
-  kanalı duraklatıldı ve Firestore'daki tüm kullanıcı verisi silindi.
-  Depodaki `firebase_options.dart` ve `google-services.json` artık çalışmayan bir
-  projeye işaret ediyor — fork'larsan **kendi Firebase projeni kurmalısın**
-  (aşağıya bak).
-* Kod, çalıştığı hâliyle ve olduğu gibi yayımlanıyor: biri faydalanabilsin
-  diye. Destek, yol haritası veya güvenlik güncellemesi sözü **yok**.
+* It **never shipped to production** on Google Play. 24 builds went out
+  to a closed test (~12 testers); production access was granted but
+  never used.
+* The **Firebase backend has been shut down** (13 Oct 2026): the closed
+  test track was paused and all user data in Firestore was deleted.
+  The `firebase_options.dart`
+  and `google-services.json` in this repo point at a project that no
+  longer works — if you fork it, **you must set up your own Firebase
+  project** (see below).
+* The code is published as-is so someone can learn from it or build on
+  it. No support, roadmap, or security-update promise.
 
-> 🔐 **Gerçek gizlilik ihtiyacın varsa bu uygulamayı kullanma.** E2EE
-> katmanı bağımsız denetimden geçmedi ve bilinen sınırları var (aşağıda
-> dürüstçe yazılı). Gazeteci, aktivist veya risk altındaki biriysen
-> **Signal** kullan.
+> 🔐 **Don't use this app if you actually need privacy.** The E2EE layer
+> has not been independently audited and has known limitations (listed
+> honestly below). If you're a journalist, activist, or otherwise at
+> risk, use **[Signal](https://signal.org)**.
 
 ---
 
 ![SECRETER](docs/screenshots/00-feature-graphic.png)
 
-## Ekran görüntüleri
+## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/01-e2ee-sohbet.png" width="19%" alt="Uçtan uca şifreli sohbet">
-  <img src="docs/screenshots/02-numarasiz-kayit.png" width="19%" alt="Telefon numarası istemeyen kayıt">
-  <img src="docs/screenshots/03-gizlilik-kontrolleri.png" width="19%" alt="Gizlilik kontrolleri">
-  <img src="docs/screenshots/04-bulusma-kodu.png" width="19%" alt="Tek kullanımlık buluşma kodu">
-  <img src="docs/screenshots/05-16-dil.png" width="19%" alt="16 dil">
+  <img src="docs/screenshots/01-e2ee-sohbet.png" width="19%" alt="End-to-end encrypted chat">
+  <img src="docs/screenshots/02-numarasiz-kayit.png" width="19%" alt="Signup without a phone number">
+  <img src="docs/screenshots/03-gizlilik-kontrolleri.png" width="19%" alt="Privacy controls">
+  <img src="docs/screenshots/04-bulusma-kodu.png" width="19%" alt="Single-use meeting code">
+  <img src="docs/screenshots/05-16-dil.png" width="19%" alt="16 languages">
 </p>
 
-> ℹ️ Bunlar Play mağaza sayfası için hazırlanmış görsellerdir
-> (Ağustos 2026, sürüm 1.0.x). Sohbetlerdeki isim ve mesajlar **demo**
-> veridir; profil fotoğrafları **yapay zekâ üretimidir**, gerçek kişi
-> değildir. O tarihten sonra sohbet başlığı biraz değişti: arama simgesi
-> taşma menüsüne alındı, böylece "son görülme" metni dar ekranlarda
-> kırpılmıyor.
+> ℹ️ These are the Play store listing images (August 2026, version
+> 1.0.x). The names and messages in the chats are **demo data**, and the
+> profile pictures are **AI-generated** — they are not real people. The chat
+> header has changed slightly since: the search icon moved into the
+> overflow menu so the "last seen" text is no longer truncated on narrow
+> screens.
 
-## Ne yapıyor
+## What it does
 
 | | |
 |---|---|
-| 🔑 **Numarasız kayıt** | Telefon numarası ve e-posta istemez; kimlik cihazda üretilir |
-| 🔒 **E2EE (1-1)** | X25519 + AES-256-GCM + HKDF; X3DH el sıkışma, ratchet |
-| 👥 **Grup & kanal** | Sender-key ile grup şifrelemesi, kanal yayını |
-| 📞 **Sesli/görüntülü arama** | WebRTC; TURN kurulursa IP gizlenir |
-| 🕑 **Kaybolan mesaj** | Süresi dolunca cihazdan **ve sunucudan** silinir |
-| 🧹 **Metadata kontrolleri** | Okundu/yazıyor/çevrimiçi kapatılabilir, mesaj dolgusu, kaba zaman damgası |
-| 🎭 **Kılık modu** | Uygulama başlatıcıda "Hesap Makinesi" olarak görünebilir |
-| 🛡️ **Cihaz sertleştirme** | Root/Frida/debugger tespiti, `FLAG_SECURE` |
-| 📤 **Veri taşınabilirliği** | Sohbet dışa aktarma, hesap silme |
+| 🔑 **No-phone-number signup** | No phone or email; identity is generated on-device |
+| 🔒 **E2EE (1-to-1)** | X25519 + AES-256-GCM + HKDF; X3DH handshake, ratchet |
+| 👥 **Groups & channels** | Sender-key group encryption, channel broadcast |
+| 📞 **Voice/video calls** | WebRTC; IP is hidden when TURN is configured |
+| 🕑 **Disappearing messages** | Deleted from the device **and the server** on expiry |
+| 🧹 **Metadata controls** | Read receipts / typing / online can be turned off; message padding; coarse timestamps |
+| 🎭 **Disguise mode** | The app can appear as "Calculator" in the launcher |
+| 🛡️ **Device hardening** | Root/Frida/debugger detection, `FLAG_SECURE` |
+| 📤 **Data portability** | Chat export, account deletion |
 
-Kod: **185 Dart dosyası**, **60 test dosyası**.
-Doğrulama kapıları: analyzer 0 bulgu · **640 Dart testi** · **175 Firestore
-kural testi** · 4 functions testi.
-
----
-
-## Mimari
-
-| Belge | İçerik |
-|---|---|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Clean Architecture katmanları, Riverpod, DI |
-| [`METADATA_PRIVACY.md`](METADATA_PRIVACY.md) | Dürüst tehdit modeli, Firebase'in sınırları |
-| [`DESIGN.md`](DESIGN.md) | Tasarım dili ve kararları |
-| [`TURN_KURULUMU.md`](TURN_KURULUMU.md) | coturn kurulumu (IP gizleme için şart) |
-| [`GUVENLIK_DUZELTMELERI.md`](GUVENLIK_DUZELTMELERI.md) | Her güvenlik düzeltmesinin GEREKÇESİ |
-| [`DEVAM.md`](DEVAM.md) | Geliştirme günlüğü — ne zaman, ne, neden |
-
-> `DEVAM.md` ve `GUVENLIK_DUZELTMELERI.md` geliştirme sırasında tutulmuş
-> çalışma notlarıdır; cilalı belge değil, gerçek kayıt. Bir kararın
-> *neden* öyle verildiğini merak edersen cevap büyük ihtimalle oradadır.
+**185 Dart files**, **60 test files**.
+Verification gates: analyzer clean · **640 Dart tests** · **175 Firestore
+rules tests** · 4 functions tests.
 
 ---
 
-## Kurulum
+## Architecture
 
-### Gereksinimler
-
-| Araç | Sürüm | Ne için |
+| Document | Contents | Language |
 |---|---|---|
-| Flutter SDK | **3.44.4** (Dart 3.12.2) | uygulama — CI bu sürüme sabitli |
-| JDK | **17** | Android derlemesi |
-| JDK | **21** | Firestore kural testleri (`firebase-tools` şartı) |
-| Node.js | 20+ | Cloud Functions ve kural testleri |
-| Firebase CLI | güncel | dağıtım |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Clean Architecture layers, Riverpod, DI | 🇹🇷 |
+| [`METADATA_PRIVACY.md`](METADATA_PRIVACY.md) | Honest threat model, Firebase's limits | 🇹🇷 |
+| [`TURN_KURULUMU.md`](TURN_KURULUMU.md) | coturn setup (required to hide IPs) | 🇹🇷 |
+| [`GUVENLIK_DUZELTMELERI.md`](GUVENLIK_DUZELTMELERI.md) | The **reasoning** behind every security fix | 🇹🇷 |
+| [`DEVAM.md`](DEVAM.md) | Development log — what, when, and why | 🇹🇷 |
 
-> ⚠️ İki ayrı JDK gerekiyor. Kural testleri 21'in altında **çalışmaz**;
-> Android derlemesi 17 ile yapılır.
+> Most docs are in Turkish. `DEVAM.md` and `GUVENLIK_DUZELTMELERI.md` are
+> working notes kept during development — not polished documentation, but
+> the real record. If you wonder *why* a decision was made the way it was,
+> the answer is probably in there.
 
-### 0. 🧪 Hızlı yol — hiçbir hesap açmadan çalıştır
+---
 
-Sadece denemek veya katkı vermek istiyorsan Firebase hesabı, proje ve
-kredi kartı **gerekmez**. Yerel emülatör yeter:
+<a name="setup"></a>
+
+## Setup
+
+### Requirements
+
+| Tool | Version | For |
+|---|---|---|
+| Flutter SDK | **3.44.4** (Dart 3.12.2) | the app — CI is pinned to this |
+| JDK | **17** | Android build |
+| JDK | **21** | Firestore rules tests (`firebase-tools` requirement) |
+| Node.js | 20+ | Cloud Functions and rules tests |
+| Firebase CLI | latest | deployment |
+
+> ⚠️ Two different JDKs are needed. The rules tests **will not run**
+> below 21; the Android build uses 17.
+
+### 0. 🧪 Fast path — run it without any account
+
+To just try it, or to contribute, you need **no** Firebase account, no
+project and no credit card. The local emulator is enough:
 
 ```bash
 flutter pub get
 firebase emulators:start                      # firestore + auth + functions + storage
-flutter run --dart-define=USE_EMULATOR=true   # ayrı bir terminalde
+flutter run --dart-define=USE_EMULATOR=true   # in a second terminal
 ```
 
-Emülatör paneli: <http://localhost:4000>
+Emulator UI: <http://localhost:4000>
 
-🪤 **İlk çalıştırmada** Storage emülatörü bir `.jar` indirir ve bu sırada
-Functions keşfi 10 saniyelik penceresini aşıp şu hatayı verebilir:
+🪤 **On the first run**, the Storage emulator downloads a `.jar`, and
+Functions discovery can exceed its 10-second window and report:
 *"User code failed to load. Cannot determine backend specification."*
-Kod bozuk değildir — **komutu bir daha çalıştır**, indirme önbelleğe
-alındığı için ikincisi geçer. Doğru açılışta şunu görmelisin:
+The code is fine — **run the command again**; the download is cached and
+the second run succeeds. A correct start prints:
 
 ```
 +  functions: Loaded functions definitions from source: … claimPreKey …
 ```
 
-`claimPreKey` listede yoksa E2EE oturumu kurulamaz.
+If `claimPreKey` is missing from that list, E2EE sessions cannot be set up.
 
-⚠️ **Gerçek bir Android cihazda** `10.0.2.2` çalışmaz (o adres yalnızca
-Android emülatöründen ana makineye gider). Cihaz ile bilgisayar aynı
-ağdaysa makinenin LAN adresini ver:
+⚠️ On a **real Android device** `10.0.2.2` will not work (that address
+only routes from the Android emulator to the host). If the device and
+your machine are on the same network, pass the machine's LAN address:
 
 ```bash
 flutter run --dart-define=USE_EMULATOR=true --dart-define=EMULATOR_HOST=192.168.1.42
 ```
 
-🪤 `--dart-define` **sürüm derlemesinde de geçerlidir.** `USE_EMULATOR=true`
-ile çıkılmış bir APK herkesin telefonunda var olmayan bir yerel sunucuya
-bağlanmaya çalışır ve uygulama sessizce tamamen çalışmaz. Bu yüzden bayrak
-sürüm derlemesinde yok sayılır; bilerek istiyorsan
-`--dart-define=ALLOW_EMULATOR_IN_RELEASE=true` eklemen gerekir.
-Gerekçe: `lib/core/emulator_kurulumu.dart`.
+🪤 `--dart-define` **also applies to release builds.** An APK shipped with
+`USE_EMULATOR=true` would try to reach a local server that does not exist
+on anyone's phone, and the app would silently not work at all. The flag is
+therefore ignored in release builds; if you really mean it, add
+`--dart-define=ALLOW_EMULATOR_IN_RELEASE=true`.
+Rationale: `lib/core/emulator_kurulumu.dart`.
 
-Gerçek bir arka uç istiyorsan aşağıdan devam et.
+For a real backend, continue below.
 
-### 1. Kendi Firebase projeni kur
+### 1. Set up your own Firebase project
 
-Depodaki yapılandırma kapatılan bir projeye ait. Kendi projeni oluştur ve
-şunları **kendi** projene bağla:
+The config in this repo belongs to a project that has been shut down.
+Create your own and wire it up:
 
 ```bash
-flutterfire configure            # firebase_options.dart + google-services.json üretir
+flutterfire configure     # generates firebase_options.dart + google-services.json
 ```
 
-### 2. 🔴 Sunucu tarafını DAĞIT — atlanırsa uygulama korumasız çalışır
+### 2. 🔴 Deploy the server side — skipping this leaves your app unprotected
 
-Bu adım isteğe bağlı değil. Güvenlik istemcide değil **kurallarda**:
+This step is not optional. Security lives in the **rules**, not the client:
 
 ```bash
 firebase deploy --only firestore:rules,firestore:indexes,storage,functions
 ```
 
-* `firestore.rules` / `storage.rules` dağıtılmazsa **veri herkese açıktır**
-* `firestore.indexes.json` eksikse sorgular **sessizce boş döner**
-* `functions/` olmadan **E2EE oturumu kurulamaz** (`claimPreKey`)
+* Without `firestore.rules` / `storage.rules`, **your data is world-readable**
+* Without `firestore.indexes.json`, queries **silently return empty**
+* Without `functions/`, E2EE sessions can't be established (`claimPreKey`)
 
-> 💸 **Cloud Functions için Blaze planı gerekiyor** (kullandıkça öde).
-> Spark planında v2 fonksiyonlar çalışmaz — dağıtılmış görünüp sessizce
-> durur. Bu projede tam olarak bu yaşandı; bkz. `DEVAM.md` §4cn.
+> 💸 **Cloud Functions require the Blaze plan** (pay-as-you-go). On the
+> Spark plan, v2 functions appear deployed but silently do nothing. That
+> is exactly what happened to this project — see `DEVAM.md` §4cn.
 
-### 3. Derle
+### 3. Build
 
 ```bash
 flutter pub get
 flutter build apk --release --split-per-abi
-# veya Play paketi:
+# or an app bundle for Play:
 flutter build appbundle --release
 ```
 
 ---
 
-## Depoda OLMAYAN, senin üretmen gerekenler
+## Not in this repo — you must supply these
 
-`.gitignore` bunları bilerek dışarıda tutar:
+`.gitignore` deliberately keeps these out:
 
-| Dosya / değer | Ne işe yarar |
+| File / value | Purpose |
 |---|---|
-| `android/key.properties` | imzalama parolaları — şablon: `key.properties.ORNEK` |
-| `*.jks` / `*.keystore` | imzalama anahtarı (`keytool` ile üretilir) |
-| `functions/.env` | `TURN_SECRET`, `TURN_URLS` — bkz. `TURN_KURULUMU.md` |
-| `--dart-define=GIPHY_API_KEY=...` | GIF sekmesi; verilmezse özellik kapalı gelir |
+| `android/key.properties` | signing passwords — template: `key.properties.ORNEK` |
+| `*.jks` / `*.keystore` | signing key (generate with `keytool`) |
+| `functions/.env` | `TURN_SECRET`, `TURN_URLS` — see `TURN_KURULUMU.md` |
+| `--dart-define=GIPHY_API_KEY=...` | GIF tab; the feature is disabled without it |
 
-`google-services.json` ve `lib/firebase_options.dart` **depoda vardır**.
-İçlerindeki Firebase API anahtarı tasarım gereği herkese açıktır (her
-APK'nın içinde gider) ve güvenlik ondan değil Firestore kurallarından
-gelir. Yine de kendi anahtarını Google Cloud Console'dan **Android
-uygulaması + SHA-1** ile kısıtla.
+`google-services.json` and `lib/firebase_options.dart` **are** in the
+repo. The Firebase API key inside them is public by design (it ships in
+every APK) and security comes from Firestore rules, not from hiding it.
+Still, restrict your own key in Google Cloud Console to **Android app +
+SHA-1**.
 
 ---
 
-## Doğrulama kapıları
+## Verification gates
 
-Bu projede her değişiklik beş kapıdan geçer:
+Every change in this project passes five gates:
 
 ```bash
 dart format --output=none --set-exit-if-changed lib test
-flutter analyze                       # 0 bulgu olmalı
-flutter test                          # 640 test
+flutter analyze                       # must be 0 issues
+flutter test                          # 640 tests
 node --check functions/index.js
-cd functions && node --test           # 4 test
+cd functions && node --test           # 4 tests
 
-# Firestore kuralları (175 test) — JDK 21 ŞART, emülatör gerekir:
+# Firestore rules (175 tests) — requires JDK 21 and the emulator:
 cd test/rules && npm install
 firebase emulators:exec --only firestore --project secreter-rules-test "npm test"
 ```
 
-Bu beş kapı CI'da da koşuyor (`.github/workflows/ci.yml`): her
-push ve PR'da analiz, Dart testleri, Firestore kural testleri,
-Cloud Functions denetimi ve APK derlemesi.
+These five gates also run in CI (`.github/workflows/ci.yml`) on every
+push and pull request: analysis, Dart tests, Firestore rules tests,
+Cloud Functions checks and an APK build.
 
-> 🪤 **Flutter sürümü `3.44.4`'e SABİTLİ.** `3.x` yazılsaydı CI her
-> zaman en son stable'ı çekerdi ve bir katkıcının PR'ı, Flutter dün
-> yeni bir sürüm yayınladığı için kırmızıya düşerdi. Yerelde aynı
-> sürümü kullan; farklı bir sürümle `dart format` çalıştırmak
-> dokunmadığın dosyaları diff'e sokar.
-
----
-
-
-## 📞 ÖNEMLİ — Sesli/Görüntülü Arama (WebRTC)
-
-Aramalarda ses/görüntü sunucudan geçmez; yalnızca bağlantı kurulumu (signaling) Firestore üzerinden yapılır.
-
-### ⚠️ TURN YOKSA IP ADRESLERİ KARŞILIKLI GÖRÜNÜR
-
-Bu, arama kalitesi değil **anonimlik** meselesidir. TURN yapılandırılmamışsa arama P2P kurulur ve **arayan ile aranan birbirinin gerçek IP adresini öğrenir**. Telefon numarası istemeyen bir uygulamada IP, kimliğin en güçlü belirleyicilerinden biridir.
-
-TURN yapılandırıldığında `iceTransportPolicy: relay` devreye girer: yalnızca relay adayları toplanır, cihazın IP'si karşı tarafa **hiç gitmez**. Uygulama bu durumu arama ekranında kullanıcıya da gösterir (🔒 "IP adresin gizli" / ⚠️ "IP adresin karşı tarafa görünüyor").
-
-**STUN (hazır):** Google'ın ücretsiz STUN sunucuları yedek olarak yapılandırıldı — bağlantı kurulur ama **IP gizlenmez**.
-
-### TURN kimlik bilgileri nasıl veriliyor
-
-**Tercih edilen yol — sunucudan, kısa ömürlü:** `getTurnCredentials` Cloud Function'ı, coturn'ün `use-auth-secret` şemasıyla saatlerle ölçülen kimlik üretir. Sır **yalnızca sunucuda** durur.
-
-> ❗ TURN parolasını `--dart-define` ile vermek onu APK'ya gömer ve **APK'dan çıkarılabilir** (Giphy anahtarında yaşanan sorunun aynısı). Bu yol yalnızca yedektir; kullanılıyorsa parolanın sızmış sayılması ve döndürülmesi için yeni sürüm gerekir.
->
-> Kimlik bilgilerini **kaynak koda yazma** — `call_service.dart` artık bunu okumaz.
-
-Kurulumun tamamı (VPS, coturn, TLS, 443/TCP, güvenlik duvarı, doğrulama): **[`TURN_KURULUMU.md`](TURN_KURULUMU.md)**
-
-> Test için: aynı Wi-Fi ağındaki iki cihaz STUN ile sorunsuz çalışır ama IP'ler görünür. Gerçek gizlilik testi için TURN şarttır.
-
-> ⚠️ iOS'ta WebRTC için ek Info.plist izinleri gerekir (kamera/mikrofon). Bu proje Android odaklı; iOS eklersen `flutter_webrtc` dökümanına bak.
+> 🪤 **The Flutter version is PINNED to `3.44.4`.** With `3.x`, CI
+> would always pull the latest stable and a contributor's PR could go
+> red simply because Flutter shipped a release yesterday. Use the same
+> version locally — running `dart format` with a different one pulls
+> files you never touched into the diff.
 
 ---
 
+## 🔐 E2EE architecture and its honest limits
 
-## 🔐 ÖNEMLİ — Uçtan Uca Şifreleme (E2EE) Mimarisi ve Sınırları
+**Audited primitives** (the `cryptography` package):
+X25519 · AES-256-GCM · HKDF-SHA256
 
-Birebir (1-1) sohbetlerde gerçek E2EE var. Mimari:
+**Protocol layer** (written in this project):
 
-**Kullanılan denetlenmiş primitifler** (`cryptography` paketi):
-- X25519 (Diffie-Hellman anahtar değişimi)
-- AES-256-GCM (mesaj şifreleme + bütünlük)
-- HKDF-SHA256 (anahtar türetme)
+* **X3DH** — two parties derive a shared secret without exchanging
+  private keys; works while the other side is offline (prekey bundle).
+* **Symmetric ratchet** — the key changes with every message → forward
+  secrecy.
+* Private keys live **only on the device** (secure storage). The server
+  only ever sees public prekey bundles.
 
-**Protokol katmanı** (bu projede yazıldı):
-- **X3DH:** İlk bağlantıda iki taraf, özel anahtarlarını paylaşmadan ortak sırra ulaşır. Karşı taraf çevrimdışıyken bile çalışır (prekey bundle sayesinde).
-- **Double Ratchet (symmetric):** Her mesajda anahtar değişir → Forward Secrecy.
-- Özel anahtarlar **sadece cihazda** (secure storage). Sunucu sadece açık anahtarları (prekey bundle) görür.
+### ⚠️ Known limitations — stated plainly
 
-**Nasıl çalışır:**
-1. Kayıtta her kullanıcı identity key + signed prekey + 100 one-time prekey üretir, açık kısımları `keyBundles`'a yükler.
-2. İlk mesajda gönderen, alıcının bundle'ını çekip X3DH başlatır, başlığı ilk mesaja ekler.
-3. Alıcı bu başlıkla aynı sırra ulaşır, oturum kurulur.
-4. Sonraki her mesaj ratchet'i ilerletir.
+1. **The protocol layer is unaudited.** The primitives are sound, but
+   this X3DH/ratchet *implementation* has not had a professional
+   security review.
+2. **Simplified ratchet.** The DH-ratchet step of a full Double Ratchet
+   is missing (symmetric only). Out-of-order messages can fail to
+   decrypt.
+3. **Signed prekey signature verification is incomplete** — full MITM
+   protection needs this finished.
+4. **No key backup.** Losing the device means the history can't be
+   decrypted. Good for security, but users must be warned.
+5. **No TURN server configured** → in calls, both parties learn each
+   other's real IP. For an app that asks for no phone number, IP is one
+   of the strongest identifiers. See `TURN_KURULUMU.md`.
 
-**⚠️ Bu E2EE'nin bilinen sınırları (dürüst olmak gerekirse):**
-1. **Denetlenmemiş protokol katmanı:** Primitifler güvenli ama X3DH/Ratchet *uygulaması* profesyonel güvenlik denetiminden geçmedi. Gerçek anonimlik hayati önemdeyse (gazeteci, aktivist) bunun yerine **gerçek Signal uygulamasını** kullanın.
-2. **Grup E2EE var ama ayrı bir mekanizma:** Grup/kanal mesajları "sender key" deseniyle şifrelenir (`lib/services/group_key_service.dart`) — her üye kendi gönderen zincirini üretir, mevcut ikili E2EE kanalından dağıtır, mesajı bir kez şifreler. Üyelik değiştiğinde zincir rotasyona girer; ayrılan kişi sonraki mesajları okuyamaz. ⚠️ Rotasyon **her üyenin kendi cihazında** gerçekleşmek zorundadır; yalnızca atan yöneticinin rotasyonuna güvenmek diğer üyelerin zincirlerini olduğu gibi bırakırdı. Bu yüzden üyelik farkı gönderim anında her cihazda ayrıca ölçülür.
-3. **Basitleştirilmiş Ratchet:** Tam Double Ratchet'teki DH-ratchet adımı yok (sadece symmetric ratchet). Sıra dışı gelen mesajlarda (out-of-order) çözme sorunları olabilir.
-4. **Signed prekey imza doğrulaması** tam uygulanmadı — MITM'e karşı tam koruma için eklenmelidir.
-5. **Anahtar yedekleme yok:** Cihaz kaybedilirse oturum geçmişi çözülemez (bu aslında güvenlik açısından iyi, ama kullanıcıyı uyarın).
-
-**Üretim için öneri:** Bu katman E2EE'nin *nasıl çalıştığını* gösterir ve makul koruma sağlar, ama hayati gizlilik için olgunlaştığında resmi `libsignal` binding'ine geçilmelidir.
-
----
-
-
-## 🛡️ Cihaz güvenliği sertleştirmesi
-
-Uygulama açılışında (`splash_screen` → `SecurityService`) cihaz taranır:
-
-| Tehdit | Tespit yöntemi | Davranış |
-|--------|---------------|----------|
-| Root / Jailbreak | RootBeer (flutter_jailbreak_detection) + safe_device | **Engelle** |
-| Hooking (Frida/Xposed) | Native Frida port taraması (MainActivity.kt) | **Engelle** |
-| Debugger | Native `Debug.isDebuggerConnected()` | **Engelle** |
-| Emulator | safe_device `isRealDevice` | Uyarı (devam edilebilir) |
-| Geliştirici modu | flutter_jailbreak_detection `developerMode` | Uyarı |
-
-**FLAG_SECURE:** `MainActivity.kt` açılışta `WindowManager.LayoutParams.FLAG_SECURE`
-set eder → ekran görüntüsü, ekran kaydı ve son kullanılanlar önizlemesi
-engellenir. Runtime'da `NativeSecurityBridge.setSecureFlag()` ile değiştirilebilir.
-
-### ⚠️ ÖNEMLİ — Güvenlik Sertleştirmenin Sınırları (dürüst değerlendirme)
-
-Bu kontroller **mutlak güvenlik DEĞİLDİR**. Kararlı bir saldırgan:
-- **Magisk Hide / Zygisk** ile root tespitini atlatabilir
-- **Frida gadget injection** ile port taramasını atlatabilir
-- **Uygulamayı yeniden paketleyerek** tüm kontrolleri kaldırabilir
-
-Bu bir "yükseltme bariyeri"dir — sıradan tehditleri eler, ama asıl koruma
-**E2EE şifreleme** ve **sunucu kurallarındadır**. İstemci kontrolleri her zaman
-atlatılabilir; kritik doğrulama sunucuda yapılmalı.
-
-### Production için daha güçlü alternatifler
-
-Şu an `flutter_jailbreak_detection` + `safe_device` + native port taraması
-kullanıyoruz. Daha güvenilir tespit için:
-
-1. **`jailbreak_root_detection`** — RootBeer **+ DetectFrida** içerir (gerçek
-   Frida tespiti, port taramasından güçlü)
-2. **`device_safety_info`** — Native FFI ile process memory map taraması
-   (Frida/Xposed/Cydia hook tespiti) + native TracerPid debugger tespiti
-
-Bunlara geçmek için sadece `SecurityServiceImpl` değişir — soyutlama (`SecurityService`)
-ve geri kalan kod aynı kalır (mimarinin avantajı).
-
-> Not: `flutter_jailbreak_detection` Samsung Knox / Xiaomi gibi cihazlarda
-> false-positive verebilir. Production'da `jailbreakDetails` ile hangi kontrolün
-> tetiklendiğini loglayıp eşiği ayarlamak gerekebilir.
+**Recommendation:** this layer demonstrates *how* E2EE works and offers
+reasonable protection, but for life-critical privacy it should be
+replaced with official `libsignal` bindings.
 
 ---
 
+## 🛡️ Device hardening and its honest limits
 
-## ✅ Özellikler
+On startup the app checks for root/jailbreak, Frida/Xposed hooking,
+attached debuggers, and emulators; `FLAG_SECURE` blocks screenshots,
+screen recording and the recents preview.
 
-| Özellik | Durum |
-|--------|-------|
-| Anonim kayıt (kullanıcı adı ile) | ✅ |
-| Birebir mesajlaşma | ✅ |
-| Grup kurma ve yönetim | ✅ |
-| Mesaj geçmişi | ✅ |
-| Fotoğraf gönderme | ✅ |
-| GIF gönderme | ✅ |
-| Sesli mesaj (dalga animasyonlu) | ✅ |
-| Dosya gönderme (50MB'a kadar) | ✅ |
-| Konum paylaşımı | ✅ |
-| Yanıtlama (reply) | ✅ |
-| Tepki emojisi | ✅ |
-| Yazıyor göstergesi | ✅ |
-| Okundu bilgisi (tik sistemi) | ✅ |
-| Mesaj düzenleme | ✅ |
-| Kaybolan mesajlar | ✅ |
-| Uygulama kilidi (PIN) | ✅ |
-| Parmak izi / yüz tanıma | ✅ |
-| Sahte PIN (plausible deniability) | ✅ |
-| Otomatik kilit | ✅ |
-| Ekran görüntüsü engelleme | ✅ |
-| Son görülmeyi gizleme | ✅ |
-| Okundu bilgisini gizleme | ✅ |
-| Yazıyor göstergesini gizleme | ✅ |
-| Push bildirim (FCM) | ✅ |
-| Bildirim içeriği gizleme | ✅ |
-| 24 saatlik hikaye/durum | ✅ |
-| Metin + fotoğraf durumu | ✅ |
-| Durum görüntülenme sayısı | ✅ |
-| Çoklu hesap | ✅ |
-| Grup rolleri (kurucu/admin/üye) | ✅ |
-| Üye atma / yasaklama | ✅ |
-| Üye sessize alma | ✅ |
-| Davet linki | ✅ |
-| Kanal (tek yönlü yayın) | ✅ |
-| Sadece adminler yazsın modu | ✅ |
-| Grup açıklaması düzenleme | ✅ |
-| Sesli arama (WebRTC P2P) | ✅ |
-| Görüntülü arama (WebRTC P2P) | ✅ |
-| Arama kontrolleri (mute/kamera/hoparlör) | ✅ |
-| Gelen arama bildirimi | ✅ |
-| Ön/arka kamera değiştirme | ✅ |
-| Uçtan uca şifreleme (X3DH) | ✅ |
-| Double Ratchet (forward secrecy) | ✅ |
-| Prekey bundle sistemi | ✅ |
-| Çevrimdışı oturum kurma | ✅ |
-| Her iki taraftan mesaj silme | ✅ |
-| AES-256 mesaj şifreleme | ✅ |
-| Çevrimiçi durum göstergesi | ✅ |
-| Kullanıcı adıyla kişi arama | ✅ |
-| Telegram benzeri karanlık tema | ✅ |
-| APK olarak dağıtım | ✅ |
+**These are not absolute.** A determined attacker can bypass root
+detection with Magisk Hide/Zygisk, bypass port scanning with Frida
+gadget injection, or simply repackage the app without the checks.
+
+This is a *raised bar*, not a wall. The real protection is **E2EE** and
+**server-side rules**. Client-side checks can always be bypassed;
+anything critical must be verified on the server.
 
 ---
 
+## Contributing
 
-## 📖 Lisans — AGPL-3.0
+Known problems are tracked as
+**[Issues](https://github.com/lemuxon/secreter/issues)** — each with
+what it is, where, why it matters, and a fix idea. Start there.
 
-Bu proje **GNU Affero General Public License v3.0** ile dağıtılır. Tam
-metin: kök dizindeki [`LICENSE`](LICENSE).
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the dev environment, the
+five gates, and this project's house habits.
 
-Kısaca ne demek:
-
-* Kodu **kullanabilir, inceleyebilir, değiştirebilir ve dağıtabilirsin.**
-* Değiştirilmiş bir sürümü **dağıtırsan** (veya ağ üzerinden hizmet olarak
-  sunarsan), **kaynağını da açmak zorundasın** — aynı lisansla.
-* Garanti verilmez.
-
-AGPL, gizlilik iddiası taşıyan bir uygulama için bilinçli bir tercih:
-kodun kapatılıp yeniden paketlenememesi, kullanıcının "bu gerçekten
-iddia ettiği şeyi mi yapıyor" sorusunu sorabilmesini kalıcı kılar.
-
-### ⚠️ Fork'layacaksan — güvenlik uyarısı
-
-Bu uygulamanın güvenliği yalnızca istemci koduna dayanmaz. Kendi
-sürümünü yayımlayacaksan **kendi Firebase projeni kur** ve şunları
-kendin dağıt; aksi halde uygulama çalışır görünür ama korumasız olur:
-
-* `firestore.rules` ve `storage.rules` — **dağıtılmadan** veri herkese
-  açıktır (bu projede bir kez yaşandı, bkz. `GUVENLIK_DUZELTMELERI.md`)
-* `firestore.indexes.json` — eksikse sorgular sessizce boş döner
-* `functions/` — E2EE oturumu `claimPreKey` olmadan kurulamaz
-
-### Depoda OLMAYAN ve senin üretmen gerekenler
-
-Bunlar bilerek dışarıda bırakıldı (`.gitignore`):
-
-| Dosya | Ne işe yarar |
-|---|---|
-| `android/key.properties` | imzalama parolaları — şablonu `key.properties.ORNEK` |
-| `*.jks` / `*.keystore` | imzalama anahtarı |
-| `functions/.env` | `TURN_SECRET`, `TURN_URLS` (bkz. `TURN_KURULUMU.md`) |
-| `--dart-define=GIPHY_API_KEY` | GIF sekmesi; verilmezse özellik kapalı gelir |
-
-`android/app/google-services.json` ve `lib/firebase_options.dart`
-**depoda vardır**; içlerindeki Firebase API anahtarı tasarım gereği
-herkese açıktır (her APK'nın içinde gider) ve güvenlik ondan değil
-Firestore kurallarından gelir. Yine de kendi projeni kurarken anahtarı
-Google Cloud Console'dan **Android uygulaması + SHA-1** ile kısıtla.
-
-
-## 🔒 Gizlilik Notları
-
-- Firebase **anonim auth** kullanır — telefon/e-posta kaydı yok
-- Mesajlar **AES-256** ile uygulama katmanında şifrelenir
-- Firebase sunucusunda şifreli veri saklanır
-- **Tam anonimlik** için ileride Matrix/Synapse'a geçiş yapılabilir
-- Şifreleme anahtarı cihazda `flutter_secure_storage` ile saklanır
+Found a vulnerability? Read [`SECURITY.md`](SECURITY.md) first — please
+report privately rather than opening a public Issue.
 
 ---
 
+## License
 
-## 🚀 APK'yı Telefona Yükle
+**GNU Affero General Public License v3.0** — see [`LICENSE`](LICENSE).
 
-1. APK dosyasını telefona kopyala
-2. Ayarlar → Güvenlik → **Bilinmeyen kaynaklardan yükleme** → Aç
-3. APK'ya tıkla → Yükle
+In short: you may use, study, modify and distribute this code. If you
+**distribute** a modified version (or offer it as a network service),
+you must **release your source** under the same license. No warranty.
+
+AGPL is a deliberate choice for an app that makes privacy claims: code
+that can't be closed and repackaged keeps the user's "is this really
+doing what it says?" question answerable.

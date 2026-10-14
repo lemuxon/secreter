@@ -58,7 +58,7 @@ Gerçek bir Android cihazda `EMULATOR_HOST` ile makinenin LAN adresini
 vermen gerekir. Ayrıntı ve tuzaklar: `lib/core/emulator_kurulumu.dart`.
 
 Kurulumun tamamı ve kendi Firebase projeni bağlama adımları:
-[`README.md`](README.md#kurulum).
+[`README.tr.md`](README.tr.md#kurulum).
 
 ---
 
@@ -138,7 +138,7 @@ Kod yorumları ve belgeler **Türkçe**. Bu, projenin yazıldığı dildi.
 Katkıda bulunurken:
 * **Kod ve testler:** İngilizce de yazabilirsin, sorun değil.
 * **Belgeler:** hangi dilde rahatsan.
-* İngilizce özet: [`README.en.md`](README.en.md).
+* İngilizce sürüm (birincil): [`README.md`](README.md).
 
 Türkçe bilmemek engel olmasın — kodun kendisi standart Dart ve
 değişken adlarının çoğu İngilizce.
@@ -190,7 +190,7 @@ On a real Android device, pass your machine's LAN address via
 `EMULATOR_HOST`. Details and traps: `lib/core/emulator_kurulumu.dart`.
 
 Full setup, including pointing the app at **your own** Firebase project:
-[`README.en.md`](README.en.md#setup).
+[`README.md`](README.md#setup).
 
 ## 🚦 Verification gates — all must pass before a PR
 

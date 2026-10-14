@@ -9,7 +9,7 @@
 * E2EE katmanı **bağımsız güvenlik denetiminden geçmedi.** Kriptografik
   primitifler (X25519, AES-256-GCM, HKDF) denetlenmiş kütüphanelerden
   geliyor, ama X3DH/ratchet **uygulaması** bu projede yazıldı.
-* Bilinen sınırlar [`README.md`](README.md) içinde dürüstçe yazılı:
+* Bilinen sınırlar [`README.tr.md`](README.tr.md) içinde dürüstçe yazılı:
   DH-ratchet yok, signed prekey imza doğrulaması tam değil.
 * Proje **aktif olarak geliştirilmiyor** ve çalışan bir hizmeti yok.
 
@@ -96,7 +96,7 @@ Ayrıca kendi Firebase API anahtarını Google Cloud Console'dan
 * The E2EE layer has **not been independently audited.** The primitives
   (X25519, AES-256-GCM, HKDF) come from audited libraries, but the
   X3DH/ratchet **implementation** was written in this project.
-* Known limits are documented honestly in [`README.en.md`](README.en.md):
+* Known limits are documented honestly in [`README.md`](README.md):
   no DH ratchet, signed prekey signature verification incomplete.
 * The project is **not actively maintained** and runs no service.
 
