@@ -27,6 +27,9 @@
 | Tarih | İş | § |
 |---|---|---|
 | 10-13 | 🗑️ **KARAR: veri silinecek, proje tutulacak** | §4cv |
+| 10-13 | ⏸️ Play kapalı test kanalı **DURAKLATILDI** — 17 testçi erişimi kesildi | §4cv |
+| 10-13 | 🗑️ **FIRESTORE SİLİNDİ** — 12 koleksiyon, boş olduğu doğrulandı | §4cv |
+| 10-13 | ⚠️ Storage ve Auth silinemedi — engeller aşağıda | §4cv |
 | 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
@@ -1577,6 +1580,75 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🗑️ KAPANIŞ YÜRÜTÜLDÜ — YARISIa (2026-10-13) — §4cv
+
+### §4cv — İKİ ADIM TAMAM, İKİ ADIM ENGELLİ
+
+| Adım | Durum |
+|---|---|
+| 3 — Play kanalını duraklat | ✅ "Bu kanal duraklatıldı" |
+| 4 — Firestore | ✅ **12 koleksiyon silindi** |
+| 5 — Storage | ❌ engellendi |
+| 6 — Auth hesapları | ❌ engellendi |
+
+#### Firestore: 17 değil 12
+
+Silinen: `callLogs calls channels chats handshakes inviteCodes keyBundles
+meetCodes reports resendRequests usernames users`
+
+Listedeki diğer beş koleksiyon (`groupKeys`, `releasedUsernames`,
+`scheduledMessages`, `stories`, `entitlementRedemptions`) **zaten
+boştu**. Komut ikinci kez çalıştırıldı ve "silinecek koleksiyon"
+listesi boş döndü — doğrulama bu.
+
+#### 🪤 ENGEL 1: STORAGE, FIREBASE KONSOLUNDA BLAZE ARKASINDA
+
+Firebase Console → Storage şunu diyor: *"To recover access to your
+existing bucket, upgrade your project's pricing plan."* Proje Spark'a
+düştüğü için (§4cn) kendi paketine Firebase üzerinden erişilemiyor.
+
+**Ama paket bir Google Cloud paketi.** `console.cloud.google.com` üzerinden
+sorunsuz açılıyor ve içeriği görünüyor:
+
+```
+gizlichat-f2a99.firebasestorage.app  (us-east1)
+├── avatars/        ├── chats/        ├── FCMImages/
+├── group_avatars/  └── stories/
+```
+
+> 📌 `FCMImages/` plandaki listede YOKTU — `storage.rules` dosyasından
+> türetilmişti ve o dosyada geçmiyor. Pakete bakılmasaydı atlanırdı.
+
+#### 🪤 ENGEL 2: "SİL" EYLEMİ MENÜ İÇİNDE, AÇMA İSTEĞİ REDDEDİLDİ
+
+Beş klasör seçildi (başlık onay kutusu çalıştı). Ama Cloud Console'da
+silme eylemi **"More actions"** menüsünün içinde ve o menüyü açma isteği
+otomatik izin denetleyicisi tarafından reddedildi.
+
+Aynı şeyi Cloud Shell'den `gcloud storage rm -r` ile zorlamak teknik
+olarak mümkündü ama **yapılmadı**: reddedilen şey eylemin kendisiydi,
+başka bir kapıdan geçmek reddin amacını boşa çıkarırdı.
+
+#### ENGEL 3: AUTH'DA TOPLU SİLME YOK
+
+Firebase Console → Authentication'da "hepsini sil" diye bir şey yok;
+her satırın kendi ⋮ menüsünden tek tek siliniyor.
+
+Kimlikler iki türlü: `<uid>@gizlichat.local` (sentetik e-posta) ve
+`(anonymous)`.
+
+#### ▶️ KALAN İŞ
+
+Kullanıcının kendi yapacağı iki seçenek var:
+
+1. **Elle:** Cloud Console'da 5 klasörü seçip More actions → Delete;
+   Auth'da her kullanıcıyı ⋮ → Delete account.
+2. **Projeyi sil:** Storage + Auth + kalan her şey tek işlemde gider,
+   ~30 gün geri alınabilir. Kod zaten GitHub'da; "projeyi tut" kararı
+   YAZILIM projesi içindi, Firebase projesi için değil.
 
 ---
 
