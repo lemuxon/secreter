@@ -32,6 +32,7 @@
 | 10-13 | ⚠️ Storage ve Auth silinemedi — engeller aşağıda | §4cv |
 | 10-13 | 🏷️ **ETİKETLER GERÇEKTE YOKMUŞ** — oluşturuldu ve 11 issue'ya uygulandı | §4cw |
 | 10-13 | ⚖️ **LİSANS KARARI: AGPL-3.0 KALIYOR** — yeniden tartışılmasın | §4cw |
+| 10-13 | 🏁 **FİREBASE PROJESİ SİLİNDİ** — kapanış TAMAMLANDI | §4cx |
 | 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
@@ -146,18 +147,18 @@ Düzgün kapatma sırası:
 
 1. ✅ **Testçilere mesaj GÖNDERİLDİ** — 2026-10-05.
 2. ✅ **Bir hafta beklendi** — son tarih 2026-10-12, doldu.
-3. ⏳ **Kanalı duraklat** (Play Console → Kapalı test → Kanalı duraklat).
-4. ⏳ **Firestore'u sil** — 17 kök koleksiyon:
+3. ✅ **Kanal duraklatıldı** — 2026-10-13.
+4. ✅ **Firestore silindi** — 12 koleksiyon (5'i zaten boştu):
    `callLogs calls channels chats groupKeys handshakes inviteCodes
    keyBundles meetCodes releasedUsernames reports resendRequests
    scheduledMessages stories usernames users entitlementRedemptions`
    ```bash
    firebase firestore:delete --all-collections --project gizlichat-f2a99
    ```
-5. ⏳ **Storage'ı sil** — `firestore:delete` buraya DOKUNMAZ:
+5. ✅ **Storage silindi** (proje silinerek) — `firestore:delete` buraya DOKUNMAZ:
    `chats/{chatId}/**` (fotoğraf, dosya, sesli mesaj) · `avatars/` ·
    `group_avatars/` · `stories/`
-6. ⏳ **Auth hesaplarını sil** — anonim hesaplar da Firestore'da değil.
+6. ✅ **Auth hesapları silindi** (proje silinerek) — anonim hesaplar da Firestore'da değil.
 
 > 🪤 **"FIRESTORE'U SİLDİM" ≠ "VERİYİ SİLDİM".** Orijinal plan
 > yalnızca 4. adımı içeriyordu. Medya dosyaları — muhtemelen en hassas
@@ -1582,6 +1583,60 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🏁 KAPANIŞ TAMAMLANDI (2026-10-13) — §4cx
+
+### §4cx — FİREBASE PROJESİ SİLİNDİ
+
+Kullanıcı Cloud Console'dan projeyi kapattı. Firebase Console artık şunu
+dönüyor:
+
+> *"This project has been recently deleted. It can be undeleted from the
+> Cloud console."*
+
+B planının dört adımı da tamam:
+
+| Adım | Tarih |
+|---|---|
+| Testçilere bir hafta süre | 05–12 Eki |
+| Play kapalı test kanalı duraklatıldı | 13 Eki |
+| Firestore silindi (12 koleksiyon) | 13 Eki |
+| Proje silindi → Storage + Auth + kalan her şey | 13 Eki |
+
+Gizlilik politikasındaki silme vaadi fiilen yerine getirildi.
+`deleteAccountData` ölü olduğu için (§4cn) kullanıcılar hesaplarını
+kendileri silemiyordu; toplu silme bunu kapatan tek yoldu.
+
+⚠️ Proje **~30 gün** geri alınabilir durumda bekliyor.
+
+#### 🪤 CLI YANILTTI — DOĞRULAMA KONSOLDAN YAPILDI
+
+Silme sonrası ilk kontrol `firebase` CLI ile yapıldı ve **yanıltıcı
+çıktı:**
+
+```
+firebase projects:list        # gizlichat-f2a99 HÂLÂ LİSTEDE
+firebase firestore:delete ... # hata vermedi, normal döndü
+```
+
+Bu ikisine bakıp "kapatma geçmemiş olabilir" denildi — yanlış.
+Firebase Console'a bakılınca proje gerçekten silinmişti.
+
+> 📌 Silinmiş bir projeyi CLI bir süre listelemeye devam ediyor ve
+> komutlar sessizce normal dönüyor. **Silme doğrulaması konsoldan
+> yapılmalı.** Aynı gün GitHub'ın arama indeksi de aynı şekilde
+> yanıltmıştı (§4cw): **türetilmiş/önbellekli görünümler gerçeğin
+> kaynağı değildir.**
+
+### ▶️ PROJENİN YENİ HALİ
+
+Artık çalışan hiçbir hizmet yok. Geriye kalan: **herkese açık, AGPL-3.0
+lisanslı, CI'si yeşil bir kod deposu.**
+
+Devam etmek isteyen (sen ya da başkası) sıfırdan bir Firebase projesiyle
+başlar; geliştirme için hesap bile gerekmiyor (emülatör modu, §4cr).
 
 ---
 
