@@ -34,6 +34,7 @@
 | 10-13 | ⚖️ **LİSANS KARARI: AGPL-3.0 KALIYOR** — yeniden tartışılmasın | §4cw |
 | 10-13 | 🏁 **FİREBASE PROJESİ SİLİNDİ** — kapanış TAMAMLANDI | §4cx |
 | 10-13 | 🌐 **İNGİLİZCE BİRİNCİL** — README.md İngilizce, Türkçe README.tr.md | §4cy |
+| 10-13 | 🌍 **12 ISSUE İNGİLİZCEYE ÇEVRİLDİ** — başlık + gövde | §4cy |
 | 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
@@ -1607,7 +1608,26 @@ GitHub depo açıklaması da İngilizce yapıldı.
 Ekran görüntüleri (§4cu) zaten her iki sürümde de vardı; takas sonrası
 da doğru render oluyor (`docs/screenshots/` yolları göreli).
 
-#### ⚠️ KALAN DİL ENGELİ: ISSUE'LAR TÜRKÇE
+#### ✅ ISSUE'LAR İNGİLİZCEYE ÇEVRİLDİ
+
+11 açık + 1 kapalı issue'nun **başlığı ve gövdesi tamamen** İngilizce
+yapıldı (seçenek 3). Kullanıcı tercihi: özet değil tam çeviri.
+
+Depo İngilizce görünüp Issues sekmesi Türkçe kalsaydı, projenin açık
+kaynak yayımlanma amacı (*"sorunları insanlar görsün ve geliştirsin"*)
+çalışmazdı — başlıklar okunamıyorsa kimse içeri girmez.
+
+Her gövdenin sonuna şu not eklendi: *"Translated from Turkish; the
+development log (`DEVAM.md`) is still in Turkish."* Kod yorumları ve
+geliştirme günlüğü Türkçe kalmaya devam ediyor; bu
+`CONTRIBUTING.md`'de zaten yazılı.
+
+> 📌 **#11'de bir ayrıntı:** çeviri sırasında gövdedeki **yanlış
+> iddia** (kural testlerinin CI'da olmadığı, bkz. §4ct) çıkarıldı —
+> artık gövde doğru. Hatanın kaydı alttaki errata yorumunda duruyor
+> (Türkçe). Yani yanlış metin silindi ama **yanıldığımın kaydı silinmedi.**
+
+#### ⚠️ ESKİ NOT — ÇÖZÜLDÜ: ISSUE'LAR TÜRKÇEYDİ
 
 11 issue'nun **başlığı ve gövdesi Türkçe.** Depo İngilizce görünüyor ama
 Issues sekmesine tıklayan İngilizce konuşan biri hiçbir şey anlamayacak.
