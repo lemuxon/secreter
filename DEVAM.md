@@ -30,6 +30,7 @@
 | 10-13 | ⏸️ Play kapalı test kanalı **DURAKLATILDI** — 17 testçi erişimi kesildi | §4cv |
 | 10-13 | 🗑️ **FIRESTORE SİLİNDİ** — 12 koleksiyon, boş olduğu doğrulandı | §4cv |
 | 10-13 | ⚠️ Storage ve Auth silinemedi — engeller aşağıda | §4cv |
+| 10-13 | 🏷️ **ETİKETLER GERÇEKTE YOKMUŞ** — oluşturuldu ve 11 issue'ya uygulandı | §4cw |
 | 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
@@ -1580,6 +1581,56 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🏷️ ETİKET SİSTEMİ BELGEDE VARDI, DEPODA YOKTU (2026-10-13) — §4cw
+
+### §4cw — "?labels=security" SESSİZCE YOK SAYILMIŞ
+
+Kullanıcı hedefi: *"GitHub'da herkesin erişimi olsun, insanlar rahatça
+kullansın, geliştirsin ve büyütsün."*
+
+Depo zaten herkese açıktı. Ama kontrol edince şu çıktı: **11 issue'nun
+hiçbirinde etiket yoktu.**
+
+Sebep: issue'lar `.../issues/new?title=...&labels=security` biçiminde
+URL ile açılmıştı. **GitHub, var olmayan bir etiketi URL'den sessizce
+yok sayar** — hata vermez. `security`, `known-limitation` ve `infra`
+etiketleri depoda hiç tanımlanmamıştı.
+
+Yani `CONTRIBUTING.md`'de anlatılan etiket sözlüğü (§4cq) **gerçekte
+var olmayan bir şeyi** tarif ediyordu. Daha kötüsü: `good first issue`
+etiketli **tek bir issue bile yoktu**, yani yeni gelen birinin
+tutunacağı dal yoktu.
+
+#### Yapılan
+
+| Etiket | Issue |
+|---|---|
+| `security` | #1 #2 #3 #4 #5 #6 #12 |
+| `known-limitation` | #7 #8 #9 #10 |
+| `good first issue` | #1 #4 #5 |
+
+`good first issue` seçimi keyfi değil: üçü de **Firestore kuralı
+değişikliği + test**, ve düzeltmenin kendisi issue gövdesinde yazılı.
+Projeyi tanımadan yapılabilir, doğrulaması kolay.
+
+#### ⚠️ YAPTIĞIM HATA: 7 ISSUE'YA `wontfix` YAPIŞTI
+
+Toplu etiketlemede `find` aracı "security" metnini eşleştirdi ama
+tıklanan öğe **`wontfix`** çıktı. Yedi güvenlik issue'su bir süre
+*"This will not be worked on"* etiketiyle herkese açık durdu — tam
+tersi anlam.
+
+Düzeltildi. Dersi: **açılır listede metne göre `find` ile tıklama.**
+Güvenilir yöntem, seticinin kendi "Filter labels" kutusuna yazıp tek
+seçenek kalana kadar daraltmak, sonra o tek öğeyi tıklamak.
+
+> 📌 GitHub'ın issue **arama indeksi gecikir.** `label:security`
+> sorgusu 5 sonuç dönerken issue sayfalarında etiket zaten vardı.
+> İki kez "uygulanmamış" sanılıp boşuna tekrar denendi. Doğrulama
+> **issue sayfasından** yapılmalı, arama sonucundan değil.
 
 ---
 

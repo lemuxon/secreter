@@ -17,8 +17,9 @@ cihazda üretilen bir anahtarla açılır.
 
 * Google Play'de **üretime çıkmadı.** Kapalı testte (≈12 testçi) 24 sürüm
   yayınlandı, üretim erişimi alındı ama kullanılmadı.
-* Projeye ait **Firebase arka ucu kapatılıyor.** Depodaki
-  `firebase_options.dart` ve `google-services.json` artık çalışmayan bir
+* Projeye ait **Firebase arka ucu KAPATILDI** (13 Eki 2026): kapalı test
+  kanalı duraklatıldı ve Firestore'daki tüm kullanıcı verisi silindi.
+  Depodaki `firebase_options.dart` ve `google-services.json` artık çalışmayan bir
   projeye işaret ediyor — fork'larsan **kendi Firebase projeni kurmalısın**
   (aşağıya bak).
 * Kod, çalıştığı hâliyle ve olduğu gibi yayımlanıyor: biri faydalanabilsin

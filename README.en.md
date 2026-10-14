@@ -19,7 +19,9 @@ account is created from a key generated on the device.
 * It **never shipped to production** on Google Play. 24 builds went out
   to a closed test (~12 testers); production access was granted but
   never used.
-* The **Firebase backend is being shut down.** The `firebase_options.dart`
+* The **Firebase backend has been shut down** (13 Oct 2026): the closed
+  test track was paused and all user data in Firestore was deleted.
+  The `firebase_options.dart`
   and `google-services.json` in this repo point at a project that no
   longer works — if you fork it, **you must set up your own Firebase
   project** (see below).
@@ -150,7 +152,7 @@ For a real backend, continue below.
 
 ### 1. Set up your own Firebase project
 
-The config in this repo belongs to a project that is being shut down.
+The config in this repo belongs to a project that has been shut down.
 Create your own and wire it up:
 
 ```bash
