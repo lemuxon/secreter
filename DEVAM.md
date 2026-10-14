@@ -33,6 +33,7 @@
 | 10-13 | 🏷️ **ETİKETLER GERÇEKTE YOKMUŞ** — oluşturuldu ve 11 issue'ya uygulandı | §4cw |
 | 10-13 | ⚖️ **LİSANS KARARI: AGPL-3.0 KALIYOR** — yeniden tartışılmasın | §4cw |
 | 10-13 | 🏁 **FİREBASE PROJESİ SİLİNDİ** — kapanış TAMAMLANDI | §4cx |
+| 10-13 | 🌐 **İNGİLİZCE BİRİNCİL** — README.md İngilizce, Türkçe README.tr.md | §4cy |
 | 10-06 | ✅ Issue #11 düzeltildi ve KAPATILDI — kendi yanlış iddiam | §4ct |
 | 10-06 | 🖼️ **EKRAN GÖRÜNTÜLERİ EKLENDİ** — Play mağaza görselleri README'de | §4cu |
 | 10-05 | ✅ **CI #6 TAMAMEN YEŞİL** — 5 işin 5'i, 3 aydır ilk kez | §4ct |
@@ -1583,6 +1584,42 @@ kanıtı. Algı sorunu değil, **eksik geri bildirim.**
 > 📌 Ders: *bir onarımın çalıştığını kullanıcıya söylemiyorsan,
 > çalışmadığını varsayar ve sana öyle raporlar.* §4bv ile aynı aile
 > (çözülemeyen medya "bozuk resim" görünüyordu).
+
+---
+
+## 🌐 İNGİLİZCE BİRİNCİL YAPILDI (2026-10-13) — §4cy
+
+### §4cy — README TAKASI
+
+Kullanıcı depoyu **İngilizce bir kitleyle** paylaşacak. GitHub varsayılan
+olarak `README.md`'yi gösteriyordu ve o Türkçeydi — yabancı biri ilk
+ekranda anlamadığı bir metinle karşılaşıyordu.
+
+```
+README.md     → README.tr.md   (Türkçe, 459 satır, daha ayrıntılı)
+README.en.md  → README.md      (İngilizce, 312 satır, birincil)
+```
+
+Çapraz bağlantılar düzeltildi: `README.tr.md`, `CONTRIBUTING.md`,
+`SECURITY.md`. Artık hiçbir yerde `README.en.md` atıfı yok (doğrulandı).
+GitHub depo açıklaması da İngilizce yapıldı.
+
+Ekran görüntüleri (§4cu) zaten her iki sürümde de vardı; takas sonrası
+da doğru render oluyor (`docs/screenshots/` yolları göreli).
+
+#### ⚠️ KALAN DİL ENGELİ: ISSUE'LAR TÜRKÇE
+
+11 issue'nun **başlığı ve gövdesi Türkçe.** Depo İngilizce görünüyor ama
+Issues sekmesine tıklayan İngilizce konuşan biri hiçbir şey anlamayacak.
+
+Bu önemli çünkü projenin açık kaynak yayımlanma amacı tam da buydu:
+*"Uygulamanın sorunlarını insanlar görsün ve geliştirsin."* Başlıklar
+okunamıyorsa o amaç çalışmıyor.
+
+Seçenekler (kullanıcıya soruldu):
+1. Yalnızca **başlıkları** İngilizceye çevir — insanların taradığı şey bu
+2. Başlık + gövdenin başına kısa İngilizce özet
+3. Gövdeleri tamamen çevir
 
 ---
 
